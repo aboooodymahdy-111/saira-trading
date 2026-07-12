@@ -1,0 +1,13 @@
+{
+  "run_timestamp": "20260713_023746",
+  "git_commit": "008e3bf8fdeacae203c23115504de195455cef8d",
+  "swing_reversal_bars": 2,
+  "backtest_lookback_months": 6,
+  "sample_frequency_days": 7,
+  "ticker_sample_size": 400,
+  "sample_seed": 42,
+  "tickers_tested": 400,
+  "target_gain_pct": 10.0,
+  "target_holding_days": 5,
+  "lookahead_check": "passed \u2014 pivots detected on hist truncated to as_of_date; entry signal checked only on the last bar of that truncation"
+}
