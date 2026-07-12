@@ -123,12 +123,23 @@ from yf_retry import call_with_retry
 # — a manual, occasional step, not part of the daily run.
 TICKER_UNIVERSE_CSV = Path("data/ticker_universe.csv")
 
-# Abdo's local offline Stooq-format historical data dump (2026-07) — only used
-# by refresh_ticker_universe.py to enumerate ticker SYMBOLS (filenames), never
-# for price data (stale; see module docstring). "etfs" and "nysemkt" (NYSE
-# American) sibling folders in the same dump are deliberately excluded — Abdo
-# asked specifically for NASDAQ + NYSE common stocks.
-LOCAL_MARKET_DATA_DIR = Path(r"D:\EGX.Daily.2000-2023\data\daily\us")
+# Abdo's local offline Stooq-format historical data dump. Used by
+# refresh_ticker_universe.py to enumerate ticker SYMBOLS (filenames), and
+# (2026-07, per Abdo's explicit instruction — see CLAUDE.md) by backtest.py
+# for actual PRICE DATA too, now that build_local_ticker_index()/
+# load_local_history() exist. "etfs" and "nysemkt" (NYSE American) sibling
+# folders in the same dump are deliberately excluded — Abdo asked
+# specifically for NASDAQ + NYSE common stocks.
+#
+# PATH CORRECTED 2026-07: the dump actually lives one level deeper than this
+# constant used to point to — `...\data\daily\us` (no nested `data\daily`)
+# silently resolves to a STALE duplicate copy of the dump (confirmed: AAL's
+# last bar there is 2026-04-02), while `...\data\daily\data\daily\us` is the
+# live, current one (AAL's last bar there is 2026-06-24). Both paths exist on
+# disk, so this was silently returning stale data with no error — verify
+# LOCAL_MARKET_DATA_DIR's last-bar date against today whenever this dump is
+# touched again.
+LOCAL_MARKET_DATA_DIR = Path(r"D:\EGX.Daily.2000-2023\data\daily\data\daily\us")
 EXCHANGE_SUBFOLDERS = ("nasdaq stocks", "nyse stocks")
 
 OUTPUT_CSV = Path("runs/full_universe_results.csv")
@@ -216,6 +227,51 @@ def load_ticker_universe() -> list[str]:
     return sorted(df["ticker"].astype(str).str.upper().unique())
 
 
+def build_local_ticker_index() -> dict:
+    """
+    Maps TICKER -> file path across LOCAL_MARKET_DATA_DIR's exchange
+    subfolders (built once and reused — rglob-ing per ticker for a
+    400-1000-ticker backtest would be needlessly slow). Local-machine-only,
+    same as LOCAL_MARKET_DATA_DIR itself.
+    """
+    index: dict = {}
+    for sub in EXCHANGE_SUBFOLDERS:
+        base = LOCAL_MARKET_DATA_DIR / sub
+        if not base.exists():
+            continue
+        for txt_file in base.rglob("*.us.txt"):
+            index[txt_file.stem.split(".")[0].upper()] = txt_file
+    return index
+
+
+def load_local_history(ticker: str, index: dict) -> pd.DataFrame | None:
+    """
+    Loads one ticker's full daily OHLCV history from Abdo's local Stooq-format
+    dump (LOCAL_MARKET_DATA_DIR), reshaped to the same column names/shape
+    yfinance's .history() returns (Open/High/Low/Close/Volume, DatetimeIndex)
+    so evaluate_ticker_snapshot works unchanged regardless of the source.
+
+    ADDED 2026-07 per Abdo's explicit instruction: ALL backtesting must run
+    against this local dump, not yfinance — it removes both the network
+    dependency and Yahoo's rate-limiting (see MAX_WORKERS/REQUEST_DELAY_SECONDS
+    above), which is what made a 400+/1000-ticker backtest impractical before.
+    Returns None (not an exception) if the ticker isn't in the local dump —
+    same "skip, don't crash the whole run" contract backtest.py already uses
+    for fetch failures.
+    """
+    path = index.get(ticker.upper())
+    if path is None:
+        return None
+    df = pd.read_csv(path)
+    df.columns = [c.strip("<>") for c in df.columns]
+    if df.empty or "DATE" not in df.columns:
+        return None
+    df["DATE"] = pd.to_datetime(df["DATE"], format="%Y%m%d")
+    df = df.set_index("DATE").sort_index()
+    df = df.rename(columns={"OPEN": "Open", "HIGH": "High", "LOW": "Low", "CLOSE": "Close", "VOL": "Volume"})
+    return df[["Open", "High", "Low", "Close", "Volume"]]
+
+
 def touch_test(high: pd.Series, low: pd.Series, close: pd.Series, increment: float) -> float:
     if increment <= 0:
         return 0.0
@@ -232,12 +288,16 @@ def touch_test(high: pd.Series, low: pd.Series, close: pd.Series, increment: flo
 # per-vote pick. See backtest.py's module docstring for the comparison run
 # that produced the current value.
 SUPPORT_RESISTANCE_METHOD = "fibonacci"  # "pivot" | "fibonacci" — set by backtest comparison
-# DECIDED 2026-07-12: backtest.py --compare-support-method (30 tickers, 10
-# sample dates, 3-month window) scored fibonacci hit_rate=0.111 vs
-# pivot hit_rate=0.095 (126/126 resolved committee calls each pass) — see
-# runs/backtest/support_method_comparison_20260712_203613/summary.md. A
-# larger/longer comparison run may shift this; re-run the comparison and
-# update this constant if so.
+# DECIDED 2026-07-12, CONFIRMED at full scale same day: backtest.py
+# --compare-support-method against the local dump (see CLAUDE.md's
+# backtesting rule) first ran at 30 tickers/3 months (fibonacci
+# hit_rate=0.111 vs pivot 0.095, 126/126 resolved calls each — see
+# runs/backtest/support_method_comparison_20260712_203613/summary.md), then
+# at the full 400-ticker/6-month default (fibonacci hit_rate=0.098 vs pivot
+# 0.073, 4078/4078 resolved calls each — see
+# runs/backtest/support_method_comparison_20260712_214850/summary.md).
+# Fibonacci won both times, with a wider margin at the larger sample. Re-run
+# the comparison and update this constant if a future run shifts the result.
 
 
 def compute_entry_exit_levels(

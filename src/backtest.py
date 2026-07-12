@@ -7,9 +7,22 @@ what ACTUALLY happened afterward (which we now know).
 
 NOT part of the daily automation (.github/workflows/daily-scan.yml) — this is
 compute-heavy (hundreds of tickers x tens of historical dates, each running
-the full indicator/calibration stack) and meant to be run by hand:
+the full indicator/calibration stack) and meant to be run by hand, on Abdo's
+own machine:
 
     python src/backtest.py
+
+DATA SOURCE (RULE, 2026-07 — per Abdo's explicit instruction, see CLAUDE.md):
+    ALL backtesting reads price history from Abdo's local Stooq-format dump
+    (full_universe_analysis.LOCAL_MARKET_DATA_DIR, see that constant for the
+    exact path), via
+    build_local_ticker_index()/load_local_history() — NEVER yfinance. This is
+    what makes a 400-1000-ticker backtest practical at all: no network calls,
+    no Yahoo rate-limiting (see MAX_WORKERS in full_universe_analysis.py for
+    how badly that bites the LIVE daily path, which still uses yfinance and is
+    unaffected by this file). Local-machine-only, same restriction
+    refresh_ticker_universe.py already has — this script cannot run on GitHub
+    Actions.
 
 LOOKAHEAD SAFETY (see preflight-checklist.md section A — "no feature uses
 data that wouldn't have been known at prediction time"):
@@ -17,25 +30,19 @@ data that wouldn't have been known at prediction time"):
       technical) is called via full_universe_analysis.evaluate_ticker_snapshot
       with `hist` TRUNCATED to `.loc[:as_of_date]` — nothing after that date
       is ever visible to the decision logic.
-    - `include_analyst_consensus=False`: yfinance's analyst consensus is a
-      CURRENT-only snapshot with no historical point-in-time equivalent, so
-      it's dropped for backtest scoring only (see
+    - `include_analyst_consensus=False`: analyst consensus is a CURRENT-only
+      snapshot with no historical point-in-time equivalent (and isn't in the
+      local dump at all), so it's dropped for backtest scoring only (see
       committee_signals.evaluate_quantitative_group). The live daily system
       is unaffected.
     - Verified (2026-07, see project plan notes): evaluate_horizon_fit, Pivot
       Points, Ichimoku, and the Gann Square9/ZigZag pivot detection are all
       safe on truncated input by construction — no code changes were needed
       for those, this is documentation of that check, not a fix.
-    - CAVEAT (not a lookahead bug, but affects dollar-level precision):
-      yfinance's history() returns split/dividend-ADJUSTED prices as of
-      TODAY'S fetch, not as literally traded on the historical date — this
-      affects signal magnitude/price levels slightly, not signal direction.
-
-FETCH_PERIOD margin: the binding lookback constraint is compute_ma_cross_vote
-needing MA200 (200 trading days) and Ichimoku needing 78 — NOT the Gann
-calibration's smaller CALIBRATION_LOOKBACK_BARS. "3y" leaves ~620 trading
-days of history behind even the EARLIEST as-of date in a 6-month backtest
-window, comfortably clearing the 200-bar requirement.
+    - CAVEAT: the local dump's prices are whatever Stooq recorded at dump
+      time (not necessarily split/dividend-adjusted the same way yfinance's
+      live fetch is) — affects price-level precision slightly, not signal
+      direction. Distinct from the old yfinance caveat this replaces.
 
 BASE-RATE COMPARISON: every analyzed (ticker, date) snapshot gets an
 entry/exit level from compute_entry_exit_levels regardless of the committee's
@@ -53,36 +60,41 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
-import yfinance as yf
 
 from full_universe_analysis import (
     TARGET_GAIN_PCT,
     TARGET_HOLDING_DAYS,
     SUPPORT_RESISTANCE_METHOD,
     _load_eligibility_cache,
+    build_local_ticker_index,
+    load_local_history,
     evaluate_ticker_snapshot,
 )
 from swing_horizon_filter import evaluate_forward_outcome
-from yf_retry import call_with_retry
 
 BACKTEST_LOOKBACK_MONTHS = 6
 SAMPLE_FREQUENCY_DAYS = 7   # weekly
-TICKER_SAMPLE_SIZE: int | None = 400   # None = full eligible universe (expensive — pilot with 400 first)
+TICKER_SAMPLE_SIZE: int | None = 400   # None = full eligible universe; local data removes the old
+                                        # network-rate-limit reason to keep this small — raise to
+                                        # 1000 (or None) freely, see CLAUDE.md's backtesting rule
 SAMPLE_SEED = 42            # logged in params.json — reproducible ticker sample
-FETCH_PERIOD = "3y"         # see module docstring for why 3y, not less
 OUTCOME_BUFFER_DAYS = 14    # calendar-day buffer so the latest as-of date still has
                             # TARGET_HOLDING_DAYS trading days of forward data to score
 
 OUTPUT_ROOT = Path("runs/backtest")
 
 
-def _sample_tickers() -> list[str]:
+def _sample_tickers(local_index: dict) -> list[str]:
     cache = _load_eligibility_cache()
-    eligible = sorted(t for t, entry in cache.items() if entry.get("status") == "eligible")
+    eligible = sorted(
+        t for t, entry in cache.items()
+        if entry.get("status") == "eligible" and t.upper() in local_index
+    )
     if not eligible:
         raise RuntimeError(
-            "No eligible tickers in runs/ticker_eligibility_cache.json — run "
-            "full_universe_analysis.py to completion at least once first."
+            "No eligible tickers found in both runs/ticker_eligibility_cache.json and "
+            "LOCAL_MARKET_DATA_DIR — run full_universe_analysis.py to completion at least "
+            "once first, and check LOCAL_MARKET_DATA_DIR is reachable."
         )
     if TICKER_SAMPLE_SIZE is None or TICKER_SAMPLE_SIZE >= len(eligible):
         return eligible
@@ -107,11 +119,12 @@ def run_backtest(support_resistance_method: str = SUPPORT_RESISTANCE_METHOD,
                   tickers: list[str] | None = None,
                   as_of_dates: list[pd.Timestamp] | None = None,
                   write_output: bool = True) -> pd.DataFrame:
-    tickers = tickers if tickers is not None else _sample_tickers()
+    local_index = build_local_ticker_index()
+    tickers = tickers if tickers is not None else _sample_tickers(local_index)
     as_of_dates = as_of_dates if as_of_dates is not None else _sample_dates()
     print(f"Backtesting {len(tickers)} tickers x {len(as_of_dates)} sample dates "
           f"({as_of_dates[0].date()} to {as_of_dates[-1].date()}, every {SAMPLE_FREQUENCY_DAYS} days) "
-          f"[support_resistance_method={support_resistance_method}]...")
+          f"[support_resistance_method={support_resistance_method}, source=local dump]...")
 
     cache = _load_eligibility_cache()
     rows: list[dict] = []
@@ -122,18 +135,10 @@ def run_backtest(support_resistance_method: str = SUPPORT_RESISTANCE_METHOD,
         if completed % 50 == 0:
             print(f"  {completed}/{len(tickers)} tickers...")
 
-        try:
-            hist = call_with_retry(lambda t=ticker: yf.Ticker(t).history(period=FETCH_PERIOD))
-        except Exception as exc:  # noqa: BLE001 - one ticker's fetch failure shouldn't stop the whole backtest
-            print(f"WARNING: backtest fetch failed for {ticker}: {exc}")
+        hist = load_local_history(ticker, local_index)
+        if hist is None or hist.empty:
+            print(f"WARNING: no local history for {ticker} — skipping.")
             continue
-        if hist.empty:
-            continue
-        # yfinance normally returns a tz-aware (exchange-local) index; strip it so
-        # .loc slicing against the tz-naive as_of_dates below doesn't raise. Guarded
-        # since tz_localize(None) itself errors if the index is already tz-naive.
-        if hist.index.tz is not None:
-            hist.index = hist.index.tz_localize(None)
 
         entry = cache.get(ticker, {})
         sector, industry = entry.get("sector"), entry.get("industry")
@@ -275,8 +280,8 @@ def _write_output(results: pd.DataFrame, tickers: list[str], as_of_dates: list[p
         "## Conclusion",
         f"Committee beat the base rate by {edge:+.1%}." if edge is not None
         else "Not enough resolved data to compare committee vs base rate yet.",
-        "Caveat: yfinance prices are adjusted as of today's fetch, not as literally traded "
-        "on the historical date — affects price-level precision, not signal direction.",
+        "Caveat: local dump prices are whatever Stooq recorded at dump time, not necessarily "
+        "adjusted identically to a live fetch — affects price-level precision, not signal direction.",
     ]
     (out_dir / "summary.md").write_text("\n".join(summary_lines), encoding="utf-8")
 
@@ -297,7 +302,7 @@ def compare_support_resistance_methods() -> None:
 
     Run: python src/backtest.py --compare-support-method
     """
-    tickers = _sample_tickers()
+    tickers = _sample_tickers(build_local_ticker_index())
     as_of_dates = _sample_dates()
 
     print("=== Pass 1/2: support_resistance_method=pivot ===")
