@@ -2,7 +2,9 @@ name: Daily scan + report
 
 # Runs the full pipeline entirely in the cloud (2026-07 project decision — see
 # full_universe_analysis.py's module docstring): no local machine needs to be
-# on for this to run or for the report to stay reachable.
+# on for this to run or for the report to stay reachable. Repo is public
+# (Abdo's call, 2026-07) so GitHub Pages' free tier can serve the report
+# directly — no third-party host needed.
 #
 # 21:00 EST/EDT (Abdo's stated schedule, register_scheduled_task.ps1) is
 # 01:00 or 02:00 UTC depending on US daylight saving — cron below is fixed at
