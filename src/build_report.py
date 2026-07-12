@@ -479,7 +479,6 @@ td.ticker-cell { font-weight: 600; font-family: var(--font-mono); }
 .pagination button:not(:disabled):hover { border-color: var(--accent); }
 
 .history-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; position: relative; }
-.history-toolbar select#history-select { min-width: 220px; }
 .history-toolbar .cal-toggle-btn {
   font-size: 13px; padding: 7px 10px; line-height: 1;
   border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--ink-2);
@@ -490,7 +489,6 @@ td.ticker-cell { font-weight: 600; font-family: var(--font-mono); }
   margin-left: auto; font-size: 12px; color: var(--accent-ink); text-decoration: none; font-weight: 600;
 }
 .history-toolbar .current-link:hover { text-decoration: underline; }
-.history-empty { font-size: 13px; color: var(--ink-3); padding: 8px 2px; }
 
 .cal-popover {
   position: absolute; top: calc(100% + 6px); left: 0; z-index: 20;
@@ -546,8 +544,7 @@ footer.notes strong { color: var(--ink-2); }
   <section id="history-section">
     <h2 class="section-title">Previous reports <span class="count" id="history-count"></span></h2>
     <div class="history-toolbar">
-      <select id="history-select"><option value="">Jump to a previous report…</option></select>
-      <button id="cal-toggle" class="cal-toggle-btn" title="Browse by calendar">📅</button>
+      <button id="cal-toggle" class="cal-toggle-btn" title="Browse by calendar">📅 Browse by date</button>
       <a class="current-link" id="history-current-link" href="#">Latest report ↗</a>
       <div id="cal-popover" class="cal-popover" hidden>
         <div class="calendar-nav">
@@ -858,7 +855,7 @@ footer.notes strong { color: var(--ink-2); }
 
   render();
 
-  // ---- previous-reports picker: dropdown + small calendar popover ----
+  // ---- previous-reports picker: calendar popover only ----
   document.getElementById('history-current-link').href = CURRENT_REPORT_URL;
   document.getElementById('history-count').textContent =
     HISTORY.length ? `(${HISTORY.length.toLocaleString()} archived)` : '';
@@ -866,33 +863,23 @@ footer.notes strong { color: var(--ink-2); }
   const calToggle = document.getElementById('cal-toggle');
   const calPopover = document.getElementById('cal-popover');
 
-  if (!HISTORY.length) {
-    document.getElementById('history-select').style.display = 'none';
-    calToggle.disabled = true;
-    const empty = document.createElement('div');
-    empty.className = 'history-empty';
-    empty.textContent = "No archived reports yet — check back after tomorrow's run.";
-    document.getElementById('history-section').appendChild(empty);
-  } else {
-    // ---- dropdown (HISTORY already sorted newest first) ----
-    const select = document.getElementById('history-select');
-    HISTORY.forEach(r => {
-      const opt = document.createElement('option');
-      opt.value = r.url;
-      opt.textContent = r.label;
-      select.appendChild(opt);
-    });
-    select.addEventListener('change', () => { if (select.value) window.location.href = select.value; });
-
-    // ---- small calendar popover ----
+  {
+    // Merge today's own report in alongside the archive: it's never in
+    // ARCHIVE_REPORTS_DIR yet (that copy is only made AFTER this file is
+    // built — see _collect_report_history's docstring), so without this
+    // the calendar would show nothing at all on day one / after a gap.
     const byDateMap = new Map();
     HISTORY.forEach(r => {
       if (!byDateMap.has(r.date)) byDateMap.set(r.date, []);
       byDateMap.get(r.date).push(r);
     });
-    const latest = HISTORY[0];
-    let calYear = Number(latest.date.slice(0, 4));
-    let calMonth = Number(latest.date.slice(5, 7)) - 1; // 0-indexed
+    const todayEntry = { date: STATS.run_timestamp.slice(0, 10), time: STATS.run_timestamp.slice(11, 16), url: CURRENT_REPORT_URL };
+    if (!byDateMap.has(todayEntry.date)) byDateMap.set(todayEntry.date, []);
+    byDateMap.get(todayEntry.date).unshift(todayEntry);
+
+    const latestDate = [...byDateMap.keys()].sort().at(-1);
+    let calYear = Number(latestDate.slice(0, 4));
+    let calMonth = Number(latestDate.slice(5, 7)) - 1; // 0-indexed
 
     function renderCalendar() {
       const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
