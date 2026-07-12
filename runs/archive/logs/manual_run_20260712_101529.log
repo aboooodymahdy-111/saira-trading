@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "C:\Users\Mahdy\Saira-Trading\src\full_universe_analysis.py", line 521, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\Mahdy\Saira-Trading\src\full_universe_analysis.py", line 430, in main
+    tickers = load_ticker_universe()
+  File "C:\Users\Mahdy\Saira-Trading\src\full_universe_analysis.py", line 205, in load_ticker_universe
+    return sorted(df["ticker"].astype(str).str.upper().unique())
+TypeError: '<' not supported between instances of 'float' and 'str'

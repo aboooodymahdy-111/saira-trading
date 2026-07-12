@@ -1,8 +1,11 @@
 ﻿# run_daily.ps1 - Runs the full daily scan + report pipeline:
 #   1. src/full_universe_analysis.py  (scans NASDAQ+NYSE, ethical filter applied,
 #      writes runs/full_universe_results.csv + archives a timestamped copy)
-#   2. src/build_report.py            (builds runs/report.html from that CSV)
-#   3. Archives a timestamped copy of report.html too, so past reports stay
+#   2. src/track_outcomes.py          (2026-07: updates runs/outcome_tracking.csv
+#      with today's new candidates + rechecks previously-pending ones, so the
+#      report below can show a real "Track record" stat)
+#   3. src/build_report.py            (builds runs/report.html from that CSV)
+#   4. Archives a timestamped copy of report.html too, so past reports stay
 #      browsable (full_universe_analysis.py already archives its own CSV; this
 #      script adds the same treatment for the HTML report, which it doesn't).
 #
@@ -41,13 +44,19 @@ try {
     # PowerShell 5.1 wraps a redirected native-command stderr line in a
     # NativeCommandError (flips $? to false even on a real exit code 0) - so
     # redirecting here would make LASTEXITCODE checks unreliable for no benefit.
-    Write-Log "Step 1/2: running full_universe_analysis.py (this scans the full NASDAQ+NYSE universe and can take tens of minutes)..."
+    Write-Log "Step 1/3: running full_universe_analysis.py (this scans the full NASDAQ+NYSE universe and can take tens of minutes)..."
     python src\full_universe_analysis.py | Tee-Object -FilePath $LogFile -Append
     if ($LASTEXITCODE -ne 0) {
         throw "full_universe_analysis.py exited with code $LASTEXITCODE"
     }
 
-    Write-Log "Step 2/2: running build_report.py..."
+    Write-Log "Step 2/3: running track_outcomes.py..."
+    python src\track_outcomes.py | Tee-Object -FilePath $LogFile -Append
+    if ($LASTEXITCODE -ne 0) {
+        throw "track_outcomes.py exited with code $LASTEXITCODE"
+    }
+
+    Write-Log "Step 3/3: running build_report.py..."
     python src\build_report.py | Tee-Object -FilePath $LogFile -Append
     if ($LASTEXITCODE -ne 0) {
         throw "build_report.py exited with code $LASTEXITCODE"

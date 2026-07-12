@@ -285,6 +285,136 @@ def compute_entry_exit_levels(
     }
 
 
+def evaluate_ticker_snapshot(
+    ticker: str,
+    hist: pd.DataFrame,
+    sector: str | None,
+    industry: str | None,
+    target_gain_pct: float = TARGET_GAIN_PCT,
+    target_holding_days: int = TARGET_HOLDING_DAYS,
+    include_analyst_consensus: bool = True,
+) -> dict:
+    """
+    The actual decision-making core, shared by the live daily path
+    (analyze_ticker, below) and src/backtest.py (2026-07, ADDED to let both
+    reuse identical logic instead of the backtest silently drifting from
+    live behavior over time). Takes `hist` as given — the caller decides
+    whether it's a live 2-year fetch or a truncated as-of-some-past-date
+    slice; this function has no opinion on that and does no fetching itself.
+
+    include_analyst_consensus=False (backtest only): yfinance's analyst
+    consensus is a CURRENT-only snapshot with no historical point-in-time
+    equivalent, so it's not reconstructable for a past as-of date — dropping
+    it is the one deliberate difference between backtest and live scoring
+    (see committee_signals.evaluate_quantitative_group).
+
+    NOTE for backtest scoring: best_square9_angle/best_square9_hit_rate below
+    (from compare_increment_methods+touch_test) are a SEPARATE calibration
+    from the one get_astrological_votes actually votes on internally (via
+    gann_increment_selection.recommended_price_increment) — cosmetic/
+    reporting columns, not "the angle the committee traded on". Don't score
+    backtest outcomes against best_square9_angle expecting it to explain
+    astrological_net_vote.
+
+    Raises on any analysis failure — same "one ticker's failure shouldn't
+    stop the whole run" contract as before, just left to the caller (which
+    differs between the live per-ticker thread and a backtest per-ticker/date
+    loop) instead of swallowed here.
+    """
+    increment_comparison = compare_increment_methods(hist["High"], hist["Low"], hist["Close"], touch_test)
+    best_method_row = increment_comparison.iloc[0]
+
+    calib = calibrate_square9_angle(hist["High"], hist["Low"], hist["Close"], best_method_row["increment"])
+    best_angle = calib[0] if calib else None
+
+    tech = evaluate_technical_group(hist)
+    quant = evaluate_quantitative_group(ticker, hist, include_analyst_consensus=include_analyst_consensus)
+    astro = get_astrological_votes(ticker, hist)  # calibrated Square of Nine vote (see committee_signals.py)
+    advanced_tech = evaluate_advanced_technical_group(hist)  # ACTIVATED 2026-07
+
+    total_buy_votes = tech.votes_buy + quant.votes_buy + advanced_tech.votes_buy
+    total_sell_votes = tech.votes_sell + quant.votes_sell + advanced_tech.votes_sell
+    if astro is not None:
+        total_buy_votes += astro.votes_buy
+        total_sell_votes += astro.votes_sell
+
+    horizon = evaluate_horizon_fit(hist["Close"], target_gain_pct, target_holding_days)
+
+    current_price = float(hist["Close"].iloc[-1])
+    pivot_points = advanced_tech.details.get("pivot_points")
+    if not isinstance(pivot_points, dict):
+        pivot_points = None
+    square9_projected_level = astro.details.get("square9_projected_price_level") if astro else None
+    net_buy = (tech.votes_buy + quant.votes_buy + advanced_tech.votes_buy
+               + (astro.votes_buy if astro else 0)) > (
+        tech.votes_sell + quant.votes_sell + advanced_tech.votes_sell
+        + (astro.votes_sell if astro else 0)
+    )
+    entry_exit = compute_entry_exit_levels(
+        current_price, pivot_points, square9_projected_level, net_buy,
+        target_gain_pct, horizon.median_days_to_hit,
+    )
+
+    # "Highest likely gain in the shortest time" isn't hit_rate alone (that's
+    # just success probability) — it's gain achieved PER DAY when it does hit.
+    # A stock hitting +20% in a 5-day median beats one hitting +20% in a
+    # 14-day median even if both have similar hit rates. Weighted by hit_rate
+    # so a fast-but-rare hit doesn't outrank a reliable one on a technicality
+    # (Pillar 4: the ranking metric should mean what the user actually asked
+    # for, not just be the first plausible-looking number).
+    if horizon.median_days_to_hit and horizon.median_days_to_hit > 0:
+        gain_speed_score = round(
+            (target_gain_pct / horizon.median_days_to_hit) * horizon.hit_rate, 4
+        )
+    else:
+        gain_speed_score = None  # never hit the target in this window — no meaningful rate
+
+    # Per-signal breakdown (which member of each group voted buy/sell) —
+    # serialized as JSON so build_report.py can render it as a per-row,
+    # per-group "why" tooltip without a schema change every time a new
+    # sub-signal is added to any group. json.dumps(default=str) covers the
+    # astrological group's date objects (upcoming_time_cycle_dates).
+    signal_breakdown = json.dumps(
+        {
+            "technical": tech.details,
+            "quantitative": quant.details,
+            "astrological": astro.details if astro else None,
+            "advanced_technical": advanced_tech.details,
+        },
+        default=str,
+    )
+
+    return {
+        "ticker": ticker,
+        "sector": sector,
+        "industry": industry,
+        "current_price": current_price,
+        "best_increment_method": best_method_row["method"],
+        "best_increment_value": best_method_row["increment"],
+        "best_square9_angle": best_angle.angle if best_angle else None,
+        "best_square9_hit_rate": round(best_angle.hit_rate, 2) if best_angle else None,
+        "technical_net_vote": tech.net_vote,
+        "technical_buy_votes": tech.votes_buy,
+        "quantitative_net_vote": quant.net_vote,
+        "quantitative_buy_votes": quant.votes_buy,
+        "astrological_status": "unavailable_insufficient_history" if astro is None else "implemented",
+        "astrological_net_vote": astro.net_vote if astro else None,
+        "advanced_technical_net_vote": advanced_tech.net_vote,
+        "advanced_technical_buy_votes": advanced_tech.votes_buy,
+        "total_buy_votes": total_buy_votes,
+        "total_sell_votes": total_sell_votes,
+        f"horizon_fit_{target_gain_pct}pct_{target_holding_days}d": horizon.hit_rate,
+        "horizon_median_days_when_hit": horizon.median_days_to_hit,
+        "gain_speed_score": gain_speed_score,
+        "entry_price": entry_exit["entry_price"],
+        "entry_basis": entry_exit["entry_basis"],
+        "exit_price": entry_exit["exit_price"],
+        "exit_basis": entry_exit["exit_basis"],
+        "exit_days_estimate": entry_exit["exit_days_estimate"],
+        "signal_breakdown": signal_breakdown,
+    }
+
+
 def analyze_ticker(ticker: str, cache: dict) -> dict | None:
     cached = cache.get(ticker)
 
@@ -328,103 +458,12 @@ def analyze_ticker(ticker: str, cache: dict) -> dict | None:
         return None
 
     try:
-        increment_comparison = compare_increment_methods(hist["High"], hist["Low"], hist["Close"], touch_test)
-        best_method_row = increment_comparison.iloc[0]
-
-        calib = calibrate_square9_angle(hist["High"], hist["Low"], hist["Close"], best_method_row["increment"])
-        best_angle = calib[0] if calib else None
-
-        tech = evaluate_technical_group(hist)
-        quant = evaluate_quantitative_group(ticker, hist)
-        astro = get_astrological_votes(ticker, hist)  # calibrated Square of Nine vote (see committee_signals.py)
-        advanced_tech = evaluate_advanced_technical_group(hist)  # ACTIVATED 2026-07
-
-        total_buy_votes = tech.votes_buy + quant.votes_buy + advanced_tech.votes_buy
-        total_sell_votes = tech.votes_sell + quant.votes_sell + advanced_tech.votes_sell
-        if astro is not None:
-            total_buy_votes += astro.votes_buy
-            total_sell_votes += astro.votes_sell
-
-        horizon = evaluate_horizon_fit(hist["Close"], TARGET_GAIN_PCT, TARGET_HOLDING_DAYS)
-
-        current_price = float(hist["Close"].iloc[-1])
-        pivot_points = advanced_tech.details.get("pivot_points")
-        if not isinstance(pivot_points, dict):
-            pivot_points = None
-        square9_projected_level = astro.details.get("square9_projected_price_level") if astro else None
-        net_buy = (tech.votes_buy + quant.votes_buy + advanced_tech.votes_buy
-                   + (astro.votes_buy if astro else 0)) > (
-            tech.votes_sell + quant.votes_sell + advanced_tech.votes_sell
-            + (astro.votes_sell if astro else 0)
-        )
-        entry_exit = compute_entry_exit_levels(
-            current_price, pivot_points, square9_projected_level, net_buy,
-            TARGET_GAIN_PCT, horizon.median_days_to_hit,
-        )
-
-        # "Highest likely gain in the shortest time" isn't hit_rate alone (that's
-        # just success probability) — it's gain achieved PER DAY when it does hit.
-        # A stock hitting +20% in a 5-day median beats one hitting +20% in a
-        # 14-day median even if both have similar hit rates. Weighted by hit_rate
-        # so a fast-but-rare hit doesn't outrank a reliable one on a technicality
-        # (Pillar 4: the ranking metric should mean what the user actually asked
-        # for, not just be the first plausible-looking number).
-        if horizon.median_days_to_hit and horizon.median_days_to_hit > 0:
-            gain_speed_score = round(
-                (TARGET_GAIN_PCT / horizon.median_days_to_hit) * horizon.hit_rate, 4
-            )
-        else:
-            gain_speed_score = None  # never hit the target in this window — no meaningful rate
-
-        # Per-signal breakdown (which member of each group voted buy/sell) —
-        # serialized as JSON so build_report.py can render it as a per-row,
-        # per-group "why" tooltip without a schema change every time a new
-        # sub-signal is added to any group. json.dumps(default=str) covers the
-        # astrological group's date objects (upcoming_time_cycle_dates).
-        signal_breakdown = json.dumps(
-            {
-                "technical": tech.details,
-                "quantitative": quant.details,
-                "astrological": astro.details if astro else None,
-                "advanced_technical": advanced_tech.details,
-            },
-            default=str,
-        )
-
+        result = evaluate_ticker_snapshot(ticker, hist, sector, industry)
         cache[ticker] = {
             "status": "eligible", "reason": None,
             "sector": sector, "industry": industry, "last_checked": now,
         }
-
-        return {
-            "ticker": ticker,
-            "sector": sector,
-            "industry": industry,
-            "current_price": current_price,
-            "best_increment_method": best_method_row["method"],
-            "best_increment_value": best_method_row["increment"],
-            "best_square9_angle": best_angle.angle if best_angle else None,
-            "best_square9_hit_rate": round(best_angle.hit_rate, 2) if best_angle else None,
-            "technical_net_vote": tech.net_vote,
-            "technical_buy_votes": tech.votes_buy,
-            "quantitative_net_vote": quant.net_vote,
-            "quantitative_buy_votes": quant.votes_buy,
-            "astrological_status": "unavailable_insufficient_history" if astro is None else "implemented",
-            "astrological_net_vote": astro.net_vote if astro else None,
-            "advanced_technical_net_vote": advanced_tech.net_vote,
-            "advanced_technical_buy_votes": advanced_tech.votes_buy,
-            "total_buy_votes": total_buy_votes,
-            "total_sell_votes": total_sell_votes,
-            f"horizon_fit_{TARGET_GAIN_PCT}pct_{TARGET_HOLDING_DAYS}d": horizon.hit_rate,
-            "horizon_median_days_when_hit": horizon.median_days_to_hit,
-            "gain_speed_score": gain_speed_score,
-            "entry_price": entry_exit["entry_price"],
-            "entry_basis": entry_exit["entry_basis"],
-            "exit_price": entry_exit["exit_price"],
-            "exit_basis": entry_exit["exit_basis"],
-            "exit_days_estimate": entry_exit["exit_days_estimate"],
-            "signal_breakdown": signal_breakdown,
-        }
+        return result
     except Exception as exc:  # noqa: BLE001 - one ticker's analysis failure shouldn't stop the whole run
         print(f"WARNING: analysis failed for {ticker}: {exc}")
         return None

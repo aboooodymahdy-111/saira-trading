@@ -40,13 +40,23 @@ def prune() -> None:
     with TICKER_UNIVERSE_CSV.open(encoding="utf-8") as f:
         before = [row["ticker"] for row in csv.DictReader(f)]
 
+    # A handful of tickers can legitimately have no cache entry even after a
+    # FULLY completed run — analyze_ticker() deliberately never caches a
+    # transient fetch/analysis failure (so it gets retried next run instead
+    # of silently sticking), and every ticker is still submitted to the
+    # thread pool regardless. Only a low coverage ratio actually indicates an
+    # interrupted/partial run worth blocking on.
     checked = sum(1 for t in before if t in cache)
-    if checked < len(before):
+    coverage = checked / len(before) if before else 0.0
+    if coverage < 0.90:
         raise RuntimeError(
-            f"Only {checked}/{len(before)} tickers in {TICKER_UNIVERSE_CSV} have a cache "
-            f"entry — this looks like a partial/interrupted run, not a completed one. "
+            f"Only {checked}/{len(before)} tickers ({coverage:.0%}) in {TICKER_UNIVERSE_CSV} have a "
+            f"cache entry — this looks like a partial/interrupted run, not a completed one. "
             f"Re-run full_universe_analysis.py to completion before pruning."
         )
+    if checked < len(before):
+        print(f"Note: {len(before) - checked} ticker(s) had no cache entry (transient fetch/analysis "
+              f"failures never get cached) — dropping them along with the ineligible ones.")
 
     eligible = sorted(t for t in before if cache.get(t, {}).get("status") == "eligible")
 

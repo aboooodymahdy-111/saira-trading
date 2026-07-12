@@ -61,6 +61,12 @@ jobs:
       - name: Run full universe scan
         run: python src/full_universe_analysis.py
 
+      # Appends today's net-buy candidates to the outcome ledger and rechecks
+      # previously-pending ones, so build_report.py (next) can show a real
+      # "Track record" stat — see track_outcomes.py's own docstring.
+      - name: Track recommendation outcomes
+        run: python src/track_outcomes.py
+
       - name: Build report
         env:
           REPORT_BASE_URL: ${{ steps.pages.outputs.base_url }}

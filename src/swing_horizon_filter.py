@@ -108,3 +108,51 @@ def summarize_fit_for_swing_trader(close: pd.Series, target_gain_pct: float = 20
             f"{result.hit_rate:.1%} of the time historically "
             f"(median {result.median_days_to_hit:.0f} days when it happened, "
             f"{result.hit_within_window}/{result.total_entry_points_tested} entry points).")
+
+
+@dataclass
+class ForwardOutcomeResult:
+    status: str  # "hit" | "missed" | "still_pending"
+    days_to_exit: int | None
+    entry_touched: bool
+
+
+def evaluate_forward_outcome(future_close: pd.Series, entry_price: float, exit_price: float,
+                              max_holding_days: int, net_buy: bool) -> ForwardOutcomeResult:
+    """
+    The mirror-image question to evaluate_horizon_fit's "does this ticker
+    tend to reach its target" — given what ACTUALLY happened after a
+    recommendation date (future_close, the close-price series starting the
+    bar AFTER the recommendation), did it? Shared by src/track_outcomes.py
+    (live daily recommendations) and src/backtest.py (simulated historical
+    ones) so both score outcomes identically (2026-07).
+
+    net_buy=True means entry_price was just today's close at recommendation
+    time (see compute_entry_exit_levels) — entry is trivially "touched" on
+    day zero, so entry_touched isn't a meaningful signal in that case; only
+    whether exit_price was reached within max_holding_days matters. For a
+    net_buy=False row (needed a pullback to entry_price first), entry_touched
+    tracks whether that pullback ever actually happened.
+
+    "still_pending": fewer than max_holding_days bars are available yet in
+    future_close — the window hasn't fully elapsed, so "missed" can't be
+    concluded yet (this is the live-tracking case; a backtest run far enough
+    in the past should never see this).
+    """
+    closes = future_close.values
+    entry_touched = True if net_buy else False
+    days_to_exit = None
+
+    window = min(len(closes), max_holding_days)
+    for i in range(window):
+        if not net_buy and not entry_touched and closes[i] <= entry_price:
+            entry_touched = True
+        if (net_buy or entry_touched) and closes[i] >= exit_price:
+            days_to_exit = i + 1
+            break
+
+    if days_to_exit is not None:
+        return ForwardOutcomeResult("hit", days_to_exit, entry_touched)
+    if len(closes) < max_holding_days:
+        return ForwardOutcomeResult("still_pending", None, entry_touched)
+    return ForwardOutcomeResult("missed", None, entry_touched)

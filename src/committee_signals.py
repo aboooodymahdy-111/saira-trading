@@ -257,12 +257,22 @@ def compute_analyst_vote(ticker: str) -> str:
         return "unavailable"
 
 
-def evaluate_quantitative_group(ticker: str, hist: pd.DataFrame) -> GroupResult:
+def evaluate_quantitative_group(ticker: str, hist: pd.DataFrame, include_analyst_consensus: bool = True) -> GroupResult:
+    """
+    include_analyst_consensus=False (2026-07, for src/backtest.py only): skips
+    compute_analyst_vote entirely rather than counting it as "unavailable" —
+    yfinance's analyst consensus is a CURRENT-only snapshot with no historical
+    point-in-time equivalent, so it can't be reconstructed for a past as-of
+    date and would otherwise silently look like a live-matching signal it
+    isn't. Live callers never pass this, so default True keeps them unchanged.
+    """
     result = GroupResult()
-    votes = {
-        "analyst_consensus": compute_analyst_vote(ticker),
-        "volume_spike": compute_volume_vote(hist["Volume"]),
-    }
+    votes = {}
+    if include_analyst_consensus:
+        votes["analyst_consensus"] = compute_analyst_vote(ticker)
+    else:
+        votes["analyst_consensus"] = "skipped_for_backtest"
+    votes["volume_spike"] = compute_volume_vote(hist["Volume"])
     for name, vote in votes.items():
         result.details[name] = vote
         if vote == "buy":

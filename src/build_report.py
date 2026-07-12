@@ -48,6 +48,18 @@ OUTPUT_HTML = Path("runs/report.html")
 # run_daily.ps1 copies OUTPUT_HTML here after each run (see its own comment) —
 # read back here so the report page can offer a picker over past runs.
 ARCHIVE_REPORTS_DIR = Path("runs/archive/reports")
+# Written by track_outcomes.py (2026-07) — absent until that's run at least
+# once (e.g. a fresh clone before the first daily-scan.yml run completes).
+OUTCOME_SUMMARY_JSON = Path("runs/outcome_summary.json")
+
+
+def _load_outcome_summary() -> dict | None:
+    if not OUTCOME_SUMMARY_JSON.exists():
+        return None
+    try:
+        return json.loads(OUTCOME_SUMMARY_JSON.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
 
 
 def _report_url_for(target: Path) -> str:
@@ -204,6 +216,7 @@ def build() -> None:
         "net_buy_candidates": len(net_buy),
         "shortlist_count": len(shortlist),
         "run_timestamp": run_timestamp,
+        "track_record": _load_outcome_summary(),
     }
 
     history = _collect_report_history()
@@ -323,7 +336,7 @@ header.top p.meta span.sep { margin: 0 8px; color: var(--ink-3); }
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
   margin-bottom: 28px;
 }
@@ -697,6 +710,16 @@ footer.notes strong { color: var(--ink-2); }
     ['Net-buy candidates', STATS.net_buy_candidates, 'buy'],
     ['Diversified shortlist', STATS.shortlist_count, 'accent'],
   ];
+  // Track record (2026-07, track_outcomes.py): absent until that script has
+  // run at least once and resolved at least one recommendation.
+  const tr = STATS.track_record;
+  if (tr && tr.hit_rate !== null && tr.hit_rate !== undefined) {
+    statTiles.push([
+      `Track record (${tr.window_days}d)`,
+      `${(tr.hit_rate * 100).toFixed(0)}%`,
+      `${tr.hits}/${tr.resolved} hit · ${tr.still_pending} pending`,
+    ]);
+  }
   document.getElementById('stats').innerHTML = statTiles.map(([label, n, cls]) => `
     <div class="stat ${cls === 'buy' || cls === 'accent' ? cls : ''}">
       <span class="n">${n.toLocaleString ? n.toLocaleString() : n}</span>
