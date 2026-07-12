@@ -201,7 +201,11 @@ def load_ticker_universe() -> list[str]:
             f"{TICKER_UNIVERSE_CSV} not found — run `python src/refresh_ticker_universe.py` "
             f"first (needs LOCAL_MARKET_DATA_DIR, so only works on Abdo's own machine)."
         )
-    df = pd.read_csv(TICKER_UNIVERSE_CSV)
+    # keep_default_na=False: pandas' default NA-marker list includes "NA" and
+    # "NULL" — both real NASDAQ/NYSE ticker symbols — which would otherwise
+    # silently turn into a missing value here (confirmed 2026-07: ticker "NA"
+    # was dropped this way, tripping a float-vs-str sort error).
+    df = pd.read_csv(TICKER_UNIVERSE_CSV, keep_default_na=False)
     return sorted(df["ticker"].astype(str).str.upper().unique())
 
 

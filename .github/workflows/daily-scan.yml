@@ -91,3 +91,21 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      # Emails Abdo the fresh report link every day so he doesn't have to
+      # remember to check GitHub himself. Needs two repo secrets set once in
+      # Settings > Secrets and variables > Actions > New repository secret:
+      #   MAIL_USERNAME — the Gmail address to send FROM
+      #   MAIL_PASSWORD — a Gmail App Password (myaccount.google.com/apppasswords),
+      #                   NOT the real Google account password
+      - name: Email the report link
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "Gann Committee Scanner — daily report ready"
+          to: aboooodymahdy@gmail.com
+          from: Saira Trading Bot
+          body: "Today's report is live: ${{ steps.deployment.outputs.page_url }}"
