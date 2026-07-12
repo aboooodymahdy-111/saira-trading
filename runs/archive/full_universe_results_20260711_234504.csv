@@ -1,0 +1,94 @@
+﻿run_timestamp,ticker,sector,current_price,best_increment_method,best_increment_value,best_square9_angle,best_square9_hit_rate,technical_net_vote,technical_buy_votes,quantitative_net_vote,quantitative_buy_votes,astrological_status,astrological_net_vote,advanced_technical_net_vote,advanced_technical_buy_votes,total_buy_votes,total_sell_votes,horizon_fit_20.0pct_15d,horizon_median_days_when_hit,gain_speed_score
+2026-07-11 23:45:04,AARD,Healthcare,7.599999904632568,book_round_number,0.1,135,0.62,buy,2,buy,1,implemented,neutral,buy,4,7,0,0.399,6.0,1.33
+2026-07-11 23:45:04,ACAD,Healthcare,26.219999313354492,volatility/45deg,0.0231,225,0.78,buy,1,buy,1,implemented,buy,buy,4,7,0,0.072,9.0,0.16
+2026-07-11 23:45:04,ABTC,Financial Services,6.130000114440918,volatility/360deg,0.00267,315,0.57,buy,1,buy,1,implemented,neutral,buy,4,6,0,0.3,6.0,1.0
+2026-07-11 23:45:04,ACIW,Technology,56.41999816894531,volatility/45deg,0.04498,315,1.0,buy,1,buy,1,implemented,neutral,buy,4,6,0,0.038,11.0,0.0691
+2026-07-11 23:45:04,ADAML,Real Estate,24.368000030517578,book_round_number,0.1,45,1.0,buy,1,neutral,0,implemented,buy,buy,4,6,0,0.0,,
+2026-07-11 23:45:04,ADAMM,Real Estate,25.040000915527344,book_round_number,0.1,45,0.91,buy,1,neutral,0,implemented,buy,buy,4,6,0,0.0,,
+2026-07-11 23:45:04,ADC,Real Estate,77.94999694824219,volatility/45deg,0.02557,315,0.89,buy,1,buy,1,implemented,buy,buy,3,6,1,0.0,,
+2026-07-11 23:45:04,ACHV,Healthcare,6.110000133514404,book_round_number,0.1,270,0.44,buy,1,buy,1,implemented,neutral,buy,3,5,1,0.264,8.0,0.66
+2026-07-11 23:45:04,ADIL,Healthcare,2.7799999713897705,volatility/90deg,0.00243,180,0.45,buy,1,buy,1,implemented,neutral,buy,3,5,0,0.196,6.0,0.6533
+2026-07-11 23:45:04,ACRS,Healthcare,5.579999923706055,book_round_number,0.1,135,0.7,buy,1,buy,1,implemented,neutral,buy,3,5,1,0.268,9.0,0.5956
+2026-07-11 23:45:04,ACOG,Healthcare,8.40999984741211,book_round_number,0.1,90,0.62,buy,1,buy,1,implemented,neutral,buy,3,5,1,0.225,8.0,0.5625
+2026-07-11 23:45:04,ADPT,Healthcare,21.059999465942383,volatility/45deg,0.02724,270,0.5,neutral,1,buy,1,implemented,neutral,buy,3,5,2,0.238,9.0,0.5289
+2026-07-11 23:45:04,ACFN,Technology,17.25,book_round_number,0.25,45,0.79,neutral,0,buy,1,implemented,buy,buy,3,5,1,0.204,8.5,0.48
+2026-07-11 23:45:04,AAPG,Healthcare,19.969999313354492,volatility/90deg,0.00786,270,0.58,buy,1,buy,1,implemented,neutral,buy,3,5,0,0.156,8.0,0.39
+2026-07-11 23:45:04,ACCL,Industrials,1.7999999523162842,volatility/45deg,0.00161,315,0.75,buy,1,neutral,0,implemented,neutral,buy,4,5,0,0.116,7.0,0.3314
+2026-07-11 23:45:04,ABX,Financial Services,11.109999656677246,book_round_number,0.25,90,0.5,buy,1,buy,1,implemented,neutral,buy,3,5,1,0.14,10.0,0.28
+2026-07-11 23:45:04,ACHC,Healthcare,31.280000686645508,book_round_number,0.5,90,0.55,buy,1,buy,1,implemented,neutral,buy,3,5,1,0.116,9.0,0.2578
+2026-07-11 23:45:04,ABEO,Healthcare,6.980000019073486,book_round_number,0.1,90,0.86,buy,1,buy,1,implemented,neutral,buy,3,5,1,0.104,10.5,0.1981
+2026-07-11 23:45:04,ABUS,Healthcare,4.800000190734863,volatility/45deg,0.0056,315,0.7,buy,1,buy,1,implemented,neutral,buy,3,5,1,0.05,12.0,0.0833
+2026-07-11 23:45:04,ACA,Industrials,145.0,book_round_number,0.5,135,0.78,buy,1,buy,1,implemented,neutral,buy,3,5,1,0.004,15.0,0.0053
+2026-07-11 23:45:04,AAPL,Technology,315.32000732421875,volatility/45deg,0.19881,135,0.67,neutral,0,buy,1,implemented,neutral,buy,4,5,0,0.002,11.0,0.0036
+2026-07-11 23:45:04,AACB,Financial Services,10.510000228881836,book_round_number,0.1,0,1.0,neutral,0,neutral,0,implemented,buy,buy,4,5,0,0.0,,
+2026-07-11 23:45:04,AAT,Real Estate,25.1200008392334,book_round_number,0.1,180,0.64,buy,1,neutral,0,implemented,neutral,buy,4,5,0,0.0,,
+2026-07-11 23:45:04,ACV,Financial Services,28.399999618530273,volatility/45deg,0.01307,225,0.7,buy,1,neutral,0,implemented,buy,buy,3,5,0,0.0,,
+2026-07-11 23:45:04,ADAMN,Real Estate,24.030000686645508,book_round_number,0.1,45,0.83,neutral,0,neutral,0,implemented,buy,buy,4,5,0,0.0,,
+2026-07-11 23:45:04,ADAMZ,Real Estate,18.93000030517578,book_round_number,0.1,45,0.91,neutral,0,neutral,0,implemented,buy,buy,4,5,0,0.0,,
+2026-07-11 23:45:04,ADP,Technology,241.9199981689453,book_round_number,1.0,180,1.0,neutral,0,neutral,0,implemented,buy,buy,4,5,0,0.0,,
+2026-07-11 23:45:04,ABSI,Healthcare,10.600000381469727,volatility/45deg,0.02751,135,0.22,neutral,1,buy,1,implemented,neutral,buy,2,4,2,0.344,6.0,1.1467
+2026-07-11 23:45:04,ABVC,Healthcare,1.5099999904632568,book_round_number,0.05,180,0.56,buy,1,neutral,0,implemented,neutral,buy,3,4,1,0.316,6.0,1.0533
+2026-07-11 23:45:04,ACMR,Technology,103.0,book_round_number,1.0,270,0.36,buy,1,buy,1,implemented,neutral,neutral,2,4,2,0.352,9.0,0.7822
+2026-07-11 23:45:04,ABOS,Healthcare,2.630000114440918,book_round_number,0.05,90,1.0,neutral,0,buy,1,implemented,neutral,buy,3,4,1,0.23,7.0,0.6571
+2026-07-11 23:45:04,ACRV,Healthcare,1.9600000381469727,book_round_number,0.05,45,0.4,neutral,0,buy,1,implemented,neutral,buy,3,4,1,0.262,8.0,0.655
+2026-07-11 23:45:04,ABCL,Healthcare,6.800000190734863,book_round_number,0.1,180,0.33,neutral,1,buy,1,implemented,neutral,buy,2,4,2,0.28,9.0,0.6222
+2026-07-11 23:45:04,ABVX,Healthcare,139.89999389648438,book_round_number,1.0,0,0.56,neutral,0,buy,1,implemented,neutral,buy,3,4,1,0.224,8.0,0.56
+2026-07-11 23:45:04,ACH,Healthcare,3.4200000762939453,book_round_number,0.1,90,0.67,buy,1,neutral,0,implemented,neutral,buy,3,4,0,0.168,7.0,0.48
+2026-07-11 23:45:04,ACET,Healthcare,8.829999923706055,book_round_number,0.1,135,0.82,neutral,0,buy,1,implemented,neutral,buy,3,4,1,0.174,8.0,0.435
+2026-07-11 23:45:04,ACVA,Consumer Cyclical,6.670000076293945,book_round_number,0.1,225,0.36,neutral,1,buy,1,implemented,neutral,buy,2,4,2,0.106,9.0,0.2356
+2026-07-11 23:45:04,ADNT,Consumer Cyclical,19.959999084472656,volatility/45deg,0.02011,225,0.7,buy,1,buy,1,implemented,neutral,neutral,2,4,2,0.12,10.5,0.2286
+2026-07-11 23:45:04,ADSE,Industrials,11.970000267028809,book_round_number,0.25,90,0.76,sell,0,neutral,0,implemented,buy,buy,3,4,2,0.086,9.0,0.1911
+2026-07-11 23:45:04,ACCO,Industrials,3.880000114440918,book_round_number,0.05,45,0.44,neutral,0,buy,1,implemented,neutral,buy,3,4,1,0.056,8.5,0.1318
+2026-07-11 23:45:04,AAMI,Financial Services,81.66000366210938,volatility/45deg,0.06653,225,0.5,neutral,0,neutral,0,implemented,neutral,buy,4,4,0,0.054,13.0,0.0831
+2026-07-11 23:45:04,AACBU,Financial Services,10.680000305175781,book_round_number,0.1,225,1.0,buy,1,neutral,0,implemented,neutral,buy,3,4,1,0.034,9.5,0.0716
+2026-07-11 23:45:04,ADAM,Real Estate,9.1899995803833,volatility/45deg,0.00551,225,0.71,neutral,0,neutral,0,implemented,buy,buy,3,4,1,0.03,12.0,0.05
+2026-07-11 23:45:04,A,Healthcare,134.2899932861328,book_round_number,1.0,225,0.67,neutral,0,buy,1,implemented,neutral,buy,3,4,1,0.022,9.0,0.0489
+2026-07-11 23:45:04,ABG,Consumer Cyclical,211.97000122070312,book_round_number,1.0,135,0.73,neutral,0,neutral,0,implemented,neutral,buy,4,4,0,0.016,11.5,0.0278
+2026-07-11 23:45:04,ACNT,Basic Materials,15.260000228881836,volatility/45deg,0.01267,270,0.64,neutral,0,neutral,0,implemented,neutral,buy,4,4,0,0.014,13.0,0.0215
+2026-07-11 23:45:04,ABBV,Healthcare,248.0800018310547,volatility/45deg,0.16906,270,0.75,neutral,1,buy,1,implemented,neutral,buy,2,4,2,0.002,9.0,0.0044
+2026-07-11 23:45:04,ABM,Industrials,44.599998474121094,volatility/45deg,0.02308,180,0.91,neutral,0,neutral,0,implemented,buy,buy,3,4,1,0.0,,
+2026-07-11 23:45:04,ABT,Healthcare,93.93000030517578,book_round_number,0.5,90,0.67,neutral,0,buy,1,implemented,buy,buy,2,4,1,0.0,,
+2026-07-11 23:45:04,ACGL,Financial Services,101.05999755859375,volatility/45deg,0.04983,225,0.89,buy,1,neutral,0,implemented,neutral,buy,3,4,1,0.0,,
+2026-07-11 23:45:04,ACT,Financial Services,44.75,book_round_number,0.25,135,1.0,buy,1,neutral,0,implemented,neutral,buy,3,4,1,0.0,,
+2026-07-11 23:45:04,ADM,Consumer Defensive,80.41000366210938,book_round_number,0.5,270,0.78,neutral,0,neutral,0,implemented,neutral,buy,4,4,0,0.0,,
+2026-07-11 23:45:04,ABTS,Financial Services,1.2300000190734863,book_round_number,0.05,270,0.33,buy,1,neutral,0,implemented,neutral,neutral,2,3,2,0.34,5.0,1.36
+2026-07-11 23:45:04,ABPO,Healthcare,0.22200000286102295,book_round_number,0.01,180,0.11,neutral,0,neutral,0,implemented,neutral,buy,3,3,1,0.244,5.0,0.976
+2026-07-11 23:45:04,ABLV,Consumer Cyclical,1.0299999713897705,book_round_number,0.01,225,0.36,neutral,1,neutral,0,implemented,neutral,neutral,2,3,3,0.274,7.0,0.7829
+2026-07-11 23:45:04,AACG,Consumer Defensive,0.9800000190734863,book_round_number,0.01,225,0.6,sell,0,neutral,0,implemented,neutral,buy,3,3,2,0.234,7.0,0.6686
+2026-07-11 23:45:04,ADAG,Healthcare,3.940000057220459,book_round_number,0.1,225,0.54,neutral,0,buy,1,implemented,neutral,buy,2,3,1,0.25,8.0,0.625
+2026-07-11 23:45:04,ADCT,Healthcare,1.2899999618530273,book_round_number,0.05,90,0.5,sell,0,buy,1,implemented,neutral,neutral,2,3,3,0.2,8.0,0.5
+2026-07-11 23:45:04,AAME,Financial Services,1.690000057220459,volatility/45deg,0.00148,270,0.62,sell,0,neutral,0,implemented,buy,neutral,2,3,3,0.138,9.0,0.3067
+2026-07-11 23:45:04,ADMA,Healthcare,9.079999923706055,book_round_number,0.1,135,0.44,neutral,0,buy,1,implemented,neutral,buy,2,3,1,0.128,9.0,0.2844
+2026-07-11 23:45:04,AAP,Consumer Cyclical,57.95000076293945,book_round_number,0.5,135,0.78,neutral,0,neutral,0,implemented,neutral,buy,3,3,1,0.114,11.0,0.2073
+2026-07-11 23:45:04,ACTG,Industrials,4.420000076293945,volatility/45deg,0.00305,270,0.86,neutral,0,buy,2,implemented,neutral,sell,1,3,3,0.06,9.5,0.1263
+2026-07-11 23:45:04,ACRE,Real Estate,4.429999828338623,volatility/45deg,0.00279,270,0.8,neutral,0,neutral,0,implemented,buy,neutral,2,3,2,0.024,9.5,0.0505
+2026-07-11 23:45:04,ACIC,Financial Services,11.170000076293945,book_round_number,0.1,90,0.75,neutral,0,neutral,0,implemented,neutral,buy,3,3,1,0.024,11.5,0.0417
+2026-07-11 23:45:04,ACN,Technology,135.22999572753906,book_round_number,1.0,45,0.62,sell,0,buy,1,implemented,neutral,neutral,2,3,3,0.002,12.0,0.0033
+2026-07-11 23:45:04,AB,Financial Services,37.15999984741211,book_round_number,0.25,45,0.91,neutral,0,neutral,0,implemented,buy,buy,2,3,1,0.0,,
+2026-07-11 23:45:04,ACI,Consumer Defensive,14.760000228881836,volatility/45deg,0.01071,180,1.0,sell,0,buy,1,implemented,neutral,neutral,2,3,3,0.0,,
+2026-07-11 23:45:04,ACP,Financial Services,5.21999979019165,volatility/45deg,0.00128,180,0.9,neutral,0,neutral,0,implemented,buy,buy,2,3,1,0.0,,
+2026-07-11 23:45:04,ADACU,Financial Services,10.229999542236328,book_round_number,0.1,90,1.0,buy,1,neutral,0,implemented,neutral,neutral,2,3,2,0.0,,
+2026-07-11 23:45:04,ADGM,Healthcare,0.5699999928474426,book_round_number,0.01,135,0.5,sell,0,buy,2,implemented,neutral,sell,0,2,5,0.338,7.0,0.9657
+2026-07-11 23:45:04,ACON,Healthcare,2.8440001010894775,book_round_number,0.05,135,0.78,neutral,0,buy,1,implemented,neutral,sell,1,2,3,0.216,7.0,0.6171
+2026-07-11 23:45:04,ACXP,Healthcare,1.5,book_round_number,0.05,90,0.44,neutral,0,buy,1,implemented,neutral,sell,1,2,3,0.184,6.0,0.6133
+2026-07-11 23:45:04,ACLS,Technology,143.35000610351562,book_round_number,1.0,180,0.3,neutral,0,neutral,0,implemented,buy,sell,1,2,2,0.154,9.0,0.3422
+2026-07-11 23:45:04,ACB,Healthcare,2.7100000381469727,volatility/45deg,0.0022,270,0.75,neutral,1,neutral,0,implemented,neutral,sell,1,2,4,0.13,9.0,0.2889
+2026-07-11 23:45:04,AA,Basic Materials,48.68000030517578,book_round_number,0.5,225,0.55,sell,0,buy,1,implemented,neutral,sell,1,2,4,0.128,10.0,0.256
+2026-07-11 23:45:04,AAON,Industrials,114.16000366210938,book_round_number,1.0,180,0.5,neutral,0,buy,1,implemented,neutral,sell,1,2,2,0.122,11.0,0.2218
+2026-07-11 23:45:04,AAL,Industrials,16.950000762939453,volatility/45deg,0.01689,225,0.64,buy,1,neutral,0,implemented,neutral,sell,1,2,2,0.104,11.0,0.1891
+2026-07-11 23:45:04,ADI,Technology,395.6499938964844,book_round_number,1.0,270,0.8,neutral,0,buy,1,implemented,neutral,sell,1,2,2,0.028,13.0,0.0431
+2026-07-11 23:45:04,ACGLO,Financial Services,18.950000762939453,volatility/45deg,0.00481,45,1.0,sell,0,neutral,0,implemented,buy,sell,1,2,4,0.0,,
+2026-07-11 23:45:04,ACGLN,Financial Services,15.960000038146973,volatility/45deg,0.00482,135,1.0,sell,0,neutral,0,implemented,neutral,neutral,2,2,3,0.0,,
+2026-07-11 23:45:04,ACM,Industrials,68.25,volatility/45deg,0.04471,270,0.92,neutral,0,buy,1,implemented,neutral,sell,1,2,3,0.0,,
+2026-07-11 23:45:04,ADBE,Technology,223.63999938964844,book_round_number,1.0,180,0.78,neutral,0,neutral,0,implemented,neutral,neutral,2,2,2,0.0,,
+2026-07-11 23:45:04,ABAT,Industrials,2.630000114440918,volatility/45deg,0.00396,315,0.56,neutral,0,buy,1,implemented,neutral,sell,0,1,4,0.308,6.0,1.0267
+2026-07-11 23:45:04,ACTU,Healthcare,1.2100000381469727,book_round_number,0.05,270,0.38,neutral,0,buy,1,implemented,neutral,sell,0,1,3,0.208,9.0,0.4622
+2026-07-11 23:45:04,AAUC,Basic Materials,23.34000015258789,book_round_number,0.25,0,0.75,sell,0,neutral,0,implemented,neutral,sell,1,1,4,0.2,10.0,0.4
+2026-07-11 23:45:04,ACIU,Healthcare,2.390000104904175,book_round_number,0.05,135,0.62,neutral,0,buy,1,implemented,neutral,sell,0,1,4,0.162,9.0,0.36
+2026-07-11 23:45:04,ADEA,Technology,28.985000610351562,book_round_number,0.5,135,0.45,neutral,0,buy,1,implemented,neutral,sell,0,1,3,0.134,11.0,0.2436
+2026-07-11 23:45:04,ABR,Real Estate,5.050000190734863,book_round_number,0.05,135,0.75,neutral,0,sell,0,implemented,neutral,sell,1,1,3,0.008,5.5,0.0291
+2026-07-11 23:45:04,ABEV,Consumer Defensive,3.069999933242798,book_round_number,0.01,90,0.7,neutral,0,neutral,0,implemented,neutral,sell,1,1,2,0.01,14.0,0.0143
+2026-07-11 23:45:04,ACR,Real Estate,17.31999969482422,book_round_number,0.25,45,0.7,neutral,0,neutral,0,implemented,neutral,sell,1,1,3,0.0,,
+2026-07-11 23:45:04,AAOI,Technology,119.91999816894531,book_round_number,1.0,225,0.3,neutral,0,neutral,0,implemented,neutral,sell,0,0,4,0.518,6.0,1.7267
+2026-07-11 23:45:04,ACDC,Energy,4.920000076293945,book_round_number,0.1,225,0.58,sell,0,neutral,0,implemented,neutral,sell,0,0,5,0.292,8.0,0.73
+2026-07-11 23:45:04,AD,Communication Services,34.650001525878906,book_round_number,0.5,45,1.0,sell,0,neutral,0,implemented,neutral,sell,0,0,5,0.0,,

@@ -1,0 +1,91 @@
+name: Daily scan + report
+
+# Runs the full pipeline entirely in the cloud (2026-07 project decision — see
+# full_universe_analysis.py's module docstring): no local machine needs to be
+# on for this to run or for the report to stay reachable.
+#
+# 21:00 EST/EDT (Abdo's stated schedule, register_scheduled_task.ps1) is
+# 01:00 or 02:00 UTC depending on US daylight saving — cron below is fixed at
+# 01:00 UTC (9 PM EDT / 8 PM EST), so the run lands an hour earlier during
+# EST (winter). Adjust if that drift matters.
+on:
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# Only one Pages deployment at a time; never cancel one mid-deploy.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  scan-and-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      # TA-Lib is optional (advanced_technical_tools.py degrades gracefully
+      # without it — see its module docstring); a failed build here should
+      # never fail the whole run, just reduce one group's sub-signals.
+      - name: Try installing TA-Lib (optional, non-fatal)
+        continue-on-error: true
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential wget
+          wget -q https://github.com/ta-lib/ta-lib/releases/download/v0.6.4/ta-lib-0.6.4-src.tar.gz
+          tar -xzf ta-lib-0.6.4-src.tar.gz
+          cd ta-lib-0.6.4
+          ./configure --prefix=/usr
+          make
+          sudo make install
+          pip install TA-Lib
+
+      - name: Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Run full universe scan
+        run: python src/full_universe_analysis.py
+
+      - name: Build report
+        env:
+          REPORT_BASE_URL: ${{ steps.pages.outputs.base_url }}
+        run: python src/build_report.py
+
+      # Same "keep every run" archiving run_daily.ps1 does locally (see its
+      # own comment), reimplemented here since this job runs on Linux, not
+      # Abdo's Windows machine.
+      - name: Archive this run's report
+        run: |
+          mkdir -p runs/archive/reports
+          cp runs/report.html "runs/archive/reports/report_$(date -u +%Y%m%d_%H%M%S).html"
+
+      - name: Commit updated results back to the repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add runs/
+          git diff --cached --quiet || git commit -m "Automated daily scan $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git pull --rebase
+          git push
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: runs
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

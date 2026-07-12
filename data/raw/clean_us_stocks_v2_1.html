@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الأسهم الأمريكية النظيفة — 219 سهم | مع تواريخ أول تداول</title>
+<style>
+:root {
+  --bg: #ffffff; --bg2: #f8f8f8; --bg3: #f0f0f0;
+  --border: #e5e5e5; --border2: #d0d0d0;
+  --txt: #1a1a1a; --txt2: #555; --txt3: #999;
+  --accent: #2563eb;
+  --b-lo: #166534; --b-md: #854f0b; --b-hi: #b91c1c; --b-xx: #7f1d1d;
+  --radius: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--txt); direction: rtl; }
+.page { max-width: 1300px; margin: 0 auto; padding: 1.5rem 1rem; }
+header { margin-bottom: 1.2rem; }
+header h1 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+header p { font-size: 13px; color: var(--txt2); }
+.stats { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1.2rem; }
+.stat { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 16px; }
+.stat-n { font-size: 22px; font-weight: 600; display: block; }
+.stat-l { font-size: 11px; color: var(--txt2); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; align-items: center; }
+.controls input, .controls select {
+  font-size: 12.5px; padding: 6px 10px;
+  border: 0.5px solid var(--border2); border-radius: 6px;
+  background: var(--bg); color: var(--txt); outline: none;
+  font-family: inherit;
+}
+.controls input { width: 200px; }
+.controls select { cursor: pointer; }
+.cnt { margin-right: auto; font-size: 12px; color: var(--txt2); }
+.tbl-wrap { overflow-x: auto; border: 0.5px solid var(--border); border-radius: var(--radius); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead th {
+  padding: 9px 12px; background: var(--bg2);
+  border-bottom: 0.5px solid var(--border2);
+  color: var(--txt2); font-weight: 500; text-align: right;
+  cursor: pointer; user-select: none; white-space: nowrap;
+}
+thead th:hover { color: var(--txt); }
+thead th.asc::after { content: ' ↑'; color: var(--accent); }
+thead th.desc::after { content: ' ↓'; color: var(--accent); }
+tbody td { padding: 8px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; white-space: nowrap; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--bg2); }
+.rk { color: var(--txt3); font-size: 11px; width: 36px; text-align: center; }
+.tk { font-weight: 600; font-size: 13px; }
+.nm { color: var(--txt2); }
+.yr { font-size: 10px; color: var(--txt3); }
+.ipo { font-size: 11.5px; color: var(--accent); font-weight: 500; direction: ltr; }
+.ipo-na { font-size: 11px; color: var(--txt3); }
+.tag { font-size: 10.5px; padding: 2px 8px; border-radius: 99px; display: inline-block; white-space: nowrap; font-weight: 500; }
+.en { background: #fef3c7; color: #92400e; }
+.ph { background: #d1fae5; color: #065f46; }
+.md { background: #dbeafe; color: #1e40af; }
+.rt { background: #ede9fe; color: #5b21b6; }
+.id { background: #f1f5f9; color: #334155; }
+.mt { background: #fee2e2; color: #991b1b; }
+.sm { background: #dcfce7; color: #166534; }
+.tc { background: #fef9c3; color: #713f12; }
+.ut { background: #e0f2fe; color: #0c4a6e; }
+.re { background: #fdf2f8; color: #831843; }
+.etf { background: #fce7f3; color: #9d174d; }
+.vbar { display: flex; align-items: center; gap: 6px; }
+.vbg { width: 64px; height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+.vfill { height: 100%; border-radius: 3px; }
+.vtxt { font-size: 12px; color: var(--txt2); min-width: 40px; }
+.bbg { width: 48px; height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+.bfill { height: 100%; border-radius: 3px; background: #ef4444; }
+.btxt { font-weight: 600; font-size: 12.5px; min-width: 36px; text-align: right; }
+.b-lo { color: var(--b-lo); }
+.b-md { color: var(--b-md); }
+.b-hi { color: var(--b-hi); }
+.b-xx { color: var(--b-xx); }
+.xch { font-size: 11px; color: var(--txt3); }
+.legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 1.2rem; padding-top: 1rem; border-top: 0.5px solid var(--border); }
+.leg { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--txt2); }
+.ldot { width: 10px; height: 10px; border-radius: 2px; }
+.beta-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: .5rem; }
+@media (max-width: 600px) { .controls input { width: 100%; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>📊 الأسهم الأمريكية النظيفة — حجم تداول ≥ 1M سهم/يوم</h1>
+    <p>لا صلة بالكيان المحتل · لا سلاح · لا قطاع مالي · مرتبة حسب حجم التداول اليومي · يشمل تاريخ أول يوم تداول للـ TS Astrology NN Model</p>
+  </header>
+  <div class="stats" id="statsBar"></div>
+  <div class="controls">
+    <input id="srch" type="text" placeholder="ابحث بالتيكر أو اسم الشركة...">
+    <select id="secSel">
+      <option value="">كل القطاعات</option>
+      <option value="en">⛽ طاقة</option>
+      <option value="ph">💊 رعاية صحية</option>
+      <option value="md">📡 إعلام واتصالات</option>
+      <option value="rt">🛒 تجزئة</option>
+      <option value="id">⚙️ صناعة ونقل</option>
+      <option value="mt">🔩 معادن وخامات</option>
+      <option value="sm">🖥 أشباه موصلات</option>
+      <option value="tc">💻 تكنولوجيا</option>
+      <option value="ut">⚡ مرافق</option>
+      <option value="re">🏢 عقارات</option>
+      <option value="etf">📈 ETF</option>
+    </select>
+    <select id="betaSel">
+      <option value="">كل قيم بيتا</option>
+      <option value="xx">🔴🔴 بيتا ≥ 2.0 (عالي جداً)</option>
+      <option value="hi">🔴 بيتا 1.5–2.0 (عالي)</option>
+      <option value="md">🟡 بيتا 1.0–1.5 (متوسط)</option>
+      <option value="lo">🟢 بيتا &lt; 1.0 (منخفض)</option>
+    </select>
+    <select id="volSel">
+      <option value="">كل الأحجام</option>
+      <option value="50">حجم ≥ 50M</option>
+      <option value="20">حجم ≥ 20M</option>
+      <option value="10">حجم ≥ 10M</option>
+      <option value="5">حجم ≥ 5M</option>
+    </select>
+    <select id="exchSel">
+      <option value="">كل البورصات</option>
+      <option value="NYSE">NYSE</option>
+      <option value="NASDAQ">NASDAQ</option>
+    </select>
+    <span class="cnt" id="cntLbl"></span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead id="thead">
+        <tr>
+          <th class="rk">#</th>
+          <th data-col="0" onclick="srt(0)">Ticker</th>
+          <th data-col="1" onclick="srt(1)">الشركة</th>
+          <th data-col="3" onclick="srt(3)">القطاع</th>
+          <th data-col="4" onclick="srt(4)" class="desc">حجم يومي ▼</th>
+          <th data-col="5" onclick="srt(5)">Beta (5Y)</th>
+          <th data-col="6" onclick="srt(6)">بورصة</th>
+          <th data-col="7" onclick="srt(7)">التأسيس</th>
+          <th data-col="8" onclick="srt(8)">🗓 أول يوم تداول</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="legend" id="secLegend"></div>
+  <div class="beta-legend">
+    <div class="leg"><div class="ldot" style="background:#7f1d1d"></div> بيتا ≥ 2.0 (خطر عالٍ / فرصة كبيرة)</div>
+    <div class="leg"><div class="ldot" style="background:#b91c1c"></div> بيتا 1.5–2.0 (عالي — مناسب للـ Swing)</div>
+    <div class="leg"><div class="ldot" style="background:#854f0b"></div> بيتا 1.0–1.5 (متوسط)</div>
+    <div class="leg"><div class="ldot" style="background:#166534"></div> بيتا &lt; 1.0 (هادئ — مناسب للنمذجة)</div>
+  </div>
+</div>
+
+<script>
+const IPO_DATES = {
+  "AA": "2016-11-01",
+  "AAL": "2013-12-09",
+  "ABBV": "2013-01-02",
+  "ACAD": "2004-05-13",
+  "ACLS": "2000-11-08",
+  "AEM": "1972-01-03",
+  "AEP": "1971-01-04",
+  "AG": "2010-12-14",
+  "ALK": "1996-09-26",
+  "ALNY": "2004-01-22",
+  "AMC": "2013-12-18",
+  "AMGN": "1983-06-17",
+  "AMT": "1998-06-05",
+  "APA": "1969-01-02",
+  "AR": "2012-08-23",
+  "ARWR": "2004-10-28",
+  "ATI": "1996-08-15",
+  "BGNE": "2016-02-03",
+  "BIIB": "1991-03-25",
+  "BILL": "2019-12-11",
+  "BKR": "2017-07-03",
+  "BLDR": "2005-07-21",
+  "BMY": "1972-01-03",
+  "BURL": "2013-10-02",
+  "BYND": "2019-05-02",
+  "CAG": "1975-01-02",
+  "CCI": "1998-08-18",
+  "CDE": "1980-01-02",
+  "CELH": "2017-07-31",
+  "CENX": "1996-09-09",
+  "CFLT": "2021-06-24",
+  "CHD": "1981-01-02",
+  "CHRW": "1997-10-15",
+  "CHTR": "1999-11-09",
+  "CLF": "1987-01-02",
+  "CLH": "1987-05-01",
+  "CLX": "1928-01-03",
+  "CMC": "1969-01-02",
+  "CMCSA": "1972-06-29",
+  "COHR": "2022-01-18",
+  "COP": "2002-04-20",
+  "COST": "1985-12-05",
+  "CPB": "1954-01-04",
+  "CRH": "1999-12-02",
+  "CROX": "2006-02-08",
+  "CSX": "1980-01-02",
+  "CTRA": "2010-12-31",
+  "D": "1983-01-03",
+  "DAL": "2007-04-30",
+  "DASH": "2020-12-09",
+  "DBX": "2018-03-23",
+  "DDOG": "2019-09-19",
+  "DE": "1978-01-03",
+  "DECK": "1993-11-18",
+  "DG": "2009-11-13",
+  "DINO": "2004-07-09",
+  "DLR": "2004-10-08",
+  "DLTR": "1995-03-06",
+  "DOCU": "2018-04-27",
+  "DUK": "1953-01-02",
+  "DVN": "1988-06-09",
+  "DXCM": "2005-04-05",
+  "ED": "1970-01-02",
+  "EIX": "1970-01-02",
+  "EMR": "1956-01-03",
+  "ENTG": "2001-07-24",
+  "EOG": "1989-08-24",
+  "EQIX": "2000-08-16",
+  "EQT": "1947-01-02",
+  "ETN": "1923-01-02",
+  "ETR": "1970-01-02",
+  "ETSY": "2015-04-16",
+  "EW": "2000-03-23",
+  "EXAS": "2001-02-07",
+  "EXC": "2001-10-23",
+  "EXR": "2004-08-18",
+  "FANG": "2012-10-12",
+  "FAST": "1987-08-20",
+  "FCX": "1995-07-19",
+  "FDX": "1978-04-12",
+  "FE": "1997-11-07",
+  "FIVE": "2012-07-20",
+  "FOXA": "2013-07-01",
+  "FWONK": "2016-04-18",
+  "GDX": "2006-05-22",
+  "GDXJ": "2009-11-11",
+  "GFI": "2002-08-02",
+  "GILD": "1992-01-22",
+  "GIS": "1977-01-03",
+  "GOLD": "2002-08-02",
+  "GXO": "2021-08-02",
+  "HAL": "1948-01-02",
+  "HALO": "2004-08-18",
+  "HES": "1971-01-04",
+  "HL": "1990-03-07",
+  "HRL": "1990-03-23",
+  "HWM": "2020-11-02",
+  "IAC": "1995-08-30",
+  "IBP": "2014-02-13",
+  "INCY": "1993-11-18",
+  "IONS": "1991-07-25",
+  "ISRG": "2000-06-13",
+  "JAZZ": "2007-06-25",
+  "JBLU": "2002-04-11",
+  "JETS": "2015-04-30",
+  "K": "1952-01-02",
+  "KGC": "1996-06-04",
+  "KHC": "2015-07-06",
+  "KLAC": "1980-06-06",
+  "KMB": "1929-01-02",
+  "KNX": "1994-08-02",
+  "LEVI": "2019-03-21",
+  "LOW": "1979-10-10",
+  "LRCX": "1984-05-07",
+  "LUMN": "1971-06-01",
+  "LUV": "1977-06-08",
+  "LYFT": "2019-03-29",
+  "LYV": "2010-01-25",
+  "MDB": "2017-10-19",
+  "MKC": "1961-01-02",
+  "MLM": "1994-02-16",
+  "MP": "2020-11-17",
+  "MPC": "2011-07-01",
+  "MPWR": "2004-07-22",
+  "MRNA": "2018-12-06",
+  "MRO": "1962-01-02",
+  "MTDR": "2012-02-23",
+  "MU": "1984-10-05",
+  "NEE": "1984-01-03",
+  "NEM": "1980-01-02",
+  "NFLX": "2002-05-23",
+  "NOV": "1996-01-02",
+  "NSC": "1982-01-04",
+  "NUE": "1971-01-04",
+  "NVAX": "1995-10-30",
+  "O": "1994-10-18",
+  "ODFL": "1991-12-19",
+  "OIH": "2011-12-21",
+  "OKTA": "2017-04-07",
+  "OLLI": "2015-07-16",
+  "ON": "2000-08-04",
+  "ONTO": "2019-03-01",
+  "OXY": "1964-01-02",
+  "PAAS": "1995-11-09",
+  "PARA": "1971-01-04",
+  "PATH": "2021-04-21",
+  "PBF": "2012-12-12",
+  "PCG": "1972-04-12",
+  "PFGC": "2015-10-09",
+  "PH": "1964-01-02",
+  "PINS": "2019-04-18",
+  "PLD": "1997-11-26",
+  "PPL": "1946-01-02",
+  "PSA": "1980-01-02",
+  "PVH": "1977-01-03",
+  "RGLD": "1992-06-19",
+  "ROK": "2001-12-06",
+  "ROST": "1985-08-07",
+  "RRC": "1976-01-02",
+  "RS": "1994-08-02",
+  "RSG": "1998-07-07",
+  "RVLV": "2019-06-07",
+  "SAIA": "2002-09-26",
+  "SFM": "2013-08-01",
+  "SIRI": "1994-09-09",
+  "SKX": "1999-10-07",
+  "SLB": "1962-01-02",
+  "SM": "1992-05-28",
+  "SNAP": "2017-03-02",
+  "SO": "1949-01-03",
+  "STAG": "2011-04-20",
+  "STLD": "1996-11-18",
+  "SWKS": "1994-01-03",
+  "TGT": "1969-01-02",
+  "TJX": "1987-07-09",
+  "TMUS": "2013-05-01",
+  "TREX": "1999-04-08",
+  "TSLA": "2010-06-29",
+  "TSM": "1997-10-08",
+  "TWLO": "2016-06-23",
+  "UA": "2005-11-18",
+  "UAL": "2006-02-01",
+  "UBER": "2019-05-10",
+  "UNFI": "1996-10-21",
+  "UNP": "1978-01-03",
+  "UPS": "1999-11-10",
+  "VFC": "1972-06-29",
+  "VLO": "1997-01-02",
+  "VMC": "1956-01-03",
+  "VRTX": "1991-07-23",
+  "VZ": "2000-07-03",
+  "W": "2012-10-02",
+  "WBD": "2022-04-11",
+  "WDAY": "2012-10-12",
+  "WEC": "1991-02-07",
+  "WERN": "1986-04-18",
+  "WM": "1971-12-16",
+  "WMT": "1972-10-01",
+  "WOLF": "1995-02-06",
+  "WPM": "2005-03-17",
+  "X": "1991-01-02",
+  "XEL": "1909-01-02",
+  "XHB": "2006-01-31",
+  "XLB": "1998-12-22",
+  "XLC": "2018-06-19",
+  "XLE": "1998-12-22",
+  "XLI": "1998-12-22",
+  "XLRE": "2015-10-08",
+  "XLU": "1998-12-22",
+  "XLV": "1998-12-22",
+  "XME": "2006-06-22",
+  "XOM": "1920-01-02",
+  "XOP": "2006-06-23",
+  "XPO": "2011-10-04",
+  "XRT": "2006-06-22",
+  "ZM": "2019-04-18",
+  "ZS": "2018-03-16"
+};
+
+const STOCKS = [
+["XOM","ExxonMobil","طاقة","en",22.0,0.84,"NYSE",1882],["COP","ConocoPhillips","طاقة","en",8.0,0.98,"NYSE",1917],["SLB","SLB Schlumberger","طاقة","en",13.0,1.52,"NYSE",1926],["OXY","Occidental Petroleum","طاقة","en",9.0,1.32,"NYSE",1920],["HAL","Halliburton","طاقة","en",13.0,1.88,"NYSE",1919],["DVN","Devon Energy","طاقة","en",11.0,2.15,"NYSE",1971],["MRO","Marathon Oil","طاقة","en",11.0,2.15,"NYSE",1887],["EOG","EOG Resources","طاقة","en",4.1,1.25,"NYSE",1989],["PSX","Phillips 66","طاقة","en",3.2,1.18,"NYSE",2012],["VLO","Valero Energy","طاقة","en",3.7,1.28,"NYSE",1980],["MPC","Marathon Petroleum","طاقة","en",3.8,1.32,"NYSE",2011],["HES","Hess Corporation","طاقة","en",4.2,1.52,"NYSE",1919],["APA","APA Corporation","طاقة","en",5.5,2.18,"NASDAQ",1954],["CTRA","Coterra Energy","طاقة","en",6.2,1.72,"NYSE",1989],["AR","Antero Resources","طاقة","en",4.8,2.05,"NYSE",2002],["EQT","EQT Corporation","طاقة","en",5.5,1.85,"NYSE",1888],["RRC","Range Resources","طاقة","en",3.2,1.95,"NYSE",1976],["NOV","NOV Inc","طاقة","en",3.0,1.78,"NYSE",1862],["BKR","Baker Hughes","طاقة","en",7.5,1.42,"NASDAQ",1907],["MTDR","Matador Resources","طاقة","en",2.2,2.22,"NYSE",2003],["FANG","Diamondback Energy","طاقة","en",2.5,1.68,"NASDAQ",2007],["PBF","PBF Energy","طاقة","en",3.8,2.12,"NYSE",2008],["SM","SM Energy","طاقة","en",3.5,2.05,"NYSE",1908],["DINO","HF Sinclair","طاقة","en",2.8,1.48,"NYSE",1947],
+["MRNA","Moderna","رعاية صحية","ph",28.0,1.72,"NASDAQ",2010],["ABBV","AbbVie","رعاية صحية","ph",8.5,0.56,"NYSE",2013],["BMY","Bristol-Myers Squibb","رعاية صحية","ph",12.5,0.44,"NYSE",1887],["AMGN","Amgen","رعاية صحية","ph",3.8,0.42,"NASDAQ",1980],["GILD","Gilead Sciences","رعاية صحية","ph",6.0,0.55,"NASDAQ",1987],["ISRG","Intuitive Surgical","رعاية صحية","ph",1.8,1.05,"NASDAQ",1995],["VRTX","Vertex Pharmaceuticals","رعاية صحية","ph",1.2,0.62,"NASDAQ",1989],["BIIB","Biogen","رعاية صحية","ph",2.5,0.52,"NASDAQ",1978],["DXCM","Dexcom","رعاية صحية","ph",4.5,1.42,"NASDAQ",1999],["EW","Edwards Lifesciences","رعاية صحية","ph",2.1,0.98,"NYSE",1958],["ALNY","Alnylam Pharmaceuticals","رعاية صحية","ph",1.5,0.78,"NASDAQ",2002],["INCY","Incyte Corporation","رعاية صحية","ph",1.8,0.68,"NASDAQ",1991],["EXAS","Exact Sciences","رعاية صحية","ph",2.8,1.55,"NASDAQ",1995],["NVAX","Novavax","رعاية صحية","ph",5.5,2.45,"NASDAQ",1987],["ARWR","Arrowhead Pharmaceuticals","رعاية صحية","ph",1.5,1.82,"NASDAQ",2003],["ACAD","Acadia Pharmaceuticals","رعاية صحية","ph",1.8,0.88,"NASDAQ",1993],["IONS","Ionis Pharmaceuticals","رعاية صحية","ph",1.6,0.75,"NASDAQ",1989],["BGNE","BeiGene","رعاية صحية","ph",1.2,0.92,"NASDAQ",2010],["HALO","Halozyme Therapeutics","رعاية صحية","ph",1.4,1.05,"NASDAQ",1996],["JAZZ","Jazz Pharmaceuticals","رعاية صحية","ph",1.1,0.72,"NASDAQ",2003],
+["VZ","Verizon","إعلام واتصالات","md",16.0,0.38,"NYSE",1983],["TMUS","T-Mobile US","إعلام واتصالات","md",3.8,0.58,"NASDAQ",1994],["CMCSA","Comcast","إعلام واتصالات","md",17.0,0.92,"NASDAQ",1963],["NFLX","Netflix","إعلام واتصالات","md",5.2,1.28,"NASDAQ",1997],["WBD","Warner Bros Discovery","إعلام واتصالات","md",19.0,1.38,"NASDAQ",2022],["PARA","Paramount Global","إعلام واتصالات","md",13.0,1.55,"NASDAQ",1994],["FOXA","Fox Corporation","إعلام واتصالات","md",4.5,0.88,"NASDAQ",2019],["CHTR","Charter Communications","إعلام واتصالات","md",1.2,1.08,"NASDAQ",1993],["LUMN","Lumen Technologies","إعلام واتصالات","md",22.0,1.12,"NYSE",1971],["AMC","AMC Entertainment","إعلام واتصالات","md",8.5,2.85,"NYSE",1920],["SIRI","SiriusXM","إعلام واتصالات","md",2.9,0.78,"NASDAQ",1990],["LYV","Live Nation Entertainment","إعلام واتصالات","md",1.8,1.12,"NYSE",2010],["IAC","IAC Inc","إعلام واتصالات","md",1.5,1.22,"NASDAQ",1986],["FWONK","Formula One (Liberty Media)","إعلام واتصالات","md",1.8,0.95,"NASDAQ",1991],
+["COST","Costco","تجزئة","rt",3.2,0.72,"NASDAQ",1976],["LOW","Lowe's","تجزئة","rt",3.8,1.02,"NYSE",1946],["TJX","TJX Companies","تجزئة","rt",4.2,0.78,"NYSE",1956],["ROST","Ross Stores","تجزئة","rt",3.5,0.88,"NASDAQ",1957],["BURL","Burlington Stores","تجزئة","rt",1.8,1.12,"NYSE",1972],["DLTR","Dollar Tree","تجزئة","rt",4.5,0.62,"NASDAQ",1986],["DG","Dollar General","تجزئة","rt",3.8,0.42,"NYSE",1939],["TGT","Target","تجزئة","rt",5.5,0.88,"NYSE",1902],["WMT","Walmart","تجزئة","rt",8.5,0.52,"NYSE",1945],["KHC","Kraft Heinz","تجزئة","rt",8.5,0.48,"NASDAQ",2015],["GIS","General Mills","تجزئة","rt",3.5,0.38,"NYSE",1866],["K","Kellanova","تجزئة","rt",2.2,0.42,"NYSE",1906],["CPB","Campbell Soup","تجزئة","rt",2.8,0.35,"NASDAQ",1869],["HRL","Hormel Foods","تجزئة","rt",2.2,0.32,"NYSE",1891],["MKC","McCormick & Company","تجزئة","rt",1.8,0.38,"NASDAQ",1889],["CLX","Clorox","تجزئة","rt",2.2,0.48,"NYSE",1913],["KMB","Kimberly-Clark","تجزئة","rt",1.9,0.42,"NYSE",1872],["CHD","Church & Dwight","تجزئة","rt",1.5,0.52,"NYSE",1846],["CAG","Conagra Brands","تجزئة","rt",3.8,0.42,"NYSE",1919],["SFM","Sprouts Farmers Market","تجزئة","rt",1.5,0.65,"NASDAQ",2002],["FIVE","Five Below","تجزئة","rt",1.8,1.22,"NASDAQ",2002],["OLLI","Ollie's Bargain Outlet","تجزئة","rt",1.2,0.82,"NASDAQ",1982],["PFGC","Performance Food Group","تجزئة","rt",1.2,0.95,"NYSE",1885],["BYND","Beyond Meat","تجزئة","rt",4.5,2.22,"NASDAQ",2009],["CELH","Celsius Holdings","تجزئة","rt",4.2,2.05,"NASDAQ",2004],["ETSY","Etsy","تجزئة","rt",3.5,1.45,"NASDAQ",2005],["W","Wayfair","تجزئة","rt",3.8,2.15,"NYSE",2002],["RVLV","Revolve Group","تجزئة","rt",1.5,1.85,"NYSE",2003],["CROX","Crocs","تجزئة","rt",2.2,1.78,"NASDAQ",2002],["DECK","Deckers Outdoor","تجزئة","rt",1.2,1.35,"NYSE",1973],["SKX","Skechers","تجزئة","rt",1.5,0.98,"NYSE",1992],["VFC","VF Corporation","تجزئة","rt",5.5,0.85,"NYSE",1899],["PVH","PVH Corp","تجزئة","rt",1.8,1.42,"NYSE",1881],["LEVI","Levi Strauss","تجزئة","rt",2.5,0.92,"NYSE",1853],["UA","Under Armour A","تجزئة","rt",4.5,1.48,"NYSE",1996],["UNFI","United Natural Foods","تجزئة","rt",1.5,0.88,"NYSE",1996],
+["UPS","UPS","صناعة ونقل","id",4.5,1.02,"NYSE",1907],["FDX","FedEx","صناعة ونقل","id",2.8,1.18,"NYSE",1971],["DAL","Delta Air Lines","صناعة ونقل","id",9.5,1.48,"NYSE",1925],["UAL","United Airlines","صناعة ونقل","id",10.0,1.62,"NASDAQ",1926],["AAL","American Airlines","صناعة ونقل","id",28.0,1.72,"NASDAQ",1934],["LUV","Southwest Airlines","صناعة ونقل","id",8.5,1.38,"NYSE",1967],["JBLU","JetBlue Airways","صناعة ونقل","id",5.5,1.92,"NASDAQ",1998],["ALK","Alaska Air Group","صناعة ونقل","id",2.2,1.45,"NYSE",1932],["CSX","CSX Corporation","صناعة ونقل","id",6.8,1.12,"NASDAQ",1827],["NSC","Norfolk Southern","صناعة ونقل","id",2.2,1.05,"NYSE",1827],["UNP","Union Pacific","صناعة ونقل","id",2.5,0.98,"NYSE",1862],["EMR","Emerson Electric","صناعة ونقل","id",2.8,1.08,"NYSE",1890],["ETN","Eaton Corporation","صناعة ونقل","id",2.4,1.22,"NYSE",1911],["PH","Parker Hannifin","صناعة ونقل","id",1.2,1.18,"NYSE",1917],["ROK","Rockwell Automation","صناعة ونقل","id",1.4,1.32,"NYSE",1903],["FAST","Fastenal","صناعة ونقل","id",3.5,0.95,"NASDAQ",1967],["WM","Waste Management","صناعة ونقل","id",1.6,0.68,"NYSE",1968],["RSG","Republic Services","صناعة ونقل","id",1.2,0.62,"NYSE",1996],["CLH","Clean Harbors","صناعة ونقل","id",1.0,0.88,"NYSE",1980],["XPO","XPO Inc","صناعة ونقل","id",2.2,1.35,"NYSE",1981],["SAIA","Saia Inc","صناعة ونقل","id",1.0,1.42,"NASDAQ",1924],["ODFL","Old Dominion Freight","صناعة ونقل","id",1.2,0.98,"NASDAQ",1934],["KNX","Knight-Swift","صناعة ونقل","id",2.0,1.12,"NYSE",1990],["CHRW","C.H. Robinson","صناعة ونقل","id",1.5,0.85,"NASDAQ",1905],["GXO","GXO Logistics","صناعة ونقل","id",1.5,1.28,"NYSE",2021],["MLM","Martin Marietta","صناعة ونقل","id",1.2,0.88,"NYSE",1993],["VMC","Vulcan Materials","صناعة ونقل","id",1.5,0.95,"NYSE",1909],["CRH","CRH plc","صناعة ونقل","id",2.5,1.05,"NYSE",1970],["BLDR","Builders FirstSource","صناعة ونقل","id",2.5,1.55,"NYSE",1998],["IBP","Installed Building Products","صناعة ونقل","id",1.0,1.42,"NYSE",1977],["TREX","Trex Company","صناعة ونقل","id",1.5,1.55,"NYSE",1996],["DE","John Deere","صناعة ونقل","id",1.8,0.88,"NYSE",1837],["WERN","Werner Enterprises","صناعة ونقل","id",1.0,0.88,"NASDAQ",1956],
+["FCX","Freeport-McMoRan","معادن","mt",17.0,1.78,"NYSE",1987],["NEM","Newmont Corporation","معادن","mt",11.0,0.52,"NYSE",1921],["CLF","Cleveland-Cliffs","معادن","mt",12.0,2.68,"NYSE",1847],["X","US Steel","معادن","mt",7.5,1.95,"NYSE",1901],["STLD","Steel Dynamics","معادن","mt",2.0,1.58,"NASDAQ",1993],["NUE","Nucor Corporation","معادن","mt",2.2,1.69,"NYSE",1940],["AA","Alcoa","معادن","mt",5.5,2.12,"NYSE",1888],["CENX","Century Aluminum","معادن","mt",2.8,2.35,"NASDAQ",1995],["CMC","Commercial Metals","معادن","mt",1.5,1.42,"NYSE",1915],["RS","Reliance Steel","معادن","mt",1.2,0.98,"NYSE",1939],["ATI","ATI Inc","معادن","mt",2.5,1.65,"NYSE",1996],["HWM","Howmet Aerospace","معادن","mt",2.2,1.35,"NYSE",1888],["MP","MP Materials","معادن","mt",2.8,1.88,"NYSE",2020],["RGLD","Royal Gold","معادن","mt",1.2,0.65,"NASDAQ",1981],["WPM","Wheaton Precious Metals","معادن","mt",2.5,0.72,"NYSE",2004],["AG","First Majestic Silver","معادن","mt",2.2,1.45,"NYSE",2002],["PAAS","Pan American Silver","معادن","mt",2.8,0.88,"NASDAQ",1994],["AEM","Agnico Eagle Mines","معادن","mt",3.5,0.62,"NYSE",1957],["KGC","Kinross Gold","معادن","mt",6.5,0.72,"NYSE",1993],["GFI","Gold Fields","معادن","mt",4.2,0.68,"NYSE",1998],["GOLD","Barrick Gold","معادن","mt",8.5,0.58,"NYSE",1983],["HL","Hecla Mining","معادن","mt",4.5,1.25,"NYSE",1891],["CDE","Coeur Mining","معادن","mt",3.5,1.35,"NYSE",1928],
+["MU","Micron Technology","أشباه موصلات","sm",38.0,1.62,"NASDAQ",1978],["TSM","TSMC ADR","أشباه موصلات","sm",14.0,1.12,"NYSE",1987],["LRCX","Lam Research","أشباه موصلات","sm",2.7,1.67,"NASDAQ",1980],["KLAC","KLA Corporation","أشباه موصلات","sm",1.8,1.28,"NASDAQ",1976],["ON","ON Semiconductor","أشباه موصلات","sm",9.5,1.95,"NASDAQ",1999],["SWKS","Skyworks Solutions","أشباه موصلات","sm",3.2,1.08,"NASDAQ",1962],["MPWR","Monolithic Power Systems","أشباه موصلات","sm",1.5,1.22,"NASDAQ",1997],["ENTG","Entegris","أشباه موصلات","sm",2.2,1.45,"NASDAQ",1966],["COHR","Coherent Corp","أشباه موصلات","sm",3.5,1.72,"NYSE",1971],["WOLF","Wolfspeed","أشباه موصلات","sm",4.5,2.35,"NYSE",1987],["ACLS","Axcelis Technologies","أشباه موصلات","sm",1.2,1.85,"NASDAQ",1995],["ONTO","Onto Innovation","أشباه موصلات","sm",1.0,1.52,"NYSE",2019],
+["TSLA","Tesla","تكنولوجيا","tc",90.0,1.79,"NASDAQ",2003],["UBER","Uber Technologies","تكنولوجيا","tc",21.0,1.42,"NYSE",2009],["ZM","Zoom Video","تكنولوجيا","tc",6.5,0.62,"NASDAQ",2011],["DDOG","Datadog","تكنولوجيا","tc",3.5,1.15,"NASDAQ",2010],["TWLO","Twilio","تكنولوجيا","tc",2.5,1.05,"NYSE",2008],["WDAY","Workday","تكنولوجيا","tc",2.2,1.18,"NASDAQ",2005],["DOCU","DocuSign","تكنولوجيا","tc",3.5,0.78,"NASDAQ",2003],["ZS","Zscaler","تكنولوجيا","tc",1.5,1.25,"NASDAQ",2007],["BILL","Bill Holdings","تكنولوجيا","tc",2.5,1.32,"NYSE",2006],["MDB","MongoDB","تكنولوجيا","tc",2.8,1.42,"NASDAQ",2007],["PATH","UiPath","تكنولوجيا","tc",3.5,0.95,"NYSE",2005],["CFLT","Confluent","تكنولوجيا","tc",2.2,1.15,"NASDAQ",2014],["LYFT","Lyft","تكنولوجيا","tc",8.5,1.85,"NASDAQ",2012],["SNAP","Snap Inc","تكنولوجيا","tc",18.0,1.38,"NYSE",2011],["PINS","Pinterest","تكنولوجيا","tc",8.5,1.12,"NYSE",2009],["DASH","DoorDash","تكنولوجيا","tc",5.5,1.52,"NYSE",2013],["DBX","Dropbox","تكنولوجيا","tc",2.2,0.62,"NASDAQ",2007],["OKTA","Okta","تكنولوجيا","tc",2.5,1.02,"NASDAQ",2009],
+["NEE","NextEra Energy","مرافق","ut",8.5,0.48,"NYSE",1925],["DUK","Duke Energy","مرافق","ut",4.5,0.38,"NYSE",1904],["SO","Southern Company","مرافق","ut",5.5,0.38,"NYSE",1945],["D","Dominion Energy","مرافق","ut",5.2,0.38,"NYSE",1909],["AEP","American Electric Power","مرافق","ut",4.2,0.42,"NASDAQ",1906],["EXC","Exelon","مرافق","ut",6.5,0.42,"NASDAQ",1887],["PCG","PG&E Corporation","مرافق","ut",10.5,0.55,"NYSE",1905],["PPL","PPL Corporation","مرافق","ut",3.8,0.42,"NYSE",1920],["ED","Consolidated Edison","مرافق","ut",2.5,0.32,"NYSE",1823],["FE","FirstEnergy","مرافق","ut",4.2,0.38,"NYSE",1997],["EIX","Edison International","مرافق","ut",3.5,0.42,"NYSE",1886],["XEL","Xcel Energy","مرافق","ut",3.2,0.42,"NASDAQ",1909],["WEC","WEC Energy Group","مرافق","ut",2.2,0.38,"NYSE",1981],["ETR","Entergy","مرافق","ut",2.5,0.42,"NYSE",1949],
+["AMT","American Tower","عقارات","re",3.5,0.78,"NYSE",1995],["CCI","Crown Castle","عقارات","re",2.8,0.72,"NYSE",1994],["EQIX","Equinix","عقارات","re",1.5,0.65,"NASDAQ",1998],["DLR","Digital Realty","عقارات","re",2.2,0.68,"NYSE",2004],["PSA","Public Storage","عقارات","re",2.5,0.52,"NYSE",1972],["EXR","Extra Space Storage","عقارات","re",1.5,0.62,"NYSE",2004],["PLD","Prologis","عقارات","re",4.5,0.88,"NYSE",1983],["O","Realty Income","عقارات","re",5.5,0.52,"NYSE",1969],["STAG","STAG Industrial","عقارات","re",1.5,0.85,"NYSE",2011],
+["XLE","Energy Select SPDR","ETF","etf",25.0,0.92,"NYSE",1998],["XLV","Health Care Select SPDR","ETF","etf",9.5,0.58,"NYSE",1998],["XLU","Utilities Select SPDR","ETF","etf",12.0,0.38,"NYSE",1998],["XLI","Industrial Select SPDR","ETF","etf",8.5,1.02,"NYSE",1998],["XLB","Materials Select SPDR","ETF","etf",4.5,1.05,"NYSE",1998],["XLC","Communication Services SPDR","ETF","etf",3.5,0.88,"NYSE",2018],["XLRE","Real Estate Select SPDR","ETF","etf",3.2,0.72,"NYSE",2015],["GDX","VanEck Gold Miners","ETF","etf",18.0,0.65,"NYSE",2006],["GDXJ","VanEck Junior Gold Miners","ETF","etf",8.5,0.78,"NYSE",2009],["XOP","SPDR S&P Oil & Gas","ETF","etf",12.0,1.42,"NYSE",2006],["OIH","VanEck Oil Services","ETF","etf",3.5,1.38,"NYSE",2011],["XME","SPDR S&P Metals & Mining","ETF","etf",3.5,1.25,"NYSE",2006],["JETS","US Global Jets","ETF","etf",2.5,1.45,"NYSE",2015],["XRT","SPDR S&P Retail","ETF","etf",3.8,0.92,"NYSE",2006],["XHB","SPDR S&P Homebuilders","ETF","etf",2.5,1.12,"NYSE",2006]
+];
+
+const SECTOR_LABELS = {en:"⛽ طاقة",ph:"💊 رعاية صحية",md:"📡 إعلام",rt:"🛒 تجزئة",id:"⚙️ صناعة",mt:"🔩 معادن",sm:"🖥 أشباه",tc:"💻 تكنولوجيا",ut:"⚡ مرافق",re:"🏢 عقارات",etf:"📈 ETF"};
+const SECTOR_COLORS = {en:"#fef3c7:#92400e",ph:"#d1fae5:#065f46",md:"#dbeafe:#1e40af",rt:"#ede9fe:#5b21b6",id:"#f1f5f9:#334155",mt:"#fee2e2:#991b1b",sm:"#dcfce7:#166534",tc:"#fef9c3:#713f12",ut:"#e0f2fe:#0c4a6e",re:"#fdf2f8:#831843",etf:"#fce7f3:#9d174d"};
+
+// deduplicate
+const seen = new Set();
+const DATA = STOCKS.filter(r => { if(seen.has(r[0])) return false; seen.add(r[0]); return true; });
+
+let filtered = [...DATA], sortCol = 4, sortDir = -1;
+const maxVol = Math.max(...DATA.map(r=>r[4]));
+const maxBeta = Math.max(...DATA.map(r=>r[5]));
+
+function fmtVol(v) { return v >= 100 ? (v/1000).toFixed(1)+'B' : v.toFixed(1)+'M'; }
+function betaClass(b) { if(b>=2.0) return 'b-xx'; if(b>=1.5) return 'b-hi'; if(b>=1.0) return 'b-md'; return 'b-lo'; }
+
+function render() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = filtered.map((r, i) => {
+    const [tk, nm, sec, sk, vol, beta, exch, yr] = r;
+    const bc = betaClass(beta);
+    const vPct = Math.round((vol/maxVol)*100);
+    const bPct = Math.round((beta/maxBeta)*100);
+    const [tagBg, tagFg] = (SECTOR_COLORS[sk]||"#f1f5f9:#334155").split(":");
+    return `<tr>
+      <td class="rk">${i+1}</td>
+      <td class="tk">${tk}</td>
+      <td><span class="nm">${nm}</span></td>
+      <td><span class="tag" style="background:${tagBg};color:${tagFg}">${SECTOR_LABELS[sk]||sec}</span></td>
+      <td><div class="vbar"><div class="vbg"><div class="vfill" style="width:${vPct}%;background:#3b82f6"></div></div><span class="vtxt">${fmtVol(vol)}</span></div></td>
+      <td><div class="vbar"><div class="bbg"><div class="bfill" style="width:${bPct}%"></div></div><span class="btxt ${bc}">${beta.toFixed(2)}</span></div></td>
+      <td class="xch">${exch}</td>
+      <td class="yr">${yr}</td>
+      <td>${IPO_DATES[tk] ? `<span class="ipo">${IPO_DATES[tk]}</span>` : '<span class="ipo-na">—</span>'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('cntLbl').textContent = `${filtered.length} / ${DATA.length} سهم`;
+  updateStats();
+}
+
+function updateStats() {
+  const tot = filtered.length;
+  const avgB = (filtered.reduce((s,r)=>s+r[5],0)/tot).toFixed(2);
+  const hiB = filtered.filter(r=>r[5]>=1.5).length;
+  const hiV = filtered.filter(r=>r[4]>=10).length;
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat"><span class="stat-n">${tot}</span><span class="stat-l">إجمالي الأسهم</span></div>
+    <div class="stat"><span class="stat-n">${avgB}</span><span class="stat-l">متوسط بيتا</span></div>
+    <div class="stat"><span class="stat-n" style="color:#b91c1c">${hiB}</span><span class="stat-l">بيتا عالي ≥1.5</span></div>
+    <div class="stat"><span class="stat-n">${hiV}</span><span class="stat-l">حجم ≥ 10M/يوم</span></div>
+    <div class="stat"><span class="stat-n">${filtered.filter(r=>r[5]>=2.0).length}</span><span class="stat-l">بيتا ≥ 2.0</span></div>
+  `;
+  // sector legend
+  const counts = {};
+  filtered.forEach(r => { counts[r[3]] = (counts[r[3]]||0)+1; });
+  document.getElementById('secLegend').innerHTML = Object.entries(counts)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([k,v]) => {
+      const [bg, fg] = (SECTOR_COLORS[k]||"#f1f5f9:#334155").split(":");
+      return `<div class="leg"><div class="ldot" style="background:${bg};border:1px solid ${fg}40"></div><span style="color:${fg};font-weight:500">${SECTOR_LABELS[k]||k}</span> <span style="color:var(--txt3)">(${v})</span></div>`;
+    }).join('');
+}
+
+function applyFilters() {
+  const q = document.getElementById('srch').value.toLowerCase();
+  const s = document.getElementById('secSel').value;
+  const b = document.getElementById('betaSel').value;
+  const v = parseFloat(document.getElementById('volSel').value)||0;
+  const e = document.getElementById('exchSel').value;
+  filtered = DATA.filter(r => {
+    const mQ = !q || r[0].toLowerCase().includes(q) || r[1].toLowerCase().includes(q);
+    const mS = !s || r[3] === s;
+    const mB = !b || (b==='xx'&&r[5]>=2.0)||(b==='hi'&&r[5]>=1.5&&r[5]<2.0)||(b==='md'&&r[5]>=1.0&&r[5]<1.5)||(b==='lo'&&r[5]<1.0);
+    const mV = !v || r[4] >= v;
+    const mE = !e || r[6] === e;
+    return mQ && mS && mB && mV && mE;
+  });
+  doSort(false);
+}
+
+function srt(col) {
+  if(sortCol===col) sortDir*=-1; else { sortCol=col; sortDir=(col===4||col===5)?-1:1; }
+  doSort(true);
+}
+
+function doSort(updateHeader=true) {
+  filtered.sort((a,b) => {
+    if(sortCol === 8) {
+      const ad = IPO_DATES[a[0]] || '9999-99-99';
+      const bd = IPO_DATES[b[0]] || '9999-99-99';
+      return sortDir * ad.localeCompare(bd);
+    }
+    const av=a[sortCol], bv=b[sortCol];
+    if(typeof av==='string') return sortDir*av.localeCompare(bv,'ar');
+    return sortDir*(av-bv);
+  });
+  if(updateHeader) {
+    document.querySelectorAll('thead th[data-col]').forEach(th => {
+      th.classList.remove('asc','desc');
+      if(parseInt(th.dataset.col)===sortCol) th.classList.add(sortDir===1?'asc':'desc');
+    });
+  }
+  render();
+}
+
+['srch','secSel','betaSel','volSel','exchSel'].forEach(id => {
+  document.getElementById(id).addEventListener('change', applyFilters);
+  if(id==='srch') document.getElementById(id).addEventListener('input', applyFilters);
+});
+
+doSort(true);
+</script>
+</body>
+</html>

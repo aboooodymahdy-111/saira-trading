@@ -1,0 +1,4 @@
+﻿run_timestamp,ticker,sector,current_price,total_buy_votes,total_sell_votes,gain_speed_score,historical_hit_rate,median_days_to_hit,technical_net_vote,quantitative_net_vote,astrological_status,astrological_net_vote,advanced_technical_net_vote,ts_context
+2026-07-11 22:07:08,LYFT,Technology,15.609999656677246,6,0,0.015333333333333334,0.138,9.0,buy,neutral,implemented,buy,buy,ts_agrees_nearby_buy_on_2026-07-08
+2026-07-11 22:07:08,PBF,Energy,53.18000030517578,5,0,0.0224,0.224,10.0,buy,neutral,implemented,neutral,buy,ts_agrees_nearby_buy_on_2026-06-30
+2026-07-11 22:07:08,UAL,Industrials,126.0,5,1,0.011166666666666667,0.134,12.0,buy,buy,implemented,neutral,buy,ts_agrees_nearby_buy_on_2026-07-06

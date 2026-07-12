@@ -1,0 +1,3 @@
+﻿run_timestamp,ticker,sector,current_price,best_increment_method,best_increment_value,best_square9_angle,best_square9_hit_rate,technical_net_vote,technical_buy_votes,quantitative_net_vote,quantitative_buy_votes,astrological_status,astrological_net_vote,advanced_technical_net_vote,advanced_technical_buy_votes,total_buy_votes,total_sell_votes,horizon_fit_20.0pct_15d,horizon_median_days_when_hit,gain_speed_score
+2026-07-11 23:38:24,AAPL,Technology,315.32000732421875,volatility/45deg,0.19881,135,0.67,neutral,0,buy,1,implemented,neutral,buy,4,5,0,0.002,11.0,0.0036
+2026-07-11 23:38:24,JNJ,Healthcare,256.9800109863281,volatility/45deg,0.14854,135,0.75,buy,1,buy,1,implemented,neutral,buy,3,5,1,0.0,,
