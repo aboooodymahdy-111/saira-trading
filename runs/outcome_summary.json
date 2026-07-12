@@ -1,0 +1,10 @@
+{
+  "window_days": 90,
+  "total_tracked": 3725,
+  "resolved": 0,
+  "still_pending": 3725,
+  "hits": 0,
+  "misses": 0,
+  "hit_rate": null,
+  "avg_days_to_exit": null
+}
