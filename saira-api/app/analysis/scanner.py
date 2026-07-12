@@ -238,3 +238,81 @@ def planetary_grid(df: pd.DataFrame, planet: str, center: str,
                    "lon": round(anchor_lon, 2)},
         "series": series,
     }
+
+
+# ---------------------------------------------------------------- شبكة الخطوط المترابطة
+# مجلد 1، ملاحظة 1: إذا أثّر خط تربيع كوكبٍ ما على السهم، تُرسم تلقائيًا
+# بقية خطوطه (تثليث/مقابلة). الزوايا الكلاسيكية الخمس فقط (سداسي مستثنى من
+# القائمة الأساسية في الملاحظة الأصلية، لكنه مضاف هنا لأن star_levels()
+# نفسه يدعم 60° أصلًا في هذا المشروع — التناسق مع باقي الأدوات أولى من
+# الالتزام الحرفي بقائمة لم تستثنِه لسبب معلوم).
+ASPECT_ANGLES_DEG: tuple[float, ...] = (0.0, 60.0, 90.0, 120.0, 180.0)
+
+
+def connected_lines(df: pd.DataFrame, planet: str, center: str,
+                    unit_price: float, n_lines_per_side: int = 2) -> dict:
+    """يبني شبكة الخطوط المترابطة (قِران/سداسي/تربيع/تثليث/مقابلة) لكوكبٍ
+    واحد فائز في الماسح — بدل خط واحد فقط، طبقًا لملاحظة 1 (مجلد 1):
+    "إذا أثّر خط تربيع كوكبٍ ما، تُرسم تلقائيًا بقية خطوطه".
+
+    كل زاوية تُبنى بنفس منطق planetary_grid لكن بإزاحة الارتكاز بمقدار
+    الزاوية (بوحدة السعر) قبل تكرار الدورة الكاملة — نفس الارتكاز والوحدة
+    المكتشفة، فقط "زوايا الميلاد" المختلفة لشبكة الخط الواحد.
+    """
+    if unit_price <= 0:
+        raise ValueError("unit_price يجب أن تكون موجبة")
+    fn = astro.helio_longitude if center == "helio" else astro.geo_longitude
+
+    sw = gann.swing_pivots(df, m=2)
+    if not sw["pivots"]:
+        raise ValueError("لا ارتكاز سوينج متاح")
+    anchor = sw["pivots"][-1]
+    anchor_lon = fn(planet, anchor["t"])
+    anchor_price = anchor["price"]
+
+    lo, hi = float(df["l"].min()), float(df["h"].max())
+    pad = (hi - lo) * 0.1
+    lo_p, hi_p = lo - pad, hi + pad
+    period = 360.0 * unit_price
+
+    step = max(1, len(df) // 400)
+    sample = df.iloc[::step]
+    times = sample["t"].astype(int).tolist()
+    lons = [fn(planet, t) for t in times]
+
+    aspects = []
+    for deg in ASPECT_ANGLES_DEG:
+        aspect_price = anchor_price + deg * unit_price
+        mid_price = (lo + hi) / 2
+        k_center = int(round((mid_price - aspect_price) / period))
+
+        series = []
+        for k in range(k_center - n_lines_per_side, k_center + n_lines_per_side + 1):
+            segments, cur, prev_price = [], [], None
+            for t, lon in zip(times, lons):
+                lon_delta = _wrap_delta(lon, anchor_lon)
+                price = aspect_price + lon_delta * unit_price + k * period
+                if not (lo_p <= price <= hi_p):
+                    if len(cur) > 1:
+                        segments.append(cur)
+                    cur, prev_price = [], None
+                    continue
+                if prev_price is not None and abs(price - prev_price) > period * 0.4:
+                    if len(cur) > 1:
+                        segments.append(cur)
+                    cur = []
+                cur.append({"t": t, "price": round(price, 4)})
+                prev_price = price
+            if len(cur) > 1:
+                segments.append(cur)
+            if segments:
+                series.append({"k": k, "segments": segments})
+        if series:
+            aspects.append({"deg": deg, "series": series})
+
+    return {
+        "planet": planet, "center": center, "unit_price": unit_price,
+        "anchor": {"t": anchor["t"], "price": anchor_price,
+                   "lon": round(anchor_lon, 2)},
+        "aspects": aspects,
+    }

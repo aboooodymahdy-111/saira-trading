@@ -87,135 +87,137 @@
 <header>
   <div class="brand">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 12h2v-2h-4v4h6V8H8v8h10V6H6v12h14" stroke="#E0B341" stroke-width="1.4"/></svg>
-    SAIRA TERMINAL <small>· نموذج المرحلة 1</small>
+    SAIRA TERMINAL <small data-i18n="brandTag">· نموذج المرحلة 1</small>
   </div>
   <div class="sym" id="symName">DEMO</div>
   <div class="legend" id="legend"><span>O <b>—</b></span><span>H <b>—</b></span><span>L <b>—</b></span><span>C <b>—</b></span><span>V <b>—</b></span></div>
+  <button class="btn small" id="btnLang" style="margin-inline-start:10px" title="Toggle language / تبديل اللغة">EN</button>
 </header>
 
 <div class="toolbar">
-  <span class="srv" id="srvDot" title="حالة الخادم">●</span>
-  <select class="btn" id="symSelect" style="min-width:120px"><option value="">— بيانات محلية —</option></select>
-  <button class="btn small" id="btnSync" title="إعادة الاتصال بالخادم واستيراد الرموز">⟳</button>
-  <button class="btn gold" id="btnLoad">📂 ملف</button>
+  <span class="srv" id="srvDot" data-i18n-title="srvStatus">●</span>
+  <select class="btn" id="symSelect" style="min-width:120px"><option value="" data-i18n="localDataOpt">— بيانات محلية —</option></select>
+  <button class="btn small" id="btnSync" data-i18n-title="syncTitle">⟳</button>
+  <button class="btn gold" id="btnLoad">📂 <span data-i18n="fileBtn">ملف</span></button>
   <input type="file" id="fileInput" accept=".txt,.csv" hidden>
   <div class="tf-group" id="tfGroup"></div>
   <select class="btn" id="chartType">
-    <option value="candles">شموع يابانية</option>
-    <option value="heikin">هيكين آشي</option>
-    <option value="bars">أعمدة OHLC</option>
-    <option value="line">خط</option>
-    <option value="area">مساحة</option>
+    <option value="candles" data-i18n="ctCandles">شموع يابانية</option>
+    <option value="heikin" data-i18n="ctHeikin">هيكين آشي</option>
+    <option value="bars" data-i18n="ctBars">أعمدة OHLC</option>
+    <option value="line" data-i18n="ctLine">خط</option>
+    <option value="area" data-i18n="ctArea">مساحة</option>
   </select>
   <div class="spacer"></div>
-  <button class="btn small" id="btnClearAll">مسح كل الطبقات</button>
+  <button class="btn small" id="btnClearAll" data-i18n="clearAllBtn">مسح كل الطبقات</button>
 </div>
 
 <div class="main">
   <div class="chart-wrap">
     <div id="chart"></div>
-    <div class="pick-hint" id="pickHint">انقر على الشارت لتحديد نقطة الارتكاز</div>
+    <div class="pick-hint" id="pickHint" data-i18n="pickHint">انقر على الشارت لتحديد نقطة الارتكاز</div>
   </div>
 
   <aside>
     <div class="tabs" id="tabs">
-      <button class="tab on" data-p="pGann">مروحة جان</button>
-      <button class="tab" data-p="pSq9">مربع 9</button>
-      <button class="tab" data-p="pRet">الأثمان</button>
-      <button class="tab" data-p="pSwing">سوينج</button>
-      <button class="tab" data-p="pCyc">دورات</button>
-      <button class="tab" data-p="pAstro">فلك</button>
-      <button class="tab" data-p="pScan">الماسح ⚛</button>
-      <button class="tab" data-p="pConf">التقاء</button>
-      <button class="tab" data-p="pSig">إشارات</button>
+      <button class="tab on" data-p="pGann" data-i18n="tabFan">مروحة جان</button>
+      <button class="tab" data-p="pSq9" data-i18n="tabSq9">مربع 9</button>
+      <button class="tab" data-p="pRet" data-i18n="tabRet">الأثمان</button>
+      <button class="tab" data-p="pSwing" data-i18n="tabSwing">سوينج</button>
+      <button class="tab" data-p="pCyc" data-i18n="tabCyc">دورات</button>
+      <button class="tab" data-p="pAstro" data-i18n="tabAstro">فلك</button>
+      <button class="tab" data-p="pScan" data-i18n="tabScan">الماسح ⚛</button>
+      <button class="tab" data-p="pConf" data-i18n="tabConf">التقاء</button>
+      <button class="tab" data-p="pSquare" data-i18n="tabSquare">موازنة/كسوف</button>
+      <button class="tab" data-p="pSig" data-i18n="tabSig">إشارات</button>
     </div>
 
     <!-- Gann Fan -->
     <div class="panel on" id="pGann">
-      <h3>مروحة جان</h3>
-      <div class="note">حدد نقطة ارتكاز (قاع أو قمة) بالنقر على الشارت، وستُرسم الزوايا 1×8 حتى 8×1. الزاوية الذهبية هي 1×1.</div>
-      <div class="row"><button class="btn" id="btnFanPick">🎯 تحديد الارتكاز بالنقر</button></div>
-      <div class="row"><label>المعايرة (نقطة/شمعة)</label><input type="number" id="fanUnit" step="0.001"><button class="btn small" id="fanAuto">تلقائي</button></div>
-      <div class="row"><label>الاتجاه</label>
-        <select class="btn" id="fanDir"><option value="auto">تلقائي</option><option value="up">من قاع (صاعدة)</option><option value="down">من قمة (هابطة)</option></select>
+      <h3 data-i18n="fanH3">مروحة جان</h3>
+      <div class="note" data-i18n="fanNote">حدد نقطة ارتكاز (قاع أو قمة) بالنقر على الشارت، وستُرسم الزوايا 1×8 حتى 8×1. الزاوية الذهبية هي 1×1.</div>
+      <div class="row"><button class="btn" id="btnFanPick">🎯 <span data-i18n="fanPickBtn">تحديد الارتكاز بالنقر</span></button></div>
+      <div class="row"><label data-i18n="fanUnitLbl">المعايرة (نقطة/شمعة)</label><input type="number" id="fanUnit" step="0.001"><button class="btn small" id="fanAuto" data-i18n="autoBtn">تلقائي</button></div>
+      <div class="row"><label data-i18n="dirLbl">الاتجاه</label>
+        <select class="btn" id="fanDir"><option value="auto" data-i18n="dirAuto">تلقائي</option><option value="up" data-i18n="dirUp">من قاع (صاعدة)</option><option value="down" data-i18n="dirDown">من قمة (هابطة)</option></select>
       </div>
-      <div class="row"><button class="btn small" id="fanClear">مسح المروحة</button></div>
+      <div class="row"><button class="btn small" id="fanClear" data-i18n="fanClearBtn">مسح المروحة</button></div>
       <div class="note" id="fanInfo" style="display:none"></div>
     </div>
 
     <!-- Square of 9 -->
     <div class="panel" id="pSq9">
-      <h3>مستويات مربع التسعة</h3>
-      <div class="note">مستويات دعم ومقاومة بزيادات 45° على عجلة جان (دورة كاملة = ‎+2 على الجذر). درجات الصليب الأساسي 90°/180°/270°/360° مميزة بالذهبي.</div>
-      <div class="row"><label>سعر الارتكاز</label><input type="number" id="sq9Price" step="0.01"></div>
+      <h3 data-i18n="sq9H3">مستويات مربع التسعة</h3>
+      <div class="note" data-i18n="sq9Note">مستويات دعم ومقاومة بزيادات 45° على عجلة جان (دورة كاملة = ‎+2 على الجذر). درجات الصليب الأساسي 90°/180°/270°/360° مميزة بالذهبي.</div>
+      <div class="row"><label data-i18n="pivotPriceLbl">سعر الارتكاز</label><input type="number" id="sq9Price" step="0.01"></div>
       <div class="row">
-        <button class="btn small" id="sq9FromLow">من أدنى قاع</button>
-        <button class="btn small" id="sq9FromHigh">من أعلى قمة</button>
+        <button class="btn small" id="sq9FromLow" data-i18n="fromLowBtn">من أدنى قاع</button>
+        <button class="btn small" id="sq9FromHigh" data-i18n="fromHighBtn">من أعلى قمة</button>
       </div>
-      <div class="row"><button class="btn gold small" id="sq9Draw">ارسم المستويات</button><button class="btn small" id="sq9Clear">مسح</button></div>
+      <div class="row"><button class="btn gold small" id="sq9Draw" data-i18n="drawLevelsBtn">ارسم المستويات</button><button class="btn small" id="sq9Clear" data-i18n="clearBtn">مسح</button></div>
       <div class="lvl-list" id="sq9List"></div>
-      <h3>نجمة جان</h3>
-      <div class="row"><label>النوع</label>
-        <select class="btn" id="starKind"><option value="hexagram">سداسية 60°</option><option value="pentagram">خماسية 72°</option></select>
-        <button class="btn gold small" id="starDraw">ارسم الرؤوس</button>
-        <button class="btn small" id="starClear">مسح</button>
+      <h3 data-i18n="starH3">نجمة جان</h3>
+      <div class="row"><label data-i18n="kindLbl">النوع</label>
+        <select class="btn" id="starKind"><option value="hexagram" data-i18n="hexOpt">سداسية 60°</option><option value="pentagram" data-i18n="pentOpt">خماسية 72°</option></select>
+        <button class="btn gold small" id="starDraw" data-i18n="drawStarBtn">ارسم الرؤوس</button>
+        <button class="btn small" id="starClear" data-i18n="clearBtn">مسح</button>
       </div>
-      <h3>حاسبة مربع 144</h3>
-      <div class="note">تُبنى من آخر ارتكاز سوينج على الخادم: أثمان وأثلاث أفقية + علامات زمنية + القطريان.</div>
-      <div class="row"><button class="btn gold small" id="sq144Draw">ارسم المربع</button><button class="btn small" id="sq144Clear">مسح</button></div>
+      <h3 data-i18n="sq144H3">حاسبة مربع 144</h3>
+      <div class="note" data-i18n="sq144Note">تُبنى من آخر ارتكاز سوينج على الخادم: أثمان وأثلاث أفقية + علامات زمنية + القطريان.</div>
+      <div class="row"><button class="btn gold small" id="sq144Draw" data-i18n="drawSq144Btn">ارسم المربع</button><button class="btn small" id="sq144Clear" data-i18n="clearBtn">مسح</button></div>
     </div>
 
     <!-- Retracements -->
     <div class="panel" id="pRet">
-      <h3>تصحيحات الأثمان (45 Years in Wall Street)</h3>
-      <div class="note">تقسيم المدى بين أكبر قاع وأعلى قمة إلى أثمان. مستوى 50% هو الأهم عند جان (بالذهبي).</div>
-      <div class="row"><button class="btn gold small" id="retDraw">ارسم من مدى البيانات</button><button class="btn small" id="retClear">مسح</button></div>
+      <h3 data-i18n="retH3">تصحيحات الأثمان (45 Years in Wall Street)</h3>
+      <div class="note" data-i18n="retNote">تقسيم المدى بين أكبر قاع وأعلى قمة إلى أثمان. مستوى 50% هو الأهم عند جان (بالذهبي).</div>
+      <div class="row"><button class="btn gold small" id="retDraw" data-i18n="retDrawBtn">ارسم من مدى البيانات</button><button class="btn small" id="retClear" data-i18n="clearBtn">مسح</button></div>
       <div class="lvl-list" id="retList"></div>
     </div>
 
     <!-- Swing -->
     <div class="panel" id="pSwing">
-      <h3>مخطط سوينج جان</h3>
-      <div class="note">مؤشر الاتجاه الميكانيكي: انعكاس بعد قيعان هابطة/قمم صاعدة متتالية بعدد الشموع المحدد.</div>
-      <div class="row"><label>شموع الانعكاس</label>
-        <select class="btn" id="swingBars"><option value="2">2-بار</option><option value="3">3-بار</option></select>
+      <h3 data-i18n="swingH3">مخطط سوينج جان</h3>
+      <div class="note" data-i18n="swingNote">مؤشر الاتجاه الميكانيكي: انعكاس بعد قيعان هابطة/قمم صاعدة متتالية بعدد الشموع المحدد.</div>
+      <div class="row"><label data-i18n="reversalBarsLbl">شموع الانعكاس</label>
+        <select class="btn" id="swingBars"><option value="2" data-i18n="bars2Opt">2-بار</option><option value="3" data-i18n="bars3Opt">3-بار</option></select>
       </div>
       <div class="row">
-        <label>تفعيل</label><input type="checkbox" id="swingOn">
-        <label style="min-width:auto">علامات الارتكاز</label><input type="checkbox" id="swingMarks" checked>
+        <label data-i18n="enableLbl">تفعيل</label><input type="checkbox" id="swingOn">
+        <label style="min-width:auto" data-i18n="pivotMarksLbl">علامات الارتكاز</label><input type="checkbox" id="swingMarks" checked>
       </div>
       <div class="note" id="swingInfo" style="display:none"></div>
     </div>
 
     <!-- Cycles -->
     <div class="panel" id="pCyc">
-      <h3>الدورات الزمنية (تحليل طيفي)</h3>
-      <div class="note">استخراج أقوى الدورات من حركة الإغلاق (نسخة مبسطة من FORM_US_analysis) مع إسقاط تركيبي مستقبلي لأقوى 3 دورات.</div>
+      <h3 data-i18n="cycH3">الدورات الزمنية (تحليل طيفي)</h3>
+      <div class="note" data-i18n="cycNote">استخراج أقوى الدورات من حركة الإغلاق (نسخة مبسطة من FORM_US_analysis) مع إسقاط تركيبي مستقبلي لأقوى 3 دورات.</div>
       <div class="row">
-        <button class="btn gold small" id="cycRun">تحليل</button>
-        <label style="min-width:auto">إظهار الإسقاط</label><input type="checkbox" id="cycOverlay" checked>
-        <button class="btn small" id="cycClear">مسح</button>
+        <button class="btn gold small" id="cycRun" data-i18n="analyzeBtn">تحليل</button>
+        <label style="min-width:auto" data-i18n="showProjLbl">إظهار الإسقاط</label><input type="checkbox" id="cycOverlay" checked>
+        <button class="btn small" id="cycClear" data-i18n="clearBtn">مسح</button>
       </div>
       <table class="cyc" id="cycTable"></table>
     </div>
 
     <!-- Astro -->
     <div class="panel" id="pAstro">
-      <h3>الخطوط الكوكبية</h3>
-      <div class="note">مع الخادم: كل الكواكب بدقة VSOP87 (ephem) جيوسنتري أو هيليوسنتري، وفترات التراجع تُرسم متقطعة. بدون خادم: خط الشمس المحلي فقط.</div>
-      <div class="row"><label>الكوكب</label>
+      <h3 data-i18n="astroH3">الخطوط الكوكبية</h3>
+      <div class="note" data-i18n="astroNote">مع الخادم: كل الكواكب بدقة VSOP87 (ephem) جيوسنتري أو هيليوسنتري، وفترات التراجع تُرسم متقطعة. بدون خادم: خط الشمس المحلي فقط.</div>
+      <div class="row"><label data-i18n="planetLbl">الكوكب</label>
         <select class="btn" id="planetSel">
-          <option value="sun">الشمس</option><option value="moon">القمر</option>
-          <option value="mercury">عطارد</option><option value="venus">الزهرة</option>
-          <option value="mars">المريخ</option><option value="jupiter">المشتري</option>
-          <option value="saturn">زحل</option><option value="uranus">أورانوس</option>
-          <option value="neptune">نبتون</option><option value="pluto">بلوتو</option>
+          <option value="sun" data-i18n="plSun">الشمس</option><option value="moon" data-i18n="plMoon">القمر</option>
+          <option value="mercury" data-i18n="plMercury">عطارد</option><option value="venus" data-i18n="plVenus">الزهرة</option>
+          <option value="mars" data-i18n="plMars">المريخ</option><option value="jupiter" data-i18n="plJupiter">المشتري</option>
+          <option value="saturn" data-i18n="plSaturn">زحل</option><option value="uranus" data-i18n="plUranus">أورانوس</option>
+          <option value="neptune" data-i18n="plNeptune">نبتون</option><option value="pluto" data-i18n="plPluto">بلوتو</option>
         </select>
-        <label style="min-width:auto">هيليو</label><input type="checkbox" id="helioChk">
+        <label style="min-width:auto" data-i18n="helioLbl">هيليو</label><input type="checkbox" id="helioChk">
       </div>
-      <div class="row"><label>تفعيل الخطوط</label><input type="checkbox" id="sunOn"></div>
-      <div class="row"><label>سعر لكل درجة</label><input type="number" id="sunScale" step="0.0001"><button class="btn small" id="sunAuto">تلقائي</button></div>
-      <div class="row"><label>التوافقية</label>
+      <div class="row"><label data-i18n="enableLinesLbl">تفعيل الخطوط</label><input type="checkbox" id="sunOn"></div>
+      <div class="row"><label data-i18n="pricePerDegLbl">سعر لكل درجة</label><input type="number" id="sunScale" step="0.0001"><button class="btn small" id="sunAuto" data-i18n="autoBtn">تلقائي</button></div>
+      <div class="row"><label data-i18n="harmonicLbl">التوافقية</label>
         <select class="btn" id="sunHarm"><option value="360">360°</option><option value="180">180°</option><option value="90">90°</option></select>
       </div>
       <div class="note" id="astroInfo" style="display:none"></div>
@@ -223,31 +225,51 @@
 
     <!-- Planetary Scanner -->
     <div class="panel" id="pScan">
-      <h3>الماسح الكوكبي</h3>
-      <div class="note">اختباران على ارتكازات السوينج التاريخية: (1) الانعكاس — ثبات نسبة السعر/الدرجات عند القمم والقيعان. (2) المحاذاة — توافق اتجاه السعر مع اتجاه الكوكب داخل الحركات. الثقة المدمجة = 0.6×الانعكاس + 0.4×المحاذاة.</div>
-      <div class="row"><button class="btn gold small" id="scanRun">امسح كل الكواكب</button><button class="btn small" id="scanClear">مسح الخطوط</button></div>
+      <h3 data-i18n="scanH3">الماسح الكوكبي</h3>
+      <div class="note" data-i18n="scanNote">اختباران على ارتكازات السوينج التاريخية: (1) الانعكاس — ثبات نسبة السعر/الدرجات عند القمم والقيعان. (2) المحاذاة — توافق اتجاه السعر مع اتجاه الكوكب داخل الحركات. الثقة المدمجة = 0.6×الانعكاس + 0.4×المحاذاة.</div>
+      <div class="row"><button class="btn gold small" id="scanRun" data-i18n="scanRunBtn">امسح كل الكواكب</button><button class="btn small" id="scanClear" data-i18n="scanClearBtn">مسح الخطوط</button></div>
       <div class="lvl-list" id="scanList" style="max-height:260px"></div>
       <div class="note" id="scanInfo" style="display:none"></div>
     </div>
 
     <!-- Confluence -->
     <div class="panel" id="pConf">
-      <h3>درجة الالتقاء (Confluence)</h3>
-      <div class="note">يجمع الخادم مستويات مربع 9 + نجمة جان + الأثمان + مربع 144 من آخر ارتكاز سوينج، يعنقدها بسماحة 0.4×ATR، ويشترط اتفاق عائلتي أدوات مختلفتين على الأقل. العرض الأسمك = نتيجة أعلى.</div>
-      <div class="row"><label>النجمة</label>
-        <select class="btn" id="confStar"><option value="hexagram">سداسية 60°</option><option value="pentagram">خماسية 72°</option></select>
-        <button class="btn gold small" id="confRun">احسب</button>
-        <button class="btn small" id="confClear">مسح</button>
+      <h3 data-i18n="confH3">درجة الالتقاء (Confluence)</h3>
+      <div class="note" data-i18n="confNote">يجمع الخادم مستويات مربع 9 + نجمة جان + الأثمان + مربع 144 من آخر ارتكاز سوينج، يعنقدها بسماحة 0.4×ATR، ويشترط اتفاق عائلتي أدوات مختلفتين على الأقل. العرض الأسمك = نتيجة أعلى.</div>
+      <div class="row"><label data-i18n="starLbl">النجمة</label>
+        <select class="btn" id="confStar"><option value="hexagram" data-i18n="hexOpt">سداسية 60°</option><option value="pentagram" data-i18n="pentOpt">خماسية 72°</option></select>
+        <button class="btn gold small" id="confRun" data-i18n="calcBtn">احسب</button>
+        <button class="btn small" id="confClear" data-i18n="clearBtn">مسح</button>
       </div>
       <div class="lvl-list" id="confList"></div>
     </div>
 
+    <!-- Squaring Price & Time + Eclipses -->
+    <div class="panel" id="pSquare">
+      <h3 data-i18n="sqrH3">موازنة السعر والزمن</h3>
+      <div class="note" data-i18n="sqrNote">جوهر منهج جان: يعلّم الارتكازات التي تساوى عندها عدد الشموع منذ الارتكاز مع مدى السعر منذ ذلك الارتكاز (بوحدة المعايرة). لا يتنبأ باتجاه — فقط يرصد نقطة "تربّع" محتملة.</div>
+      <div class="row"><label data-i18n="toleranceLbl">سماحة (شموع)</label><input type="number" id="sqrTol" value="1.5" step="0.5" min="0"></div>
+      <div class="row"><button class="btn gold small" id="sqrRun" data-i18n="checkBtn">افحص</button><button class="btn small" id="sqrClear" data-i18n="clearBtn">مسح</button></div>
+      <div class="lvl-list" id="sqrList" style="max-height:200px"></div>
+      <div class="note" id="sqrInfo" style="display:none"></div>
+
+      <h3 data-i18n="eclH3">جدول الكسوف/الخسوف</h3>
+      <div class="note" data-i18n="eclNote">كسوف الشمس/خسوف القمر ضمن مدى بيانات الشارت الحالي — خطوط رأسية على الشارت (فصل 17).</div>
+      <div class="row"><button class="btn gold small" id="eclRun" data-i18n="eclRunBtn">ابحث عن كسوف</button><button class="btn small" id="eclClear" data-i18n="clearBtn">مسح</button></div>
+      <div class="lvl-list" id="eclList" style="max-height:200px"></div>
+
+      <h3 data-i18n="mtH3">حاسبة الزمن الرئيسية</h3>
+      <div class="note" data-i18n="mtNote">مواعيد استحقاق 30/45/60/90/120/135/180/225/270/315/360 يومًا من آخر ارتكاز سوينج (Master Calculator for Time Periods، 1955). لا تتنبأ بالاتجاه — تُراقب سلوك السعر عند كل موعد.</div>
+      <div class="row"><button class="btn gold small" id="mtRun" data-i18n="mtRunBtn">ابنِ المسطرة الزمنية</button><button class="btn small" id="mtClear" data-i18n="clearBtn">مسح</button></div>
+      <div class="lvl-list" id="mtList" style="max-height:200px"></div>
+    </div>
+
     <!-- Signals -->
     <div class="panel" id="pSig">
-      <h3>إشارات اللجنة / TS</h3>
-      <div class="note">حمّل ملف CSV يحتوي تاريخًا وكلمة Buy/Sell (أو شراء/بيع) في أي عمود — مثل مخرجات committee_signals. تُعرض كأسهم على الشارت.</div>
-      <div class="row"><button class="btn gold" id="btnSig">📂 تحميل ملف إشارات</button><input type="file" id="sigInput" accept=".csv,.txt" hidden></div>
-      <div class="row"><button class="btn small" id="sigClear">مسح الإشارات</button></div>
+      <h3 data-i18n="sigH3">إشارات اللجنة / TS</h3>
+      <div class="note" data-i18n="sigNote">حمّل ملف CSV يحتوي تاريخًا وكلمة Buy/Sell (أو شراء/بيع) في أي عمود — مثل مخرجات committee_signals. تُعرض كأسهم على الشارت.</div>
+      <div class="row"><button class="btn gold" id="btnSig">📂 <span data-i18n="sigLoadBtn">تحميل ملف إشارات</span></button><input type="file" id="sigInput" accept=".csv,.txt" hidden></div>
+      <div class="row"><button class="btn small" id="sigClear" data-i18n="sigClearBtn">مسح الإشارات</button></div>
       <div class="note" id="sigInfo" style="display:none"></div>
     </div>
   </aside>
@@ -257,7 +279,7 @@
   <span class="dot"></span>
   <span id="stBars">—</span>
   <span id="stRange">—</span>
-  <span id="stSrc">بيانات تجريبية</span>
+  <span id="stSrc" data-i18n="demoData">بيانات تجريبية</span>
 </div>
 <div id="toast"></div>
 
@@ -269,6 +291,167 @@ const $=id=>document.getElementById(id);
 const toast=m=>{const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',2600);};
 const fmt=(v,d=2)=>v==null?'—':(+v).toFixed(d);
 const dstr=t=>new Date(t*1000).toISOString().slice(0,10);
+
+/* ================= i18n (عربي / English) ================= */
+const I18N={
+  ar:{
+    brandTag:'· نموذج المرحلة 1', srvStatus:'حالة الخادم',
+    localDataOpt:'— بيانات محلية —', syncTitle:'إعادة الاتصال بالخادم واستيراد الرموز',
+    fileBtn:'ملف', ctCandles:'شموع يابانية', ctHeikin:'هيكين آشي', ctBars:'أعمدة OHLC',
+    ctLine:'خط', ctArea:'مساحة', clearAllBtn:'مسح كل الطبقات',
+    pickHint:'انقر على الشارت لتحديد نقطة الارتكاز',
+    tabFan:'مروحة جان', tabSq9:'مربع 9', tabRet:'الأثمان', tabSwing:'سوينج',
+    tabCyc:'دورات', tabAstro:'فلك', tabScan:'الماسح ⚛', tabConf:'التقاء',
+    tabSquare:'موازنة/كسوف', tabSig:'إشارات',
+    fanH3:'مروحة جان',
+    fanNote:'حدد نقطة ارتكاز (قاع أو قمة) بالنقر على الشارت، وستُرسم الزوايا 1×8 حتى 8×1. الزاوية الذهبية هي 1×1.',
+    fanPickBtn:'تحديد الارتكاز بالنقر', fanUnitLbl:'المعايرة (نقطة/شمعة)', autoBtn:'تلقائي',
+    dirLbl:'الاتجاه', dirAuto:'تلقائي', dirUp:'من قاع (صاعدة)', dirDown:'من قمة (هابطة)',
+    fanClearBtn:'مسح المروحة',
+    sq9H3:'مستويات مربع التسعة',
+    sq9Note:'مستويات دعم ومقاومة بزيادات 45° على عجلة جان (دورة كاملة = ‎+2 على الجذر). درجات الصليب الأساسي 90°/180°/270°/360° مميزة بالذهبي.',
+    pivotPriceLbl:'سعر الارتكاز', fromLowBtn:'من أدنى قاع', fromHighBtn:'من أعلى قمة',
+    drawLevelsBtn:'ارسم المستويات', clearBtn:'مسح',
+    starH3:'نجمة جان', kindLbl:'النوع', hexOpt:'سداسية 60°', pentOpt:'خماسية 72°',
+    drawStarBtn:'ارسم الرؤوس',
+    sq144H3:'حاسبة مربع 144',
+    sq144Note:'تُبنى من آخر ارتكاز سوينج على الخادم: أثمان وأثلاث أفقية + علامات زمنية + القطريان.',
+    drawSq144Btn:'ارسم المربع',
+    retH3:'تصحيحات الأثمان (45 Years in Wall Street)',
+    retNote:'تقسيم المدى بين أكبر قاع وأعلى قمة إلى أثمان. مستوى 50% هو الأهم عند جان (بالذهبي).',
+    retDrawBtn:'ارسم من مدى البيانات',
+    swingH3:'مخطط سوينج جان',
+    swingNote:'مؤشر الاتجاه الميكانيكي: انعكاس بعد قيعان هابطة/قمم صاعدة متتالية بعدد الشموع المحدد.',
+    reversalBarsLbl:'شموع الانعكاس', bars2Opt:'2-بار', bars3Opt:'3-بار',
+    enableLbl:'تفعيل', pivotMarksLbl:'علامات الارتكاز',
+    cycH3:'الدورات الزمنية (تحليل طيفي)',
+    cycNote:'استخراج أقوى الدورات من حركة الإغلاق (نسخة مبسطة من FORM_US_analysis) مع إسقاط تركيبي مستقبلي لأقوى 3 دورات.',
+    analyzeBtn:'تحليل', showProjLbl:'إظهار الإسقاط',
+    astroH3:'الخطوط الكوكبية',
+    astroNote:'مع الخادم: كل الكواكب بدقة VSOP87 (ephem) جيوسنتري أو هيليوسنتري، وفترات التراجع تُرسم متقطعة. بدون خادم: خط الشمس المحلي فقط.',
+    planetLbl:'الكوكب', plSun:'الشمس', plMoon:'القمر', plMercury:'عطارد', plVenus:'الزهرة',
+    plMars:'المريخ', plJupiter:'المشتري', plSaturn:'زحل', plUranus:'أورانوس',
+    plNeptune:'نبتون', plPluto:'بلوتو',
+    helioLbl:'هيليو', enableLinesLbl:'تفعيل الخطوط', pricePerDegLbl:'سعر لكل درجة',
+    harmonicLbl:'التوافقية',
+    scanH3:'الماسح الكوكبي',
+    scanNote:'اختباران على ارتكازات السوينج التاريخية: (1) الانعكاس — ثبات نسبة السعر/الدرجات عند القمم والقيعان. (2) المحاذاة — توافق اتجاه السعر مع اتجاه الكوكب داخل الحركات. الثقة المدمجة = 0.6×الانعكاس + 0.4×المحاذاة.',
+    scanRunBtn:'امسح كل الكواكب', scanClearBtn:'مسح الخطوط',
+    confH3:'درجة الالتقاء (Confluence)',
+    confNote:'يجمع الخادم مستويات مربع 9 + نجمة جان + الأثمان + مربع 144 من آخر ارتكاز سوينج، يعنقدها بسماحة 0.4×ATR، ويشترط اتفاق عائلتي أدوات مختلفتين على الأقل. العرض الأسمك = نتيجة أعلى.',
+    starLbl:'النجمة', calcBtn:'احسب',
+    sqrH3:'موازنة السعر والزمن',
+    sqrNote:'جوهر منهج جان: يعلّم الارتكازات التي تساوى عندها عدد الشموع منذ الارتكاز مع مدى السعر منذ ذلك الارتكاز (بوحدة المعايرة). لا يتنبأ باتجاه — فقط يرصد نقطة "تربّع" محتملة.',
+    toleranceLbl:'سماحة (شموع)', checkBtn:'افحص',
+    eclH3:'جدول الكسوف/الخسوف',
+    eclNote:'كسوف الشمس/خسوف القمر ضمن مدى بيانات الشارت الحالي — خطوط رأسية على الشارت (فصل 17).',
+    eclRunBtn:'ابحث عن كسوف',
+    mtH3:'حاسبة الزمن الرئيسية',
+    mtNote:'مواعيد استحقاق 30/45/60/90/120/135/180/225/270/315/360 يومًا من آخر ارتكاز سوينج (Master Calculator for Time Periods، 1955). لا تتنبأ بالاتجاه — تُراقب سلوك السعر عند كل موعد.',
+    mtRunBtn:'ابنِ المسطرة الزمنية', daysWord:'يوم', mtBuilt:'تم بناء المسطرة الزمنية',
+    sigH3:'إشارات اللجنة / TS',
+    sigNote:'حمّل ملف CSV يحتوي تاريخًا وكلمة Buy/Sell (أو شراء/بيع) في أي عمود — مثل مخرجات committee_signals. تُعرض كأسهم على الشارت.',
+    sigLoadBtn:'تحميل ملف إشارات', sigClearBtn:'مسح الإشارات',
+    demoData:'بيانات تجريبية',
+    plotGridBtn:'ارسم الشبكة على الشارت', plotConnectedBtn:'الشبكة المترابطة ⚹',
+    noUnitFound:'لا وحدة سعرية مكتشفة لهذا الكوكب',
+    gridLabel:'شبكة', geoLbl:'جيو', unitLabel:'وحدة',
+    anchorLabel:'ارتكاز عند', goldLineNote:'الخط الذهبي = الارتكاز نفسه.',
+    gridDrawn:'رُسمت شبكة', gridFailed:'تعذر رسم الشبكة',
+    connectedLabel:'شبكة مترابطة',
+    aspectsLegend:'ذهبي=قِران 0°، سماوي=سداسي 60°، أحمر=تربيع 90°، أخضر=تثليث 120°، بنفسجي=مقابلة 180°.',
+    connectedDrawn:'رُسمت الشبكة المترابطة', topCandidate:'أقوى مرشح',
+    serverLost:'انقطع الخادم',
+  },
+  en:{
+    brandTag:'· Phase 1 prototype', srvStatus:'Server status',
+    localDataOpt:'— local data —', syncTitle:'Reconnect to server & import symbols',
+    fileBtn:'File', ctCandles:'Candles', ctHeikin:'Heikin Ashi', ctBars:'OHLC bars',
+    ctLine:'Line', ctArea:'Area', clearAllBtn:'Clear all layers',
+    pickHint:'Click the chart to pick an anchor point',
+    tabFan:'Gann Fan', tabSq9:'Square of 9', tabRet:'Retracements', tabSwing:'Swing',
+    tabCyc:'Cycles', tabAstro:'Astro', tabScan:'Scanner ⚛', tabConf:'Confluence',
+    tabSquare:'Squaring/Eclipses', tabSig:'Signals',
+    fanH3:'Gann Fan',
+    fanNote:'Pick an anchor point (low or high) by clicking the chart — angles 1×8 through 8×1 will be drawn. 1×1 is the golden angle.',
+    fanPickBtn:'Pick anchor by click', fanUnitLbl:'Scale (price/bar)', autoBtn:'Auto',
+    dirLbl:'Direction', dirAuto:'Auto', dirUp:'From low (up)', dirDown:'From high (down)',
+    fanClearBtn:'Clear fan',
+    sq9H3:'Square of Nine levels',
+    sq9Note:'Support/resistance levels in 45° increments on the Gann wheel (a full cycle = +2 on the square root). Cardinal cross degrees 90°/180°/270°/360° are highlighted gold.',
+    pivotPriceLbl:'Anchor price', fromLowBtn:'From lowest low', fromHighBtn:'From highest high',
+    drawLevelsBtn:'Draw levels', clearBtn:'Clear',
+    starH3:'Gann Star', kindLbl:'Type', hexOpt:'Hexagram 60°', pentOpt:'Pentagram 72°',
+    drawStarBtn:'Draw points',
+    sq144H3:'Square of 144 calculator',
+    sq144Note:'Built from the last swing pivot on the server: horizontal eighths/thirds + time marks + the two diagonals.',
+    drawSq144Btn:'Draw square',
+    retH3:'Price retracements (45 Years in Wall Street)',
+    retNote:'Divides the range between the highest high and lowest low into eighths. The 50% level is Gann\'s most important (gold).',
+    retDrawBtn:'Draw from data range',
+    swingH3:'Gann Swing chart',
+    swingNote:'Mechanical trend indicator: a reversal after N consecutive lower lows / higher highs.',
+    reversalBarsLbl:'Reversal bars', bars2Opt:'2-bar', bars3Opt:'3-bar',
+    enableLbl:'Enable', pivotMarksLbl:'Pivot markers',
+    cycH3:'Time cycles (spectral analysis)',
+    cycNote:'Extracts the strongest cycles from closing price action (a simplified FORM_US_analysis) with a forward composite projection of the top 3 cycles.',
+    analyzeBtn:'Analyze', showProjLbl:'Show projection',
+    astroH3:'Planetary lines',
+    astroNote:'With server: every planet at VSOP87 (ephem) precision, geocentric or heliocentric, retrograde spans drawn dashed. Without server: local geocentric Sun line only.',
+    planetLbl:'Planet', plSun:'Sun', plMoon:'Moon', plMercury:'Mercury', plVenus:'Venus',
+    plMars:'Mars', plJupiter:'Jupiter', plSaturn:'Saturn', plUranus:'Uranus',
+    plNeptune:'Neptune', plPluto:'Pluto',
+    helioLbl:'Helio', enableLinesLbl:'Enable lines', pricePerDegLbl:'Price per degree',
+    harmonicLbl:'Harmonic',
+    scanH3:'Planetary Scanner',
+    scanNote:'Two tests on historical swing pivots: (1) Reversal — stability of the price/degree ratio at highs and lows. (2) Alignment — agreement between price direction and planet direction within moves. Combined confidence = 0.6×reversal + 0.4×alignment.',
+    scanRunBtn:'Scan all planets', scanClearBtn:'Clear lines',
+    confH3:'Confluence score',
+    confNote:'The server pools Square-of-9 + Gann Star + retracement + Square-144 levels from the last swing pivot, clusters them within 0.4×ATR, and requires agreement between at least two different tool families. Thicker line = higher score.',
+    starLbl:'Star', calcBtn:'Calculate',
+    sqrH3:'Squaring Price & Time',
+    sqrNote:'The core of Gann\'s method: flags pivots where the number of bars elapsed since the pivot equals the price range since that pivot (in scale units). It does not predict direction — only flags a potential "squared" point.',
+    toleranceLbl:'Tolerance (bars)', checkBtn:'Check',
+    eclH3:'Eclipse table',
+    eclNote:'Solar/lunar eclipses within the chart\'s current data range — shown as vertical markers (Ch.17).',
+    eclRunBtn:'Find eclipses',
+    mtH3:'Master Time Periods calculator',
+    mtNote:'Due dates at 30/45/60/90/120/135/180/225/270/315/360 days from the last swing pivot (Master Calculator for Time Periods, 1955). Does not predict direction — it flags dates to watch price behavior at.',
+    mtRunBtn:'Build time ruler', daysWord:'days', mtBuilt:'Time ruler built',
+    sigH3:'Committee / TS signals',
+    sigNote:'Load a CSV with a date and a Buy/Sell word in any column — e.g. committee_signals output. Shown as arrows on the chart.',
+    sigLoadBtn:'Load signals file', sigClearBtn:'Clear signals',
+    demoData:'Demo data',
+    plotGridBtn:'Draw grid on chart', plotConnectedBtn:'Connected network ⚹',
+    noUnitFound:'No price unit discovered for this planet',
+    gridLabel:'Grid', geoLbl:'Geo', unitLabel:'Unit',
+    anchorLabel:'anchor at', goldLineNote:'The gold line is the anchor itself.',
+    gridDrawn:'Grid drawn for', gridFailed:'Could not draw grid',
+    connectedLabel:'Connected network',
+    aspectsLegend:'Gold=conjunction 0°, cyan=sextile 60°, red=square 90°, green=trine 120°, violet=opposition 180°.',
+    connectedDrawn:'Connected network drawn for', topCandidate:'Top candidate',
+    serverLost:'Server connection lost',
+  },
+};
+let LANG=localStorage.getItem('sairaLang')||'ar';
+
+function applyI18n(){
+  const dict=I18N[LANG];
+  // الاتجاه العام للصفحة (RTL) ثابت دومًا بقرار المستخدم — فقط lang يتغيّر
+  // (يفيد قارئات الشاشة وأدوات الترجمة) بينما التخطيط لا ينقلب مع EN.
+  document.documentElement.lang=LANG;
+  document.documentElement.dir='rtl';
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key=el.getAttribute('data-i18n');
+    if(dict[key]!=null)el.textContent=dict[key];
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{
+    const key=el.getAttribute('data-i18n-title');
+    if(dict[key]!=null)el.title=dict[key];
+  });
+  $('btnLang').textContent=LANG==='ar'?'EN':'ع';
+}
+function t(key){return I18N[LANG][key]||I18N.ar[key]||key;}
 
 /* ================= State ================= */
 const S={
@@ -284,6 +467,9 @@ const S={
   cyc:{series:null,cycles:[]},
   sun:{on:false,series:[],scale:null},
   sig:{raw:[],markers:[]},
+  sqr:{markers:[]},
+  ecl:{markers:[]},
+  mt:{markers:[]},
   pick:null,
 };
 
@@ -480,7 +666,8 @@ const barInterval=()=>S.bars.length>1?Math.round((S.bars[S.bars.length-1].t-S.ba
 
 function applyMarkers(){
   if(!mainSeries)return;
-  const all=[...S.sig.markers,...(S.swing.on&&$('swingMarks').checked?S.swing.markers:[])];
+  const all=[...S.sig.markers,...(S.swing.on&&$('swingMarks').checked?S.swing.markers:[]),
+    ...S.sqr.markers,...S.ecl.markers,...S.mt.markers];
   all.sort((a,b)=>a.time-b.time);
   mainSeries.setMarkers(all);
 }
@@ -765,14 +952,17 @@ $('scanRun').onclick=async()=>{
           ${rv.confidence!=null?`انعكاس ×${rv.confidence} (وحدة ${rv.unit_price_median} · تشتت ${rv.dispersion})`:'انعكاس —'}<br>
           ${al.confidence!=null?`محاذاة ×${al.confidence} (${al.aligned_moves}✓/${al.opposed_moves}✗ من ${al.moves_tested})`:'محاذاة —'}
         </div>
-        <button class="btn small" style="margin-top:5px;width:100%" data-plot="${i}">ارسم الشبكة على الشارت</button>
+        <div style="display:flex;gap:4px;margin-top:5px">
+          <button class="btn small" style="flex:1" data-plot="${i}">${t('plotGridBtn')}</button>
+          <button class="btn small" style="flex:1" data-connected="${i}">${t('plotConnectedBtn')}</button>
+        </div>
       </div>`;
     }).join('');
 
     $('scanList').querySelectorAll('[data-plot]').forEach(btn=>{
       btn.onclick=async()=>{
         const p=r.planets[+btn.dataset.plot];
-        if(!p.reversal){toast('لا وحدة سعرية مكتشفة لهذا الكوكب');return;}
+        if(!p.reversal){toast(t('noUnitFound'));return;}
         $('scanClear').onclick();
         try{
           const g=await API.get(`/scan/grid/${S.serverSym}?planet=${p.planet}&center=${p.center}&unit_price=${p.reversal.unit_price_median}&n_lines=3`);
@@ -785,13 +975,39 @@ $('scanRun').onclick=async()=>{
             }
           }
           $('scanInfo').style.display='block';
-          $('scanInfo').innerHTML=`شبكة <b>${NAMES[p.planet]||p.planet}</b> ${p.center==='helio'?'هيليو':'جيو'} — وحدة ${p.reversal.unit_price_median}/درجة، ارتكاز عند ${fmt(g.anchor.price)} (خط طول ${g.anchor.lon}°). الخط الذهبي = الارتكاز نفسه.`;
-          toast('رُسمت شبكة '+p.planet);
-        }catch(e){toast('تعذر رسم الشبكة');}
+          $('scanInfo').innerHTML=`${t('gridLabel')} <b>${NAMES[p.planet]||p.planet}</b> ${p.center==='helio'?t('helioLbl'):t('geoLbl')} — ${t('unitLabel')} ${p.reversal.unit_price_median}/°, ${t('anchorLabel')} ${fmt(g.anchor.price)} (lon ${g.anchor.lon}°). ${t('goldLineNote')}`;
+          toast(t('gridDrawn')+' '+p.planet);
+        }catch(e){toast(t('gridFailed'));}
       };
     });
-    toast('أقوى مرشح: '+(NAMES[r.planets[0].planet]||r.planets[0].planet)+' '+(r.planets[0].center==='helio'?'هيليو':'جيو')+' ×'+r.planets[0].combined_confidence);
-  }catch(e){setSrv(false);$('scanList').innerHTML='';toast('انقطع الخادم');}
+
+    $('scanList').querySelectorAll('[data-connected]').forEach(btn=>{
+      btn.onclick=async()=>{
+        const p=r.planets[+btn.dataset.connected];
+        if(!p.reversal){toast(t('noUnitFound'));return;}
+        $('scanClear').onclick();
+        const ASPECT_COLORS={0:'#E0B341',60:'#4FC3F7',90:'#EF5350',120:'#26A69A',180:'#9C8CF8'};
+        try{
+          const g=await API.get(`/scan/connected/${S.serverSym}?planet=${p.planet}&center=${p.center}&unit_price=${p.reversal.unit_price_median}&n_lines=1`);
+          for(const a of g.aspects){
+            const color=ASPECT_COLORS[a.deg]||'#E0B341';
+            for(const s of a.series){
+              for(const seg of s.segments){
+                if(seg.length<2)continue;
+                const sr=chart.addLineSeries({color,lineWidth:a.deg===0?2:1,lineStyle:a.deg===0?LWC.LineStyle.Solid:LWC.LineStyle.Dashed,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+                sr.setData(seg.map(pt=>({time:pt.t,value:pt.price})));
+                S.scan.series.push(sr);
+              }
+            }
+          }
+          $('scanInfo').style.display='block';
+          $('scanInfo').innerHTML=`${t('connectedLabel')} <b>${NAMES[p.planet]||p.planet}</b> ${p.center==='helio'?t('helioLbl'):t('geoLbl')} — ${t('aspectsLegend')}`;
+          toast(t('connectedDrawn')+' '+p.planet);
+        }catch(e){toast(t('gridFailed'));}
+      };
+    });
+    toast(t('topCandidate')+': '+(NAMES[r.planets[0].planet]||r.planets[0].planet)+' '+(r.planets[0].center==='helio'?t('helioLbl'):t('geoLbl'))+' ×'+r.planets[0].combined_confidence);
+  }catch(e){setSrv(false);$('scanList').innerHTML='';toast(t('serverLost'));}
 };
 
 /* ================= Star / Sq144 / Confluence (خادم) ================= */
@@ -865,6 +1081,64 @@ $('confRun').onclick=async()=>{
   }catch(e){setSrv(false);toast('انقطع الخادم');}
 };
 
+/* ================= Squaring Price & Time ================= */
+$('sqrClear').onclick=()=>{S.sqr.markers=[];applyMarkers();$('sqrList').innerHTML='';$('sqrInfo').style.display='none';};
+$('sqrRun').onclick=async()=>{
+  if(!needServer())return;
+  try{
+    const tol=+$('sqrTol').value||1.5;
+    const r=await API.get(`/gann/squaring/${S.serverSym}?tf=${S.tf==='D'?'D':'D'}&limit=5000&tolerance_bars=${tol}`);
+    $('sqrClear').onclick();
+    if(!r.squares.length){$('sqrList').innerHTML='';toast('لا موازنة سعر/زمن ضمن السماحة الحالية');return;}
+    S.sqr.markers=r.squares.map(s=>({time:S.bars[nearestIdxByTime(s.pivot_t)].t,
+      position:s.pivot_type==='top'?'aboveBar':'belowBar',color:'#FFB74D',
+      shape:'circle',text:'□'+s.diff_bars}));
+    applyMarkers();
+    $('sqrList').innerHTML=r.squares.map(s=>
+      `<div><span>${dstr(s.pivot_t)} (${s.pivot_type==='top'?'قمة':'قاع'})</span><span>±${s.diff_bars} شمعة</span></div>`).join('');
+    $('sqrInfo').style.display='block';
+    $('sqrInfo').textContent='وحدة السعر المستخدمة: '+r.price_unit+' — '+r.squares.length+' موازنة مكتشفة';
+    toast(r.squares.length+' نقطة موازنة سعر/زمن');
+  }catch(e){setSrv(false);toast('انقطع الخادم');}
+};
+
+/* ================= Eclipses ================= */
+$('eclClear').onclick=()=>{S.ecl.markers=[];applyMarkers();$('eclList').innerHTML='';};
+$('eclRun').onclick=async()=>{
+  if(!needServer())return;
+  try{
+    const r=await API.get(`/astro/eclipses?t_start=${S.bars[0].t}&t_end=${S.bars[S.bars.length-1].t}`);
+    $('eclClear').onclick();
+    if(!r.eclipses.length){$('eclList').innerHTML='';toast('لا كسوف/خسوف ضمن مدى البيانات الحالي');return;}
+    S.ecl.markers=r.eclipses.map(e=>({time:S.bars[Math.min(nearestIdxByTime(e.t),S.bars.length-1)].t,
+      position:'aboveBar',color:e.kind==='solar'?'#FFB74D':'#9C8CF8',
+      shape:'arrowDown',text:e.kind==='solar'?'☉':'☾'}));
+    applyMarkers();
+    $('eclList').innerHTML=r.eclipses.map(e=>
+      `<div><span>${dstr(e.t)}</span><span>${e.kind==='solar'?'كسوف شمس ☉':'خسوف قمر ☾'}</span></div>`).join('');
+    toast(r.eclipses.length+' حدث كسوف/خسوف على الشارت');
+  }catch(e){setSrv(false);toast(t('serverLost'));}
+};
+
+/* ================= Master Calculator for Time Periods ================= */
+S.mt={markers:[]};
+$('mtClear').onclick=()=>{S.mt.markers=[];applyMarkers();$('mtList').innerHTML='';};
+$('mtRun').onclick=async()=>{
+  if(!needServer())return;
+  try{
+    const r=await API.get(`/gann/master_time/${S.serverSym}?tf=D&limit=5000`);
+    $('mtClear').onclick();
+    S.mt.markers=r.periods.filter(p=>p.t<=S.bars[S.bars.length-1].t+barInterval()*400)
+      .map(p=>({time:S.bars[Math.min(nearestIdxByTime(p.t),S.bars.length-1)].t,
+        position:'belowBar',color:p.upcoming?'#4FC3F7':'#7C8AA0',
+        shape:'square',text:p.days+'د'}));
+    applyMarkers();
+    $('mtList').innerHTML=r.periods.map(p=>
+      `<div${p.upcoming?' class="card"':''}><span>${p.days} ${t('daysWord')}</span><span>${dstr(p.t)}${p.upcoming?' ⏳':''}</span></div>`).join('');
+    toast(t('mtBuilt'));
+  }catch(e){setSrv(false);toast(t('serverLost'));}
+};
+
 /* ================= Signals ================= */
 $('btnSig').onclick=()=>$('sigInput').click();
 $('sigClear').onclick=()=>{S.sig.raw=[];S.sig.markers=[];applyMarkers();$('sigInfo').style.display='none';};
@@ -914,7 +1188,11 @@ function clearAll(msg){
   S.swing.on=false;$('swingOn').checked=false;clearSwing();
   clearCyc(false);
   S.sun.on=false;$('sunOn').checked=false;clearSun();
-  S.sig.raw=[];S.sig.markers=[];applyMarkers();
+  S.sig.raw=[];S.sig.markers=[];
+  S.sqr.markers=[];$('sqrList').innerHTML='';$('sqrInfo').style.display='none';
+  S.ecl.markers=[];$('eclList').innerHTML='';
+  S.mt.markers=[];$('mtList').innerHTML='';
+  applyMarkers();
   if(msg)toast('تم مسح كل الطبقات');
 }
 
@@ -1051,13 +1329,22 @@ $('swingOn').onchange=async e=>{
   swingDraw();
 };
 
+/* ================= Language toggle ================= */
+$('btnLang').onclick=()=>{
+  LANG=LANG==='ar'?'en':'ar';
+  localStorage.setItem('sairaLang',LANG);
+  applyI18n();
+  toast(LANG==='ar'?'تم التبديل إلى العربية':'Switched to English');
+};
+
 /* ================= Boot ================= */
+applyI18n();
 S.serverSym=null;
 S.raw=demo();S.baseSec=86400;S.bars=resample(S.raw,'D');
 buildTfButtons();render();
 $('fanUnit').value=autoUnit();$('sq9Price').value=fmt(minLow());$('sunScale').value=autoSunScale();
 window.addEventListener('resize',()=>chart.timeScale().fitContent());
-connect(true).then(ok=>{if(ok)toast('الخادم متصل — اختر رمزًا من القائمة');});
+connect(true).then(ok=>{if(ok)toast(LANG==='ar'?'الخادم متصل — اختر رمزًا من القائمة':'Server connected — pick a symbol');});
 </script>
 </body>
 </html>

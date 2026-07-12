@@ -202,6 +202,85 @@ def star_levels(pivot: float, kind: str = "hexagram",
     return out
 
 
+# ---------------------------------------------------------------- موازنة السعر والزمن
+def squaring_price_time(df: pd.DataFrame, swing_m: int = 2,
+                        price_unit: float | None = None,
+                        tolerance_bars: float = 1.5) -> dict:
+    """جوهر منهج جان: تنبيه عندما "يتربّع" السعر مع الزمن — عدد الشموع منذ
+    آخر ارتكاز سوينج يساوي مدى السعر منذ ذلك الارتكاز (بوحدة المعايرة).
+
+    وحدة المعايرة الافتراضية = نفس autoUnit في الواجهة: مدى كامل البيانات
+    مقسومًا على عدد الشموع — لكن تُفضَّل تمريرها من قيمة معايرة موثوقة
+    (مثل sq144 price_unit أو نتيجة الماسح الكوكبي) عند توفرها.
+
+    كل ارتكاز سوينج (ما عدا الأخير الجاري) يُفحص: "شموع منذ الارتكاز" مقابل
+    "مدى السعر منذ الارتكاز ÷ الوحدة" — التطابق ضمن tolerance_bars يُعلَّم
+    كـ "مربّع". لا يُنبئ باتجاه، فقط يعلّم النقطة التي رصدها جان كارتكاز
+    محتمل قوي — التفسير (استمرار أو انعكاس) متروك للمؤشرات الأخرى (نفس مبدأ
+    الخطة: "لا نتنبأ بالاتجاه منها بل نراقب سلوك السعر عندها").
+    """
+    sw = swing_pivots(df, swing_m)
+    pivots = sw["pivots"]
+    if len(pivots) < 2:
+        return {"squares": [], "price_unit": price_unit}
+
+    if price_unit is None:
+        span = float(df["h"].max() - df["l"].min())
+        price_unit = round(span / max(len(df), 1), 6) or 0.01
+
+    t_arr = df["t"].values
+    h_arr, l_arr = df["h"].values, df["l"].values
+    n = len(df)
+
+    squares: list[dict] = []
+    for i, piv in enumerate(pivots[:-1]):
+        i0 = int(np.searchsorted(t_arr, piv["t"]))
+        if i0 >= n - 1:
+            continue
+        seg_hi = float(h_arr[i0:].max())
+        seg_lo = float(l_arr[i0:].min())
+        bars_elapsed = n - 1 - i0
+        price_range_units = (seg_hi - seg_lo) / price_unit
+        diff_bars = abs(bars_elapsed - price_range_units)
+        if diff_bars <= tolerance_bars:
+            squares.append({
+                "pivot_t": int(piv["t"]), "pivot_price": piv["price"],
+                "pivot_type": piv["type"],
+                "bars_elapsed": bars_elapsed,
+                "price_range_units": round(price_range_units, 2),
+                "diff_bars": round(diff_bars, 2),
+                "as_of_t": int(t_arr[-1]),
+            })
+    squares.sort(key=lambda s: s["diff_bars"])
+    return {"squares": squares, "price_unit": price_unit,
+            "tolerance_bars": tolerance_bars}
+
+
+# ---------------------------------------------------------------- حاسبة الزمن الرئيسية
+# Master Calculator for Time Periods (1955): مسطرة زمنية تُرسي من تاريخ
+# القاع/القمة (أو IPO) وتُعلّم أيام الاستحقاق القياسية. لا تتنبأ بالاتجاه —
+# فقط "مواعيد استحقاق" يُراقَب سلوك السعر عندها (نفس مبدأ squaring_price_time
+# أعلاه: الملاحظة لا التنبؤ).
+MASTER_TIME_PERIODS_DAYS: tuple[int, ...] = (
+    30, 45, 60, 90, 120, 135, 180, 225, 270, 315, 360,
+)
+
+
+def master_time_periods(anchor_t: int, as_of_t: int,
+                        periods_days: tuple = MASTER_TIME_PERIODS_DAYS) -> dict:
+    """يبني تواريخ الاستحقاق (30/45/60/.../360 يومًا) من تاريخ ارتكاز واحد.
+
+    كل موعد يُعلَّم بحالته: "past" (مضى) أو "upcoming" (قادم) نسبة لـ as_of_t
+    (عادة آخر شمعة في البيانات) — التمييز يفيد الواجهة في رسم الماضي بخط
+    رفيع والمستقبل بخط بارز، دون أي منطق تنبؤي إضافي هنا.
+    """
+    out = []
+    for days in periods_days:
+        t = anchor_t + days * 86400
+        out.append({"days": days, "t": t, "upcoming": t >= as_of_t})
+    return {"anchor_t": anchor_t, "as_of_t": as_of_t, "periods": out}
+
+
 # ---------------------------------------------------------------- درجة الالتقاء
 _W = {"sq9_cardinal": 2.0, "sq9": 1.0, "star": 1.5,
       "ret_50": 2.0, "ret": 1.0, "sq144_corner": 2.0, "sq144": 1.0}

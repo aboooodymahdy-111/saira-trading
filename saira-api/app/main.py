@@ -194,6 +194,17 @@ def astro_snapshot(t: int):
     return {"t": t, "positions": astro_mod.snapshot(t)}
 
 
+@app.get("/astro/eclipses")
+def astro_eclipses(t_start: int, t_end: int):
+    """جدول الكسوف/الخسوف بين تاريخين (فصل 17)."""
+    if t_end <= t_start:
+        raise HTTPException(400, "t_end يجب أن يتجاوز t_start")
+    if (t_end - t_start) / 86400 > 366 * 30:
+        raise HTTPException(400, "المدى كبير جدًا — قسّمه على دفعات أصغر من 30 سنة")
+    return {"t_start": t_start, "t_end": t_end,
+            "eclipses": astro_mod.eclipses(t_start, t_end)}
+
+
 @app.get("/gann/star")
 def gann_star(price: float, kind: str = "hexagram", rotations: int = 2,
               lo: float | None = None, hi: float | None = None):
@@ -235,6 +246,35 @@ def gann_confluence(symbol: str, tf: str = "D", limit: int = 5000,
             **gann.confluence(df, swing_m, star_kind, top)}
 
 
+@app.get("/gann/squaring/{symbol}")
+def gann_squaring(symbol: str, tf: str = "D", limit: int = 5000,
+                  swing_m: int = 2, price_unit: float | None = None,
+                  tolerance_bars: float = 1.5):
+    """موازنة السعر والزمن: ارتكازات سوينج "تربّعت" فيها الشموع مع المدى."""
+    import pandas as pd
+    df = pd.DataFrame(_need_symbol(symbol, tf, limit))
+    return {"symbol": symbol.upper(), "tf": tf,
+            **gann.squaring_price_time(df, swing_m, price_unit, tolerance_bars)}
+
+
+@app.get("/gann/master_time/{symbol}")
+def gann_master_time(symbol: str, tf: str = "D", limit: int = 5000,
+                     swing_m: int = 2, anchor_t: int | None = None):
+    """حاسبة الزمن الرئيسية: مواعيد استحقاق 30..360 يومًا من ارتكاز.
+
+    anchor_t اختياري — بلا تمرير، يُستخدم آخر ارتكاز سوينج تلقائيًا."""
+    import pandas as pd
+    df = pd.DataFrame(_need_symbol(symbol, tf, limit))
+    if anchor_t is None:
+        sw = gann.swing_pivots(df, swing_m)
+        if not sw["pivots"]:
+            raise HTTPException(422, "لا ارتكاز سوينج كافٍ ولم يُمرَّر anchor_t")
+        anchor_t = sw["pivots"][-1]["t"]
+    as_of_t = int(df["t"].iloc[-1])
+    return {"symbol": symbol.upper(), "tf": tf,
+            **gann.master_time_periods(anchor_t, as_of_t)}
+
+
 # ---------------------------------------------------------------- الماسح الكوكبي (Planetary Scanner)
 from .analysis import scanner  # noqa: E402
 
@@ -257,5 +297,18 @@ def scan_grid(symbol: str, planet: str, center: str, unit_price: float,
     df = pd.DataFrame(_need_symbol(symbol, tf, limit))
     try:
         return scanner.planetary_grid(df, planet, center, unit_price, n_lines)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+
+
+@app.get("/scan/connected/{symbol}")
+def scan_connected(symbol: str, planet: str, center: str, unit_price: float,
+                   tf: str = "D", limit: int = 5000, n_lines: int = 2):
+    """شبكة الخطوط المترابطة لكوكب فائز في الماسح: قِران/سداسي/تربيع/
+    تثليث/مقابلة معًا (ملاحظة 1، مجلد 1) بدل خط واحد فقط."""
+    import pandas as pd
+    df = pd.DataFrame(_need_symbol(symbol, tf, limit))
+    try:
+        return scanner.connected_lines(df, planet, center, unit_price, n_lines)
     except ValueError as exc:
         raise HTTPException(400, str(exc))
