@@ -105,8 +105,10 @@ def _collect_report_history() -> list[dict]:
     return entries
 
 TABLE_COLS = [
-    "ticker", "sector", "industry", "current_price", "entry_price", "entry_basis",
-    "exit_price", "exit_basis", "exit_days_estimate", "total_buy_votes", "total_sell_votes",
+    "ticker", "sector", "industry", "current_price",
+    "entry_price", "entry_basis", "stop_loss_price", "stop_loss_basis",
+    "exit_price", "exit_basis", "target2_price", "target2_basis",
+    "exit_days_estimate", "total_buy_votes", "total_sell_votes",
     "technical_net_vote", "quantitative_net_vote", "astrological_net_vote",
     "advanced_technical_net_vote", "gain_speed_score", "best_square9_angle",
     "best_square9_hit_rate", "signal_breakdown",
@@ -119,14 +121,21 @@ COLUMN_TOOLTIPS = {
     "ticker": "Stock ticker symbol (NASDAQ/NYSE).",
     "sector": "yfinance sector classification.",
     "current_price": "Latest close price from the run's yfinance fetch.",
-    "entry_price": "Nearest support level below current price (Pivot Point S1 or the calibrated "
-                    "Square of Nine projected level, whichever is closer) — the suggested pullback-buy "
-                    "level. If the committee is already net-buy, this is just the current price (no need "
-                    "to wait for a dip). Hover the value for the exact basis used on this row.",
-    "exit_price": "Nearest resistance level above current price (Pivot Point R1 or the calibrated "
-                   "Square of Nine projected level) — the first realistic take-profit target. Falls back "
-                   "to the standard 10%-swing target if no resistance level was found. Hover the value "
-                   "for the exact basis used on this row.",
+    "entry_price": "Nearest support level below current price (Pivot Point S1/S2/S3 or the calibrated "
+                    "Square of Nine projected level, whichever is closest) — the suggested pullback-buy "
+                    "level, ALWAYS a real support level regardless of the committee's vote. Falls back to "
+                    "current price only if no support level was found at all. Hover the value for the "
+                    "exact basis used on this row.",
+    "stop_loss_price": "The next support level down from entry_price (a second line of defense) — hover "
+                        "for the exact basis. Blank if no second support level was identified.",
+    "exit_price": "Nearest resistance level above current price (Pivot Point R1/R2/R3 or the calibrated "
+                   "Square of Nine projected level) — the first realistic take-profit target, ALWAYS a real "
+                   "resistance level regardless of vote. Falls back to the standard 10%-swing target only as "
+                   "a reference floor if no resistance level was found at all. Hover the value for the exact "
+                   "basis used on this row.",
+    "target2_price": "The next resistance level up from exit_price (\"T2\") — a second, further profit "
+                      "target if the first is reached. Hover for the exact basis. Blank if no second "
+                      "resistance level was identified.",
     "exit_days_estimate": "This ticker's own historical median trading days to reach the swing target "
                            "(10% within 5 trading days), from swing_horizon_filter.evaluate_horizon_fit. "
                            "Blank if the target was never historically hit in that window.",
@@ -453,7 +462,7 @@ h2.section-title .count {
 .controls .result-count { margin-left: auto; font-size: 12px; color: var(--ink-3); }
 
 .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 1240px; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 1420px; }
 thead th {
   padding: 10px 12px; background: var(--surface-2); border-bottom: 1px solid var(--border);
   color: var(--ink-2); font-weight: 600; text-align: left; white-space: nowrap;
@@ -644,7 +653,9 @@ footer.notes strong { color: var(--ink-2); }
     { key: 'industry', label: 'Industry' },
     { key: 'current_price', label: 'Price', num: true },
     { key: 'entry_price', label: 'Entry', num: true },
+    { key: 'stop_loss_price', label: 'Stop Loss', num: true },
     { key: 'exit_price', label: 'Exit', num: true },
+    { key: 'target2_price', label: 'T2', num: true },
     { key: 'exit_days_estimate', label: 'Exit (days)', num: true },
     { key: 'total_buy_votes', label: 'Buy', num: true },
     { key: 'total_sell_votes', label: 'Sell', num: true },
@@ -732,7 +743,9 @@ footer.notes strong { color: var(--ink-2); }
       <div class="price">
         <span class="current">${fmtPrice(r.current_price)}</span>
         <span title="${esc(r.entry_basis || '')}">entry ${fmtPrice(r.entry_price)}</span> ·
-        <span title="${esc(r.exit_basis || '')}">exit ${fmtPrice(r.exit_price)}</span>
+        <span title="${esc(r.exit_basis || '')}">exit ${fmtPrice(r.exit_price)}</span><br>
+        <span title="${esc(r.stop_loss_basis || '')}">stop ${fmtPrice(r.stop_loss_price)}</span> ·
+        <span title="${esc(r.target2_basis || '')}">T2 ${fmtPrice(r.target2_price)}</span>
       </div>
       <div class="chips">
         ${chip(r.technical_net_vote, r.signal_breakdown, 'technical')}
@@ -816,7 +829,9 @@ footer.notes strong { color: var(--ink-2); }
         <td>${r.industry || 'Unknown'}</td>
         <td class="num">${fmtPrice(r.current_price)}</td>
         <td class="num" title="${esc(r.entry_basis || '')}">${fmtPrice(r.entry_price)}</td>
+        <td class="num" title="${esc(r.stop_loss_basis || '')}">${fmtPrice(r.stop_loss_price)}</td>
         <td class="num" title="${esc(r.exit_basis || '')}">${fmtPrice(r.exit_price)}</td>
+        <td class="num" title="${esc(r.target2_basis || '')}">${fmtPrice(r.target2_price)}</td>
         <td class="num">${r.exit_days_estimate == null ? '—' : r.exit_days_estimate}</td>
         <td class="num">${r.total_buy_votes}</td>
         <td class="num">${r.total_sell_votes}</td>

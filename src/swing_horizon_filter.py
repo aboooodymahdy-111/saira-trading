@@ -118,7 +118,7 @@ class ForwardOutcomeResult:
 
 
 def evaluate_forward_outcome(future_close: pd.Series, entry_price: float, exit_price: float,
-                              max_holding_days: int, net_buy: bool) -> ForwardOutcomeResult:
+                              max_holding_days: int, already_at_entry: bool = False) -> ForwardOutcomeResult:
     """
     The mirror-image question to evaluate_horizon_fit's "does this ticker
     tend to reach its target" — given what ACTUALLY happened after a
@@ -127,12 +127,16 @@ def evaluate_forward_outcome(future_close: pd.Series, entry_price: float, exit_p
     (live daily recommendations) and src/backtest.py (simulated historical
     ones) so both score outcomes identically (2026-07).
 
-    net_buy=True means entry_price was just today's close at recommendation
-    time (see compute_entry_exit_levels) — entry is trivially "touched" on
-    day zero, so entry_touched isn't a meaningful signal in that case; only
-    whether exit_price was reached within max_holding_days matters. For a
-    net_buy=False row (needed a pullback to entry_price first), entry_touched
-    tracks whether that pullback ever actually happened.
+    entry_price is now ALWAYS a real support level below (or, rarely, equal
+    to) the price at recommendation time — see
+    full_universe_analysis.compute_entry_exit_levels (CORRECTED 2026-07: it
+    used to just be "today's close" whenever the committee was net-buy,
+    which wasn't a real entry level at all). already_at_entry should be True
+    only in that rare fallback case (no support level was found at all, so
+    entry_price == the price already at recommendation time) — the caller
+    computes it by comparing entry_price to that price; almost every row
+    will pass False here, since a genuine support level requires an actual
+    pullback to reach.
 
     "still_pending": fewer than max_holding_days bars are available yet in
     future_close — the window hasn't fully elapsed, so "missed" can't be
@@ -140,14 +144,14 @@ def evaluate_forward_outcome(future_close: pd.Series, entry_price: float, exit_p
     in the past should never see this).
     """
     closes = future_close.values
-    entry_touched = True if net_buy else False
+    entry_touched = already_at_entry
     days_to_exit = None
 
     window = min(len(closes), max_holding_days)
     for i in range(window):
-        if not net_buy and not entry_touched and closes[i] <= entry_price:
+        if not entry_touched and closes[i] <= entry_price:
             entry_touched = True
-        if (net_buy or entry_touched) and closes[i] >= exit_price:
+        if entry_touched and closes[i] >= exit_price:
             days_to_exit = i + 1
             break
 

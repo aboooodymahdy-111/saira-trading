@@ -496,6 +496,50 @@ def compute_zigzag(high: pd.Series, low: pd.Series,
 
 
 # ---------------------------------------------------------------------------
+# FIBONACCI RETRACEMENT (built in-house)
+# ---------------------------------------------------------------------------
+# PROVENANCE: standard Fibonacci retracement ratios (23.6/38.2/50/61.8/78.6%)
+# applied to the most recent confirmed ZigZag swing (compute_zigzag, above) —
+# reuses the swing detection this project already has rather than adding a
+# second pivot-finding method. ADDED 2026-07 per Abdo's explicit request to
+# have Fibonacci available as an alternative support/resistance source to
+# Square of Nine, with the winner picked empirically via backtest (see
+# full_universe_analysis.SUPPORT_RESISTANCE_METHOD).
+
+FIBONACCI_RATIOS = (0.236, 0.382, 0.5, 0.618, 0.786)
+
+
+@dataclass(frozen=True)
+class FibonacciLevels:
+    swing_high: float
+    swing_low: float
+    levels: dict          # ratio -> retraced price, between swing_low and swing_high
+
+
+def compute_fibonacci_levels(high: pd.Series, low: pd.Series) -> "FibonacciLevels | None":
+    """
+    Anchors on the most recent confirmed ZigZag swing (its last high pivot and
+    last low pivot, whichever order they occurred in) and retraces
+    FIBONACCI_RATIOS between them. Returns None if fewer than one high and one
+    low pivot are available yet (same "not enough data" contract as the other
+    per-ticker tools here).
+    """
+    pivots = compute_zigzag(high, low)
+    highs = [p.price for p in pivots if p.kind == "high"]
+    lows = [p.price for p in pivots if p.kind == "low"]
+    if not highs or not lows:
+        return None
+
+    swing_high, swing_low = highs[-1], lows[-1]
+    if swing_high <= swing_low:
+        return None
+
+    span = swing_high - swing_low
+    levels = {ratio: round(swing_high - span * ratio, 2) for ratio in FIBONACCI_RATIOS}
+    return FibonacciLevels(swing_high=round(swing_high, 2), swing_low=round(swing_low, 2), levels=levels)
+
+
+# ---------------------------------------------------------------------------
 # VOLUME PROFILE / MARKET PROFILE (built in-house)
 # ---------------------------------------------------------------------------
 # PROVENANCE: standard Volume Profile construction — split the traded price
@@ -713,6 +757,13 @@ def evaluate_advanced_technical_group(hist: pd.DataFrame) -> GroupResult:
             result.votes_sell += 1
         else:
             result.votes_neutral += 1
+
+    # Fibonacci retracement — exposed as a detail only (no vote of its own,
+    # same treatment as ZigZag): it exists so entry/exit pricing can be
+    # computed from it as an alternative to Pivot Points, see
+    # full_universe_analysis.SUPPORT_RESISTANCE_METHOD.
+    fib = compute_fibonacci_levels(hist["High"], hist["Low"])
+    result.details["fibonacci_levels"] = fib.__dict__ if fib else "insufficient_history"
 
     if len(hist) < 20:
         result.details["volume_profile"] = "insufficient_history"

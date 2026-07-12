@@ -15,10 +15,12 @@ HISTORY (2026-07): this script used to read runs/signals_confirmed.csv (the TS
     deprecated_ts/ and CLAUDE.md). Sizing now uses total_buy_votes (committee
     agreement across the Technical/Quantitative/Astrological/Advanced Technical
     groups, already computed by full_universe_analysis.py) as the confirmation
-    signal instead, and the suggested execution price is entry_price (the nearest
-    pivot/Square9 support level, or current price if already net-buy — see
-    full_universe_analysis.compute_entry_exit_levels) rather than a bare current
-    price fetch.
+    signal instead, and the suggested execution price is entry_price (ALWAYS the
+    nearest pivot/Square9 support level below current price — CORRECTED 2026-07,
+    see full_universe_analysis.compute_entry_exit_levels) rather than a bare
+    current price fetch. stop_loss_price (next support down) and target2_price
+    (next resistance up, "T2") are carried through below for the same reason —
+    a real trade needs a stop, not just an entry and one target.
 
 SELECTION LOGIC (a starting point — tune SUGGESTION_MIN_VOTES / other constants
     below to match your own risk tolerance; nothing here is a "correct" threshold,

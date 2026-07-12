@@ -58,6 +58,7 @@ import yfinance as yf
 from full_universe_analysis import (
     TARGET_GAIN_PCT,
     TARGET_HOLDING_DAYS,
+    SUPPORT_RESISTANCE_METHOD,
     _load_eligibility_cache,
     evaluate_ticker_snapshot,
 )
@@ -102,11 +103,15 @@ def _git_commit_hash() -> str | None:
         return None
 
 
-def run_backtest() -> None:
-    tickers = _sample_tickers()
-    as_of_dates = _sample_dates()
+def run_backtest(support_resistance_method: str = SUPPORT_RESISTANCE_METHOD,
+                  tickers: list[str] | None = None,
+                  as_of_dates: list[pd.Timestamp] | None = None,
+                  write_output: bool = True) -> pd.DataFrame:
+    tickers = tickers if tickers is not None else _sample_tickers()
+    as_of_dates = as_of_dates if as_of_dates is not None else _sample_dates()
     print(f"Backtesting {len(tickers)} tickers x {len(as_of_dates)} sample dates "
-          f"({as_of_dates[0].date()} to {as_of_dates[-1].date()}, every {SAMPLE_FREQUENCY_DAYS} days)...")
+          f"({as_of_dates[0].date()} to {as_of_dates[-1].date()}, every {SAMPLE_FREQUENCY_DAYS} days) "
+          f"[support_resistance_method={support_resistance_method}]...")
 
     cache = _load_eligibility_cache()
     rows: list[dict] = []
@@ -147,15 +152,20 @@ def run_backtest() -> None:
                     ticker, truncated, sector, industry,
                     target_gain_pct=TARGET_GAIN_PCT, target_holding_days=TARGET_HOLDING_DAYS,
                     include_analyst_consensus=False,
+                    support_resistance_method=support_resistance_method,
                 )
             except Exception as exc:  # noqa: BLE001 - one ticker/date failure shouldn't stop the whole backtest
                 print(f"WARNING: backtest snapshot failed for {ticker} @ {as_of.date()}: {exc}")
                 continue
 
             net_buy = snapshot["total_buy_votes"] > snapshot["total_sell_votes"]
+            # entry_price is only ever >= current_price in the rare "no support level
+            # found at all" fallback (see compute_entry_exit_levels) — otherwise a real
+            # pullback is required, regardless of the committee's vote.
+            already_at_entry = snapshot["entry_price"] >= snapshot["current_price"]
             outcome = evaluate_forward_outcome(
                 future, entry_price=snapshot["entry_price"], exit_price=snapshot["exit_price"],
-                max_holding_days=TARGET_HOLDING_DAYS, net_buy=net_buy,
+                max_holding_days=TARGET_HOLDING_DAYS, already_at_entry=already_at_entry,
             )
 
             rows.append({
@@ -173,10 +183,12 @@ def run_backtest() -> None:
 
     if not rows:
         print("No backtest rows produced — check eligibility cache / network access.")
-        return
+        return pd.DataFrame(rows)
 
     results = pd.DataFrame(rows)
-    _write_output(results, tickers, as_of_dates)
+    if write_output:
+        _write_output(results, tickers, as_of_dates, support_resistance_method)
+    return results
 
 
 def _hit_rate(df: pd.DataFrame) -> dict:
@@ -191,7 +203,8 @@ def _hit_rate(df: pd.DataFrame) -> dict:
     }
 
 
-def _write_output(results: pd.DataFrame, tickers: list[str], as_of_dates: list[pd.Timestamp]) -> None:
+def _write_output(results: pd.DataFrame, tickers: list[str], as_of_dates: list[pd.Timestamp],
+                   support_resistance_method: str = SUPPORT_RESISTANCE_METHOD) -> None:
     run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     out_dir = OUTPUT_ROOT / f"backtest_{run_timestamp}"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -221,6 +234,7 @@ def _write_output(results: pd.DataFrame, tickers: list[str], as_of_dates: list[p
         "target_gain_pct": TARGET_GAIN_PCT,
         "target_holding_days": TARGET_HOLDING_DAYS,
         "include_analyst_consensus": False,
+        "support_resistance_method": support_resistance_method,
         "fetch_period": FETCH_PERIOD,
         "lookahead_check": "passed — hist truncated to as_of_date for every group evaluator; "
                             "analyst_consensus dropped (no historical point-in-time equivalent); "
@@ -270,5 +284,65 @@ def _write_output(results: pd.DataFrame, tickers: list[str], as_of_dates: list[p
     print("\n".join(summary_lines))
 
 
+def compare_support_resistance_methods() -> None:
+    """
+    Runs the identical backtest (same tickers, same as-of dates — sampled
+    once, reused for both) with support_resistance_method="pivot" and again
+    with "fibonacci", then reports which one scored a higher committee hit
+    rate. Per Abdo's explicit decision (2026-07): the choice between
+    Fibonacci retracement and Square of Nine as the entry/exit support
+    source should be made GLOBALLY from one full backtest comparison, not
+    per-ticker — whichever wins here should be hand-copied into
+    full_universe_analysis.SUPPORT_RESISTANCE_METHOD.
+
+    Run: python src/backtest.py --compare-support-method
+    """
+    tickers = _sample_tickers()
+    as_of_dates = _sample_dates()
+
+    print("=== Pass 1/2: support_resistance_method=pivot ===")
+    pivot_results = run_backtest(support_resistance_method="pivot", tickers=tickers,
+                                  as_of_dates=as_of_dates, write_output=False)
+    print("\n=== Pass 2/2: support_resistance_method=fibonacci ===")
+    fib_results = run_backtest(support_resistance_method="fibonacci", tickers=tickers,
+                                as_of_dates=as_of_dates, write_output=False)
+
+    pivot_stats = _hit_rate(pivot_results[pivot_results["net_buy"]]) if not pivot_results.empty else _hit_rate(pivot_results)
+    fib_stats = _hit_rate(fib_results[fib_results["net_buy"]]) if not fib_results.empty else _hit_rate(fib_results)
+
+    run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    out_dir = OUTPUT_ROOT / f"support_method_comparison_{run_timestamp}"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    pivot_results.to_csv(out_dir / "results_pivot.csv", index=False)
+    fib_results.to_csv(out_dir / "results_fibonacci.csv", index=False)
+
+    pivot_rate = pivot_stats["hit_rate"]
+    fib_rate = fib_stats["hit_rate"]
+    if pivot_rate is None and fib_rate is None:
+        winner = "inconclusive — no resolved committee calls in either pass"
+    elif fib_rate is None:
+        winner = "pivot"
+    elif pivot_rate is None:
+        winner = "fibonacci"
+    else:
+        winner = "fibonacci" if fib_rate > pivot_rate else "pivot"
+
+    summary = (
+        f"# Support/resistance method comparison — {run_timestamp}\n\n"
+        f"pivot:     hit_rate={pivot_rate} ({pivot_stats['resolved']} resolved / {pivot_stats['total']} total)\n"
+        f"fibonacci: hit_rate={fib_rate} ({fib_stats['resolved']} resolved / {fib_stats['total']} total)\n\n"
+        f"WINNER: {winner}\n\n"
+        f"Action: set full_universe_analysis.SUPPORT_RESISTANCE_METHOD = \"{winner}\" "
+        f"if it isn't already (currently \"{SUPPORT_RESISTANCE_METHOD}\").\n"
+    )
+    (out_dir / "summary.md").write_text(summary, encoding="utf-8")
+    print(f"\n{summary}")
+    print(f"Wrote comparison output to {out_dir.resolve()}")
+
+
 if __name__ == "__main__":
-    run_backtest()
+    import sys
+    if "--compare-support-method" in sys.argv:
+        compare_support_resistance_methods()
+    else:
+        run_backtest()

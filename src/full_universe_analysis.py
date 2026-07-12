@@ -56,11 +56,18 @@ WHAT IT COMPUTES PER TICKER:
        (swing_horizon_filter.evaluate_horizon_fit) — defaults set to 10%/5
        trading days per his stated profile (2026-07), but configurable via the
        constants below.
-    8. Entry/exit price levels (compute_entry_exit_levels, ADDED 2026-07): combines
-       the Advanced Technical group's Pivot Points (S1/R1) with the Astrological
-       group's calibrated Square of Nine projected level — the two per-ticker
-       price levels already computed above, not a new invented formula. See
-       that function's docstring for the exact rule.
+    8. Entry/exit/stop-loss/T2 price levels (compute_entry_exit_levels, ADDED
+       2026-07, CORRECTED 2026-07): combines the Astrological group's
+       calibrated Square of Nine projected level with ONE of two candidate
+       support/resistance sources, selected by SUPPORT_RESISTANCE_METHOD —
+       Pivot Points (S1/S2/S3/R1/R2/R3) or Fibonacci retracement off the
+       latest ZigZag swing — both already computed above, not a new invented
+       formula. Which of the two wins is decided empirically, globally,
+       from a full historical backtest comparison (see backtest.py
+       --compare-support-method), not per-ticker. Entry is ALWAYS the
+       nearest support (a real pullback level, not "buy now"), exit ALWAYS
+       the nearest resistance, regardless of the committee's vote — see
+       compute_entry_exit_levels's docstring for the exact rule and why.
 
 RANKING (per project decision 2026-07, conditions before gain to favor lower
     risk): total_buy_votes (sum across Technical + Quantitative + Astrological
@@ -216,71 +223,126 @@ def touch_test(high: pd.Series, low: pd.Series, close: pd.Series, increment: flo
     return max((r.hit_rate for r in calib), default=0.0)
 
 
+# Which per-ticker price levels feed entry/exit alongside the calibrated
+# Square of Nine level: "pivot" (Pivot Points S1-S3/R1-R3) or "fibonacci"
+# (retracement levels off the latest confirmed ZigZag swing). Per Abdo's
+# request (2026-07), the choice is decided empirically — whichever scores a
+# higher hit_rate across the FULL historical backtest (src/backtest.py
+# --compare-support-method) wins and gets set here, not a per-ticker or
+# per-vote pick. See backtest.py's module docstring for the comparison run
+# that produced the current value.
+SUPPORT_RESISTANCE_METHOD = "fibonacci"  # "pivot" | "fibonacci" — set by backtest comparison
+# DECIDED 2026-07-12: backtest.py --compare-support-method (30 tickers, 10
+# sample dates, 3-month window) scored fibonacci hit_rate=0.111 vs
+# pivot hit_rate=0.095 (126/126 resolved committee calls each pass) — see
+# runs/backtest/support_method_comparison_20260712_203613/summary.md. A
+# larger/longer comparison run may shift this; re-run the comparison and
+# update this constant if so.
+
+
 def compute_entry_exit_levels(
     current_price: float,
     pivot_points: dict | None,
     square9_projected_level: float | None,
-    net_buy: bool,
     target_gain_pct: float,
     median_days_to_hit: float | None,
+    fibonacci_levels: dict | None = None,
+    support_resistance_method: str = SUPPORT_RESISTANCE_METHOD,
 ) -> dict:
     """
-    Combines Pivot Points (advanced_technical_tools.compute_pivot_points, already
-    run per-ticker inside the Advanced Technical group) with the calibrated
-    Square of Nine level (gann_decision_system.gann_committee_vote's
-    projected_price_level) — the two per-ticker price levels this project
-    already computes and tests, rather than inventing a new untested formula.
+    Combines one of two candidate support/resistance sources — Pivot Points
+    (advanced_technical_tools.compute_pivot_points) or Fibonacci retracement
+    (advanced_technical_tools.compute_fibonacci_levels), selected by
+    support_resistance_method — with the calibrated Square of Nine level
+    (gann_decision_system.gann_committee_vote's projected_price_level).
+    These are the per-ticker price levels this project already computes and
+    tests, rather than inventing a new untested formula.
 
-    entry_price: nearest support level BELOW current price (pivot S1 or the
-    Square9 level, whichever is closer) — the "buy the dip" level. If the
-    committee is already net-buy, current price itself is the entry (no need
-    to wait for a pullback). Falls back to current price if no support level
-    is below it.
-    exit_price: nearest resistance level ABOVE current price (pivot R1 or the
-    Square9 level) — the first realistic take-profit level. Falls back to the
-    project's standard swing target (TARGET_GAIN_PCT above current price) if
-    no resistance level was identified.
+    CORRECTED 2026-07 (per Abdo's explicit correction — entry/exit were
+    previously just "current price" and "current price + target_gain_pct%",
+    which isn't a real technical entry/exit at all): entry_price is ALWAYS
+    the nearest support below current price (pivot/Fibonacci level or the
+    Square9 level, whichever is closest) — a real pullback level, regardless
+    of the committee's vote. stop_loss_price is the next support down (a
+    second line of defense). exit_price is ALWAYS the nearest resistance
+    above current price, and target2_price the next resistance up (T2),
+    again regardless of vote. target_gain_pct is used ONLY as a last-resort
+    reference floor for exit_price when literally no resistance level was
+    found at all — a criterion, not a hard rule, per Abdo's own wording.
+
     exit_days_estimate: this ticker's own historical median days-to-hit for
     the swing-trading profile (swing_horizon_filter.evaluate_horizon_fit),
     reused rather than guessed — None if the target was never hit historically.
     """
     supports, resistances = [], []
-    if pivot_points and isinstance(pivot_points, dict):
-        s1, r1 = pivot_points.get("s1"), pivot_points.get("r1")
-        if s1 is not None and s1 < current_price:
-            supports.append(s1)
-        if r1 is not None and r1 > current_price:
-            resistances.append(r1)
+    if support_resistance_method == "fibonacci":
+        if fibonacci_levels and isinstance(fibonacci_levels, dict):
+            for level in (fibonacci_levels.get("levels") or {}).values():
+                if level is None:
+                    continue
+                if level < current_price:
+                    supports.append(level)
+                elif level > current_price:
+                    resistances.append(level)
+    else:
+        if pivot_points and isinstance(pivot_points, dict):
+            for key in ("s1", "s2", "s3"):
+                level = pivot_points.get(key)
+                if level is not None and level < current_price:
+                    supports.append(level)
+            for key in ("r1", "r2", "r3"):
+                level = pivot_points.get(key)
+                if level is not None and level > current_price:
+                    resistances.append(level)
     if square9_projected_level is not None:
         if square9_projected_level < current_price:
             supports.append(square9_projected_level)
         elif square9_projected_level > current_price:
             resistances.append(square9_projected_level)
 
-    if net_buy:
-        entry_price = round(current_price, 2)
-        entry_basis = "current price — committee already net-buy"
-    elif supports:
-        entry_price = round(max(supports), 2)  # nearest support below current price
-        entry_basis = "nearest pivot/Square9 support below current price"
+    supports = sorted(set(supports), reverse=True)  # nearest-to-price first
+    resistances = sorted(set(resistances))  # nearest-to-price first
+    source_label = "Fibonacci/Square9" if support_resistance_method == "fibonacci" else "pivot/Square9"
+
+    if supports:
+        entry_price = round(supports[0], 2)
+        entry_basis = f"nearest {source_label} support below current price"
     else:
         entry_price = round(current_price, 2)
         entry_basis = "no support level identified below current price — current price used"
 
+    if len(supports) >= 2:
+        stop_loss_price = round(supports[1], 2)
+        stop_loss_basis = "second-nearest support below current price"
+    else:
+        stop_loss_price = None
+        stop_loss_basis = "no second support level identified"
+
     if resistances:
-        exit_price = round(min(resistances), 2)  # nearest resistance above current price
-        exit_basis = "nearest pivot/Square9 resistance above current price"
+        exit_price = round(resistances[0], 2)
+        exit_basis = f"nearest {source_label} resistance above current price"
     else:
         exit_price = round(current_price * (1 + target_gain_pct / 100), 2)
-        exit_basis = f"no resistance level identified — {target_gain_pct:.0f}% swing target used"
+        exit_basis = f"no resistance level identified — {target_gain_pct:.0f}% swing target used as a reference floor"
+
+    if len(resistances) >= 2:
+        target2_price = round(resistances[1], 2)
+        target2_basis = "second-nearest resistance above current price (T2)"
+    else:
+        target2_price = None
+        target2_basis = "no second resistance level identified"
 
     exit_days_estimate = round(median_days_to_hit) if median_days_to_hit else None
 
     return {
         "entry_price": entry_price,
         "entry_basis": entry_basis,
+        "stop_loss_price": stop_loss_price,
+        "stop_loss_basis": stop_loss_basis,
         "exit_price": exit_price,
         "exit_basis": exit_basis,
+        "target2_price": target2_price,
+        "target2_basis": target2_basis,
         "exit_days_estimate": exit_days_estimate,
     }
 
@@ -293,6 +355,7 @@ def evaluate_ticker_snapshot(
     target_gain_pct: float = TARGET_GAIN_PCT,
     target_holding_days: int = TARGET_HOLDING_DAYS,
     include_analyst_consensus: bool = True,
+    support_resistance_method: str = SUPPORT_RESISTANCE_METHOD,
 ) -> dict:
     """
     The actual decision-making core, shared by the live daily path
@@ -344,15 +407,15 @@ def evaluate_ticker_snapshot(
     pivot_points = advanced_tech.details.get("pivot_points")
     if not isinstance(pivot_points, dict):
         pivot_points = None
+    fibonacci_levels = advanced_tech.details.get("fibonacci_levels")
+    if not isinstance(fibonacci_levels, dict):
+        fibonacci_levels = None
     square9_projected_level = astro.details.get("square9_projected_price_level") if astro else None
-    net_buy = (tech.votes_buy + quant.votes_buy + advanced_tech.votes_buy
-               + (astro.votes_buy if astro else 0)) > (
-        tech.votes_sell + quant.votes_sell + advanced_tech.votes_sell
-        + (astro.votes_sell if astro else 0)
-    )
     entry_exit = compute_entry_exit_levels(
-        current_price, pivot_points, square9_projected_level, net_buy,
+        current_price, pivot_points, square9_projected_level,
         target_gain_pct, horizon.median_days_to_hit,
+        fibonacci_levels=fibonacci_levels,
+        support_resistance_method=support_resistance_method,
     )
 
     # "Highest likely gain in the shortest time" isn't hit_rate alone (that's
@@ -408,8 +471,12 @@ def evaluate_ticker_snapshot(
         "gain_speed_score": gain_speed_score,
         "entry_price": entry_exit["entry_price"],
         "entry_basis": entry_exit["entry_basis"],
+        "stop_loss_price": entry_exit["stop_loss_price"],
+        "stop_loss_basis": entry_exit["stop_loss_basis"],
         "exit_price": entry_exit["exit_price"],
         "exit_basis": entry_exit["exit_basis"],
+        "target2_price": entry_exit["target2_price"],
+        "target2_basis": entry_exit["target2_basis"],
         "exit_days_estimate": entry_exit["exit_days_estimate"],
         "signal_breakdown": signal_breakdown,
     }

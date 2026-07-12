@@ -17,9 +17,13 @@ That convention exists to preserve a snapshot that would otherwise be
 overwritten; this file is never overwritten, only grown, and every day's
 state is already recoverable from daily-scan.yml's own daily git commit.
 
-Every tracked row is a net-buy candidate (compute_entry_exit_levels's
-net_buy=True branch — entry_price is just that day's close), so
-evaluate_forward_outcome is always called with net_buy=True here.
+Every tracked row is a net-buy candidate, but entry_price is now ALWAYS a
+real support level (CORRECTED 2026-07 — see
+full_universe_analysis.compute_entry_exit_levels), not just that day's
+close, so a genuine pullback is required before "hit" can register —
+already_at_entry (passed to evaluate_forward_outcome) is computed per row
+by comparing entry_price to current_price_at_recommendation, and will
+almost always be False.
 """
 
 from __future__ import annotations
@@ -42,8 +46,9 @@ SUMMARY_JSON = Path("runs/outcome_summary.json")
 TRAILING_WINDOW_DAYS = 90  # summary stat window — see summarize()
 
 LEDGER_COLUMNS = [
-    "ticker", "recommendation_date", "entry_price", "entry_basis",
-    "exit_price", "exit_basis", "expected_holding_days",
+    "ticker", "recommendation_date", "current_price_at_recommendation",
+    "entry_price", "entry_basis", "stop_loss_price",
+    "exit_price", "exit_basis", "target2_price", "expected_holding_days",
     "status", "days_to_exit", "checked_date",
 ]
 
@@ -72,10 +77,13 @@ def _append_new_recommendations(ledger: pd.DataFrame) -> pd.DataFrame:
         new_rows.append({
             "ticker": row["ticker"],
             "recommendation_date": row["recommendation_date"],
+            "current_price_at_recommendation": row["current_price"],
             "entry_price": row["entry_price"],
             "entry_basis": row["entry_basis"],
+            "stop_loss_price": row.get("stop_loss_price"),
             "exit_price": row["exit_price"],
             "exit_basis": row["exit_basis"],
+            "target2_price": row.get("target2_price"),
             "expected_holding_days": row["exit_days_estimate"] if pd.notna(row["exit_days_estimate"]) else TARGET_HOLDING_DAYS,
             "status": "still_pending",
             "days_to_exit": None,
@@ -108,9 +116,12 @@ def _recheck_pending(ledger: pd.DataFrame) -> pd.DataFrame:
             continue  # recommendation day itself may not have closed/settled in the feed yet
 
         future_close = hist["Close"].iloc[1:]  # exclude the recommendation day itself
+        # See module docstring: entry_price is only ever >= the recommendation-time
+        # price in the rare "no support level found at all" fallback.
+        already_at_entry = row["entry_price"] >= row["current_price_at_recommendation"]
         outcome = evaluate_forward_outcome(
             future_close, entry_price=row["entry_price"], exit_price=row["exit_price"],
-            max_holding_days=int(row["expected_holding_days"]), net_buy=True,
+            max_holding_days=int(row["expected_holding_days"]), already_at_entry=already_at_entry,
         )
         ledger.loc[idx, "status"] = outcome.status
         ledger.loc[idx, "days_to_exit"] = outcome.days_to_exit
