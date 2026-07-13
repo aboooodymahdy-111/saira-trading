@@ -1,0 +1,9 @@
+{
+  "appId": "com.saira.terminal",
+  "appName": "Saira Terminal",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  }
+}
