@@ -87,6 +87,70 @@ def swing_pivots(df: pd.DataFrame, m: int = 2) -> dict:
     return {"pivots": pivots, "direction": int(direction)}
 
 
+# ---------------------------------------------------------------- المعايرة التلقائية الحقيقية
+# كل أزرار "تلقائي" في الواجهة (مروحة جان، مربع 9، مربع 144، نجمة جان) كانت
+# تحسب فقط (المدى الكلي ÷ عدد الشموع) — تقريب لا علاقة له بأنماط السهم
+# الفعلية. المحاولة الأولى (قياس نسبة سعر/شمعة الأكثر ثباتًا عبر الارتكازات،
+# بنفس منطق الماسح الكوكبي) فشلت تجريبيًا: الأسهم — على عكس الكواكب — ليس
+# لها "معدل حركة يومي ثابت" طبيعي (تشتت > 0.7 على AAPL/AA، أي لا علاقة
+# مستقرة إطلاقًا). البديل الصحيح: المشروع الرئيسي (src/) عنده بالفعل نظام
+# معايرة حقيقي مُختبر ومُستخدم فعليًا في اللجنة الحية —
+# gann_increment_selection.recommended_price_increment (زيادة سعرية من
+# ATR/مستوى السعر) + gann_decision_system.calibrate_square9_angle/
+# calibrate_gann_trendline_angle (يختبران كل زاوية مرشحة ضد ارتكازات السهم
+# التاريخية فعليًا ويختاران الأعلى هيت-ريت، لا تقريبًا). هذه الدوال تُعيد
+# استخدام تلك الوحدات مباشرة بدل اختراع منطق مواز.
+def _import_src_modules():
+    import sys
+    from ..config import PROJECT_ROOT
+    sys.path.insert(0, str(PROJECT_ROOT))
+    import gann_increment_selection as _incr
+    import gann_decision_system as _decision
+    return _incr, _decision
+
+
+def auto_price_increment(high: pd.Series, low: pd.Series, close: pd.Series) -> dict:
+    """الزيادة السعرية الموصى بها (لمربع 9/144/النجمة) — من ATR ومستوى
+    السعر الفعليين للسهم (Mikula ch.6 + تنقيح عبده بالتقلب)، لا تقريب."""
+    incr, _ = _import_src_modules()
+    return incr.recommended_price_increment(high, low, close)
+
+
+def auto_square9_angle(high: pd.Series, low: pd.Series, close: pd.Series,
+                       price_increment: float) -> dict:
+    """أفضل زاوية مربع 9 لهذا السهم تحديدًا — كل زاوية مرشحة (0°/45°/.../315°)
+    تُختبر فعليًا ضد ارتكازات السهم التاريخية، والأعلى هيت-ريت هو الفائز
+    (calibrate_square9_angle، مستخدَم فعليًا في اللجنة الحية)."""
+    _, decision = _import_src_modules()
+    results = decision.calibrate_square9_angle(high, low, close, price_increment)
+    if not results or results[0].hit_rate == 0:
+        return {"angle": None, "hit_rate": 0.0, "pivots_tested": 0,
+                "note": "لا زاوية أظهرت علاقة تاريخية حقيقية"}
+    best = results[0]
+    return {"angle": best.angle, "hit_rate": round(best.hit_rate, 3),
+            "pivots_tested": best.total_pivots_tested,
+            "all_angles": [{"angle": r.angle, "hit_rate": round(r.hit_rate, 3)}
+                          for r in results]}
+
+
+def auto_fan_angle(close: pd.Series, anchor_index: int, anchor_price: float,
+                   direction: int = 1) -> dict:
+    """أفضل زاوية مروحة جان (1×8 حتى 8×1) من نقطة ارتكاز محددة — كل زاوية
+    قياسية تُختبر باختبار "لمس بلا اختراق" الحقيقي ضد حركة السعر الفعلية
+    بعد الارتكاز (calibrate_gann_trendline_angle، فيه تصحيح موثّق 2026-07
+    لبق كان بيفضّل أي زاوية أبطأ من السوق بلا داعٍ)."""
+    _, decision = _import_src_modules()
+    results = decision.calibrate_gann_trendline_angle(close, anchor_index, anchor_price, direction)
+    if not results or results[0].hit_rate == 0:
+        return {"angle_name": "1x1", "hit_rate": 0.0, "bars_tested": 0,
+                "note": "لا زاوية أظهرت احترامًا تاريخيًا حقيقيًا — 1×1 الافتراضية الذهبية"}
+    best = results[0]
+    return {"angle_name": best.angle_name, "hit_rate": round(best.hit_rate, 3),
+            "bars_tested": best.total_bars_tested,
+            "all_angles": [{"angle_name": r.angle_name, "hit_rate": round(r.hit_rate, 3)}
+                          for r in results]}
+
+
 # ---------------------------------------------------------------- الدورات
 def dominant_cycles(df: pd.DataFrame, top: int = 5,
                     max_n: int = 750) -> list[dict]:

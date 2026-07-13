@@ -132,6 +132,42 @@ def sq9_auto(symbol: str, tf: str = "D", side: str = "low", limit: int = 2000):
             "levels": gann.sq9_levels(pivot, lo - pad, hi + pad)}
 
 
+@app.get("/gann/auto_calibrate/{symbol}")
+def gann_auto_calibrate(symbol: str, tf: str = "D", limit: int = 5000,
+                        swing_m: int = 2):
+    """معايرة تلقائية حقيقية لكل أدوات المعايرة (زر "تلقائي" في الواجهة):
+
+    - increment: الزيادة السعرية الموصى بها من ATR/مستوى السعر (لمربع
+      9/144/النجمة) — Mikula ch.6 + تنقيح التقلب، لا تقريب مدى/شموع.
+    - square9: أفضل زاوية مربع 9 مُختبَرة فعليًا ضد ارتكازات السهم.
+    - fan: أفضل زاوية مروحة جان من آخر ارتكاز سوينج، مُختبَرة بلمس-بلا-اختراق.
+
+    يستبدل التقريب القديم (المدى ÷ عدد الشموع) في كل الأزرار "تلقائي"."""
+    import pandas as pd
+    df = pd.DataFrame(_need_symbol(symbol, tf, limit))
+    high, low, close = df["h"], df["l"], df["c"]
+
+    incr_result = gann.auto_price_increment(high, low, close)
+    increment = incr_result["recommended_increment"]
+    sq9_result = gann.auto_square9_angle(high, low, close, increment)
+
+    sw = gann.swing_pivots(df, swing_m)
+    fan_result = None
+    if sw["pivots"]:
+        last_pivot = sw["pivots"][-1]
+        idx_matches = df.index[df["t"] == last_pivot["t"]]
+        if len(idx_matches):
+            anchor_i = int(idx_matches[0])
+            direction = 1 if last_pivot["type"] == "bottom" else -1
+            fan_result = gann.auto_fan_angle(close, anchor_i, last_pivot["price"], direction)
+            fan_result["anchor_t"] = last_pivot["t"]
+            fan_result["anchor_price"] = last_pivot["price"]
+            fan_result["direction"] = direction
+
+    return {"symbol": symbol.upper(), "tf": tf,
+            "increment": incr_result, "square9": sq9_result, "fan": fan_result}
+
+
 @app.get("/gann/swing/{symbol}")
 def swing(symbol: str, tf: str = "D", bars: int = Query(2, ge=2, le=5),
           limit: int = 5000):
@@ -220,15 +256,21 @@ def gann_star(price: float, kind: str = "hexagram", rotations: int = 2,
 @app.get("/gann/sq144/{symbol}")
 def gann_sq144(symbol: str, tf: str = "D", limit: int = 5000,
                price_unit: float | None = None, swing_m: int = 2):
-    """شبكة مربع 144 من آخر ارتكاز سوينج للرمز."""
+    """شبكة مربع 144 من آخر ارتكاز سوينج للرمز.
+
+    وحدة السعر الافتراضية (بلا price_unit صريح) = الزيادة السعرية الموصى
+    بها فعليًا من ATR/مستوى السعر (gann.auto_price_increment) — لا تقريب
+    مدى/شموع كما كانت سابقًا."""
     import pandas as pd
     df = pd.DataFrame(_need_symbol(symbol, tf, limit))
     sw = gann.swing_pivots(df, swing_m)
     if not sw["pivots"]:
         raise HTTPException(422, "لا ارتكازات سوينج كافية")
     pivot = sw["pivots"][-1]
-    unit = price_unit or round(float(df["h"].max() - df["l"].min())
-                               / len(df), 6)
+    if price_unit is not None:
+        unit = price_unit
+    else:
+        unit = gann.auto_price_increment(df["h"], df["l"], df["c"])["recommended_increment"]
     bar_sec = int(df["t"].iloc[-1] - df["t"].iloc[-2]) if len(df) > 1 else 86400
     grid = gann.sq144_grid(pivot["price"], pivot["t"], unit, bar_sec,
                            1 if pivot["type"] == "bottom" else -1)

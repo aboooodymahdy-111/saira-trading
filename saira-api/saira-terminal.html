@@ -79,11 +79,50 @@
   .bar{height:5px;background:var(--gold);border-radius:3px;min-width:3px}
 
   /* ===== Status / toast ===== */
-  .status{display:flex;align-items:center;gap:16px;height:26px;padding:0 14px;background:var(--bg1);border-top:1px solid var(--line);color:var(--muted);font-size:11px;font-family:var(--mono)}
-  .status .dot{width:7px;height:7px;border-radius:50%;background:var(--up)}
+  .status{display:flex;align-items:center;gap:16px;height:26px;padding:0 14px;background:var(--bg1);border-top:1px solid var(--line);color:var(--muted);font-size:11px;font-family:var(--mono);overflow-x:auto}
+  .status .dot{width:7px;height:7px;border-radius:50%;background:var(--up);flex-shrink:0}
+  .status span{flex-shrink:0}
   #toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--gold-dim);color:var(--txt);padding:8px 18px;border-radius:8px;font-size:12.5px;z-index:99;display:none;box-shadow:0 6px 24px rgba(0,0,0,.5)}
   ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
-  @media(max-width:820px){ aside{width:250px;min-width:250px} .legend{display:none} }
+
+  /* ===== Mobile / touch (phones in the ~≤860px range: the aside becomes a
+     slide-up drawer instead of a permanent side panel, since a fixed sidebar
+     next to the chart leaves almost no room for candles on a phone) ===== */
+  #btnTools{display:none}
+  .aside-mobile-bar{display:none}
+  #asideBackdrop{display:none}
+  @media(max-width:820px){
+    .legend{display:none}
+    /* Fixed floating button, not a toolbar child — the toolbar itself
+       scrolls horizontally on narrow screens, so a button placed inline
+       there could end up scrolled out of view. */
+    #btnTools{
+      display:flex;align-items:center;gap:5px;position:fixed;z-index:32;
+      inset-inline-end:14px;bottom:34px;border-radius:24px;padding:10px 16px;
+      box-shadow:0 6px 20px rgba(0,0,0,.5);
+    }
+    aside{
+      position:fixed;inset:auto 0 0 0;width:100%;min-width:0;max-width:100%;
+      height:66vh;z-index:40;border-inline-start:0;border-top:1px solid var(--line);
+      border-radius:14px 14px 0 0;transform:translateY(100%);
+      transition:transform .22s ease;box-shadow:0 -10px 30px rgba(0,0,0,.55);
+    }
+    aside.open{transform:translateY(0)}
+    .aside-mobile-bar{display:flex;align-items:center;justify-content:space-between;
+      padding:10px 14px;border-bottom:1px solid var(--line);font-weight:600;color:var(--gold)}
+    #asideBackdrop{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);
+      opacity:0;pointer-events:none;transition:opacity .2s;z-index:35}
+    #asideBackdrop.open{opacity:1;pointer-events:auto}
+    .tab{padding:11px 8px;font-size:12px}
+    .btn,.tf-btn,select.btn{padding:7px 11px}
+    .row input[type=number],.row input[type=text]{padding:7px 9px}
+  }
+  @media(max-width:480px){
+    .brand small{display:none}
+    header{gap:8px;padding:0 10px}
+    .brand{gap:6px}
+    .sym{font-size:13px}
+  }
 </style>
 </head>
 <body>
@@ -114,6 +153,7 @@
   </select>
   <div class="spacer"></div>
   <button class="btn small" id="btnClearAll" data-i18n="clearAllBtn">مسح كل الطبقات</button>
+  <button class="btn gold small" id="btnTools" data-i18n="toolsBtn">🛠 الأدوات</button>
 </div>
 
 <div class="main">
@@ -122,7 +162,12 @@
     <div class="pick-hint" id="pickHint" data-i18n="pickHint">انقر على الشارت لتحديد نقطة الارتكاز</div>
   </div>
 
-  <aside>
+  <div id="asideBackdrop"></div>
+  <aside id="aside">
+    <div class="aside-mobile-bar">
+      <span data-i18n="toolsBtn">🛠 الأدوات</span>
+      <button class="btn small" id="btnToolsClose">✕</button>
+    </div>
     <div class="tabs" id="tabs">
       <button class="tab on" data-p="pGann" data-i18n="tabFan">مروحة جان</button>
       <button class="tab" data-p="pSq9" data-i18n="tabSq9">مربع 9</button>
@@ -151,6 +196,11 @@
 
     <!-- Square of 9 -->
     <div class="panel" id="pSq9">
+      <h3 data-i18n="autoCalH3">المعايرة التلقائية الحقيقية</h3>
+      <div class="note" data-i18n="autoCalNote">تختبر كل زاوية/وحدة سعرية مرشحة فعليًا ضد ارتكازات السهم التاريخية (هيت-ريت حقيقي) — لا تقريب مدى/شموع. تُطبَّق على المروحة ومربع 9/144 والنجمة معًا.</div>
+      <div class="row"><button class="btn gold small" id="autoCalRun">شغّل المعايرة الحقيقية</button></div>
+      <div class="note" id="autoCalInfo" style="display:none"></div>
+
       <h3 data-i18n="sq9H3">مستويات مربع التسعة</h3>
       <div class="note" data-i18n="sq9Note">مستويات دعم ومقاومة بزيادات 45° على عجلة جان (دورة كاملة = ‎+2 على الجذر). درجات الصليب الأساسي 90°/180°/270°/360° مميزة بالذهبي.</div>
       <div class="row"><label data-i18n="pivotPriceLbl">سعر الارتكاز</label><input type="number" id="sq9Price" step="0.01"></div>
@@ -161,6 +211,7 @@
       <div class="row"><button class="btn gold small" id="sq9Draw" data-i18n="drawLevelsBtn">ارسم المستويات</button><button class="btn small" id="sq9Clear" data-i18n="clearBtn">مسح</button></div>
       <div class="lvl-list" id="sq9List"></div>
       <h3 data-i18n="starH3">نجمة جان</h3>
+      <div class="note" data-i18n="starNote">تستخدم نفس سعر الارتكاز أعلاه (مربع 9) — شغّل "المعايرة الحقيقية" فوق أولًا لتعيير سعر الارتكاز والوحدة، ثم ارسم الرؤوس هنا.</div>
       <div class="row"><label data-i18n="kindLbl">النوع</label>
         <select class="btn" id="starKind"><option value="hexagram" data-i18n="hexOpt">سداسية 60°</option><option value="pentagram" data-i18n="pentOpt">خماسية 72°</option></select>
         <button class="btn gold small" id="starDraw" data-i18n="drawStarBtn">ارسم الرؤوس</button>
@@ -307,7 +358,7 @@ const I18N={
     brandTag:'· نموذج المرحلة 1', srvStatus:'حالة الخادم',
     localDataOpt:'— بيانات محلية —', syncTitle:'إعادة الاتصال بالخادم واستيراد الرموز',
     fileBtn:'ملف', ctCandles:'شموع يابانية', ctHeikin:'هيكين آشي', ctBars:'أعمدة OHLC',
-    ctLine:'خط', ctArea:'مساحة', clearAllBtn:'مسح كل الطبقات',
+    ctLine:'خط', ctArea:'مساحة', clearAllBtn:'مسح كل الطبقات', toolsBtn:'🛠 الأدوات',
     pickHint:'انقر على الشارت لتحديد نقطة الارتكاز',
     tabFan:'مروحة جان', tabSq9:'مربع 9', tabRet:'الأثمان', tabSwing:'سوينج',
     tabCyc:'دورات', tabAstro:'فلك', tabScan:'الماسح ⚛', tabConf:'التقاء',
@@ -367,6 +418,14 @@ const I18N={
     commTotalVotes:'إجمالي الأصوات', commBuy:'شراء', commSell:'بيع',
     commEntry:'الدخول', commExit:'الخروج', commStop:'وقف الخسارة',
     commDone:'اكتملت اللجنة لـ',
+    autoCalH3:'المعايرة التلقائية الحقيقية',
+    autoCalNote:'تختبر كل زاوية/وحدة سعرية مرشحة فعليًا ضد ارتكازات السهم التاريخية (هيت-ريت حقيقي) — لا تقريب مدى/شموع. تُطبَّق على المروحة ومربع 9/144 والنجمة معًا.',
+    autoCalRunning:'جارٍ اختبار كل الزوايا والوحدات المرشحة...', autoCalDone:'اكتملت المعايرة الحقيقية',
+    calIncrement:'الزيادة السعرية', calSq9:'أفضل زاوية مربع 9', calFan:'أفضل زاوية مروحة',
+    calNoRelation:'لا زاوية أظهرت علاقة تاريخية حقيقية', calPivots:'ارتكاز', calBars:'شمعة',
+    calibratedAngle:'الزاوية المعايرة', hitRate:'هيت-ريت',
+    starNote:'تستخدم نفس سعر الارتكاز أعلاه (مربع 9) — شغّل "المعايرة الحقيقية" فوق أولًا لتعيير سعر الارتكاز والوحدة، ثم ارسم الرؤوس هنا.',
+    sunAutoMeasured:'وحدة مقاسة فعليًا من الماسح الكوكبي', sunAutoNoMatch:'لا نتيجة انعكاس لهذا الكوكب — استخدم التقريب',
     sigH3:'إشارات اللجنة / TS',
     sigNote:'حمّل ملف CSV يحتوي تاريخًا وكلمة Buy/Sell (أو شراء/بيع) في أي عمود — مثل مخرجات committee_signals. تُعرض كأسهم على الشارت.',
     sigLoadBtn:'تحميل ملف إشارات', sigClearBtn:'مسح الإشارات',
@@ -385,7 +444,7 @@ const I18N={
     brandTag:'· Phase 1 prototype', srvStatus:'Server status',
     localDataOpt:'— local data —', syncTitle:'Reconnect to server & import symbols',
     fileBtn:'File', ctCandles:'Candles', ctHeikin:'Heikin Ashi', ctBars:'OHLC bars',
-    ctLine:'Line', ctArea:'Area', clearAllBtn:'Clear all layers',
+    ctLine:'Line', ctArea:'Area', clearAllBtn:'Clear all layers', toolsBtn:'🛠 Tools',
     pickHint:'Click the chart to pick an anchor point',
     tabFan:'Gann Fan', tabSq9:'Square of 9', tabRet:'Retracements', tabSwing:'Swing',
     tabCyc:'Cycles', tabAstro:'Astro', tabScan:'Scanner ⚛', tabConf:'Confluence',
@@ -445,6 +504,14 @@ const I18N={
     commTotalVotes:'Total votes', commBuy:'buy', commSell:'sell',
     commEntry:'Entry', commExit:'Exit', commStop:'Stop loss',
     commDone:'Committee done for',
+    autoCalH3:'Real auto-calibration',
+    autoCalNote:'Actually tests every candidate angle/price unit against the stock\'s own historical pivots (real hit rate) - no range/bar-count approximation. Applies to the fan, Square of 9/144, and the star together.',
+    autoCalRunning:'Testing all candidate angles and units...', autoCalDone:'Real calibration complete',
+    calIncrement:'Price increment', calSq9:'Best Square-9 angle', calFan:'Best fan angle',
+    calNoRelation:'No angle showed a real historical relationship', calPivots:'pivots', calBars:'bars',
+    calibratedAngle:'Calibrated angle', hitRate:'hit rate',
+    starNote:'Uses the same anchor price as above (Square of 9) - run "Real calibration" above first to calibrate the anchor price and unit, then draw the star points here.',
+    sunAutoMeasured:'Unit actually measured by the planetary scanner', sunAutoNoMatch:'No reversal result for this planet - falling back to approximation',
     sigH3:'Committee / TS signals',
     sigNote:'Load a CSV with a date and a Buy/Sell word in any column — e.g. committee_signals output. Shown as arrows on the chart.',
     sigLoadBtn:'Load signals file', sigClearBtn:'Clear signals',
@@ -497,6 +564,7 @@ const S={
   sqr:{markers:[]},
   ecl:{markers:[]},
   mt:{markers:[]},
+  autoCal:null, // نتيجة /gann/auto_calibrate الأخيرة — يُستخدم من المروحة/مربع9/144/النجمة
   pick:null,
 };
 
@@ -727,7 +795,7 @@ chart.subscribeClick(p=>{
 });
 
 /* ================= Gann Fan ================= */
-$('btnFanPick').onclick=()=>{S.pick='fan';$('pickHint').style.display='block';};
+$('btnFanPick').onclick=()=>{S.pick='fan';$('pickHint').style.display='block';closeTools();};
 $('fanAuto').onclick=()=>{$('fanUnit').value=autoUnit();if(S.fan.pivot)drawFan(false);};
 $('fanUnit').onchange=()=>{if(S.fan.pivot)drawFan(false);};
 $('fanClear').onclick=()=>clearFan(true);
@@ -744,6 +812,10 @@ function drawFan(rebuild){
   const i0=nearestIdxByTime(P.time);
   const lo=minLow(),hi=maxHigh(),pad=(hi-lo)*0.6;
   const sign=P.isLow?1:-1;
+  // لو عندنا معايرة حقيقية (auto_calibrate) للزاوية الفائزة، نميّزها بدل
+  // 1×1 الافتراضية دومًا — لكن فقط لو الارتكاز الحالي هو نفسه ارتكاز
+  // المعايرة (بيانات المعايرة قد تكون من ارتكاز آخر لو المستخدم غيّر يدويًا).
+  const bestFanName=(S.autoCal&&S.autoCal.fan&&S.autoCal.fan.anchor_t===P.time)?S.autoCal.fan.angle_name:null;
   for(const[p,t]of FAN_ANGLES){
     const slope=sign*unit*p/t;
     const data=[];
@@ -753,13 +825,43 @@ function drawFan(rebuild){
       data.push({time:S.bars[i].t,value:v});
     }
     if(data.length<2)continue;
-    const is11=p===1&&t===1;
+    const nm=p+'x'+t;
+    const is11=bestFanName?nm===bestFanName:(p===1&&t===1);
     const s=chart.addLineSeries({color:is11?'#E0B341':'rgba(224,179,65,.4)',lineWidth:is11?2:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
     s.setData(data);S.fan.series.push(s);
   }
   const inf=$('fanInfo');inf.style.display='block';
-  inf.innerHTML='الارتكاز: <span style="font-family:var(--mono);direction:ltr;display:inline-block">'+fmt(P.price)+' @ '+dstr(P.time)+'</span> ('+(P.isLow?'قاع':'قمة')+') — معايرة '+unit+' نقطة/شمعة';
+  const bestInfo=bestFanName?` — ${t('calibratedAngle')}: <b style="color:#E0B341">${bestFanName}</b> (${t('hitRate')} ${(S.autoCal.fan.hit_rate*100).toFixed(0)}%)`:'';
+  inf.innerHTML='الارتكاز: <span style="font-family:var(--mono);direction:ltr;display:inline-block">'+fmt(P.price)+' @ '+dstr(P.time)+'</span> ('+(P.isLow?'قاع':'قمة')+') — معايرة '+unit+' نقطة/شمعة'+bestInfo;
 }
+
+/* ================= المعايرة التلقائية الحقيقية ================= */
+$('autoCalRun').onclick=async()=>{
+  if(!needServer())return;
+  $('autoCalInfo').style.display='block';
+  $('autoCalInfo').textContent=t('autoCalRunning');
+  try{
+    const r=await API.get(`/gann/auto_calibrate/${S.serverSym}?tf=D&limit=5000`);
+    S.autoCal=r;
+    // الزيادة السعرية الموصى بها -> مروحة جان + مربع 144
+    $('fanUnit').value=r.increment.recommended_increment;
+    if(S.fan.pivot)drawFan(false);
+    // زاوية مربع 9 المعايرة -> سعر الارتكاز يبقى نفسه، لكن نعرض الزاوية الفائزة
+    let lines=[
+      `${t('calIncrement')}: <b>${r.increment.recommended_increment}</b> (ATR14=${r.increment.atr_14})`,
+    ];
+    if(r.square9.angle!=null){
+      lines.push(`${t('calSq9')}: <b style="color:#E0B341">${r.square9.angle}°</b> (${t('hitRate')} ${(r.square9.hit_rate*100).toFixed(0)}%, ${r.square9.pivots_tested} ${t('calPivots')})`);
+    }else{
+      lines.push(`${t('calSq9')}: ${t('calNoRelation')}`);
+    }
+    if(r.fan&&r.fan.angle_name){
+      lines.push(`${t('calFan')}: <b style="color:#E0B341">${r.fan.angle_name}</b> (${t('hitRate')} ${(r.fan.hit_rate*100).toFixed(0)}%, ${r.fan.bars_tested} ${t('calBars')})`);
+    }
+    $('autoCalInfo').innerHTML=lines.join('<br>');
+    toast(t('autoCalDone'));
+  }catch(e){setSrv(false);$('autoCalInfo').textContent=t('serverLost');}
+};
 
 /* ================= Square of 9 ================= */
 $('sq9FromLow').onclick =()=>{$('sq9Price').value=fmt(minLow());};
@@ -783,10 +885,19 @@ $('sq9Draw').onclick=()=>{
     }
   }
   rows.sort((a,b)=>b.lvl-a.lvl);
-  for(const x of rows)
-    S.sq9.levels.push({price:x.lvl,color:x.card?'#E0B341':'rgba(79,195,247,.55)',lineWidth:1,lineStyle:LWC.LineStyle.Dotted,axisLabelVisible:true,title:(x.deg>0?'+':'')+x.deg+'°'});
+  const bestDeg=(S.autoCal&&S.autoCal.square9&&S.autoCal.square9.angle!=null)?S.autoCal.square9.angle:null;
+  for(const x of rows){
+    const isBest=bestDeg!=null&&((x.deg%360+360)%360)===((bestDeg%360+360)%360);
+    S.sq9.levels.push({price:x.lvl,
+      color:isBest?'#EF5350':(x.card?'#E0B341':'rgba(79,195,247,.55)'),
+      lineWidth:isBest?2:1,lineStyle:LWC.LineStyle.Dotted,axisLabelVisible:true,
+      title:(x.deg>0?'+':'')+x.deg+'°'+(isBest?' ★':'')});
+  }
   redrawAllLinesOnly();
-  $('sq9List').innerHTML=rows.map(x=>`<div${x.card?' class="card"':''}><span>${(x.deg>0?'+':'')+x.deg}°</span><span>${fmt(x.lvl)}</span></div>`).join('');
+  $('sq9List').innerHTML=rows.map(x=>{
+    const isBest=bestDeg!=null&&((x.deg%360+360)%360)===((bestDeg%360+360)%360);
+    return `<div${x.card||isBest?' class="card"':''}><span>${(x.deg>0?'+':'')+x.deg}°${isBest?' ★':''}</span><span>${fmt(x.lvl)}</span></div>`;
+  }).join('');
   toast(rows.length+' مستوى ضمن نطاق الشارت');
 };
 function redrawAllLinesOnly(){removeAllPriceLines();redrawPriceLines();}
@@ -903,7 +1014,28 @@ function sunLon(t){
 }
 const autoSunScale=()=>+(((maxHigh()-minLow())/540)||0.1).toPrecision(2);
 $('sunOn').onchange=e=>{S.sun.on=e.target.checked;S.sun.on?drawSun():clearSun();};
-$('sunAuto').onclick=()=>{$('sunScale').value=autoSunScale();if(S.sun.on)drawSun();};
+$('sunAuto').onclick=async()=>{
+  const planet=$('planetSel').value,helio=$('helioChk').checked,center=helio?'helio':'geo';
+  // المعايرة الحقيقية: نتيجة الماسح الكوكبي الفعلية لهذا الكوكب تحديدًا
+  // (نسبة سعر/درجة الأكثر ثباتًا عبر ارتكازات السهم — نفس منهج
+  // scanner.py المُختبر) بدل تقريب (المدى÷540) القديم — فقط لو السيرفر
+  // متاح ونتيجة اختبار الانعكاس لهذا الكوكب موجودة فعلًا.
+  if(needServer()){
+    try{
+      const r=await API.get(`/scan/planets/${S.serverSym}?limit=20000&top=10`);
+      const match=(r.planets||[]).find(p=>p.planet===planet&&p.center===center);
+      if(match&&match.reversal){
+        $('sunScale').value=match.reversal.unit_price_median;
+        toast(t('sunAutoMeasured')+' ('+t('hitRate')+' '+(match.reversal.confidence*100).toFixed(0)+'%)');
+        if(S.sun.on)drawSun();
+        return;
+      }
+      toast(t('sunAutoNoMatch'));
+    }catch(e){setSrv(false);}
+  }
+  $('sunScale').value=autoSunScale();
+  if(S.sun.on)drawSun();
+};
 $('sunScale').onchange=()=>{if(S.sun.on)drawSun();};
 $('sunHarm').onchange=()=>{if(S.sun.on)drawSun();};
 $('planetSel').onchange=()=>{if(S.sun.on)drawSun();};
@@ -1085,7 +1217,7 @@ $('sq144Draw').onclick=async()=>{
     // علامات الزمن الرأسية كنقاط على المحور
     const vm=r.verticals.filter(v=>v.frac>0).map(v=>({time:S.bars[Math.min(nearestIdxByTime(v.t),S.bars.length-1)].t,position:'belowBar',color:'#E0B341',shape:'square',text:Math.round(v.frac*144)+''}));
     S.sig.markers=[...S.sig.markers,...vm];applyMarkers();
-    toast('مربع 144 من ارتكاز '+fmt(r.pivot.price)+' — وحدة '+r.price_unit);
+    toast('مربع 144 من ارتكاز '+fmt(r.pivot.price)+' — وحدة '+r.price_unit+' (ATR/مستوى سعر حقيقي)');
   }catch(e){toast('تعذر بناء المربع: '+(e.message||e));}
 };
 
@@ -1237,6 +1369,15 @@ $('tabs').addEventListener('click',e=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id===b.dataset.p));
 });
+
+/* ================= Mobile tools drawer ================= */
+// On phones the side panel becomes a slide-up drawer (see the ≤820px CSS) —
+// these classes are no-ops on desktop since that CSS never applies there.
+function openTools(){$('aside').classList.add('open');$('asideBackdrop').classList.add('open');}
+function closeTools(){$('aside').classList.remove('open');$('asideBackdrop').classList.remove('open');}
+$('btnTools').addEventListener('click',openTools);
+$('btnToolsClose').addEventListener('click',closeTools);
+$('asideBackdrop').addEventListener('click',closeTools);
 $('chartType').onchange=e=>{S.type=e.target.value;render();};
 $('btnClearAll').onclick=()=>clearAll(true);
 function clearAll(msg){
@@ -1320,13 +1461,19 @@ $('sq9Draw').onclick=async()=>{
     try{
       const r=await API.get(`/gann/sq9/${S.serverSym}?side=${+$('sq9Price').value<=(minLow()+maxHigh())/2?'low':'high'}`);
       removeLines(S.sq9);S.sq9.levels=[];
-      for(const x of r.levels)
-        S.sq9.levels.push({price:x.price,color:x.cardinal?'#E0B341':'rgba(79,195,247,.55)',
-          lineWidth:1,lineStyle:LWC.LineStyle.Dotted,axisLabelVisible:true,
-          title:(x.deg>0?'+':'')+x.deg+'°'});
+      const bestDeg=(S.autoCal&&S.autoCal.square9&&S.autoCal.square9.angle!=null)?S.autoCal.square9.angle:null;
+      for(const x of r.levels){
+        const isBest=bestDeg!=null&&((x.deg%360+360)%360)===((bestDeg%360+360)%360);
+        S.sq9.levels.push({price:x.price,
+          color:isBest?'#EF5350':(x.cardinal?'#E0B341':'rgba(79,195,247,.55)'),
+          lineWidth:isBest?2:1,lineStyle:LWC.LineStyle.Dotted,axisLabelVisible:true,
+          title:(x.deg>0?'+':'')+x.deg+'°'+(isBest?' ★':'')});
+      }
       redrawAllLinesOnly();
-      $('sq9List').innerHTML=r.levels.map(x=>
-        `<div${x.cardinal?' class="card"':''}><span>${(x.deg>0?'+':'')+x.deg}°</span><span>${fmt(x.price)}</span></div>`).join('');
+      $('sq9List').innerHTML=r.levels.map(x=>{
+        const isBest=bestDeg!=null&&((x.deg%360+360)%360)===((bestDeg%360+360)%360);
+        return `<div${x.cardinal||isBest?' class="card"':''}><span>${(x.deg>0?'+':'')+x.deg}°${isBest?' ★':''}</span><span>${fmt(x.price)}</span></div>`;
+      }).join('');
       toast(r.levels.length+' مستوى (محسوب على الخادم)');
       return;
     }catch(e){setSrv(false);}
@@ -1401,7 +1548,25 @@ S.raw=demo();S.baseSec=86400;S.bars=resample(S.raw,'D');
 buildTfButtons();render();
 $('fanUnit').value=autoUnit();$('sq9Price').value=fmt(minLow());$('sunScale').value=autoSunScale();
 window.addEventListener('resize',()=>chart.timeScale().fitContent());
-connect(true).then(ok=>{if(ok)toast(LANG==='ar'?'الخادم متصل — اختر رمزًا من القائمة':'Server connected — pick a symbol');});
+
+// إعادة محاولة تلقائية دورية: أول محاولة (خصوصًا عند إقلاع تطبيق سطح
+// المكتب) ممكن تصادف الخادم لسه بيبدأ أو DuckDB مشغولة بكتابة استيراد
+// دفعة كبيرة (import/stooq) — بدل ما نعتمد على المستخدم يدوس ⟳ يدويًا،
+// نعيد المحاولة كل بضع ثوانٍ لحد ما تنجح، ثم نستمر بمعدل أبطأ للحفاظ على
+// حالة الاتصال محدّثة (مثلًا لو الخادم اتقفل لاحقًا ثم اشتغل تاني).
+let _retryDelay=2000;
+async function _connectWithRetry(){
+  const ok=await connect(!!_everConnected);
+  if(ok){
+    _everConnected=true;
+    _retryDelay=15000; // بعد أول اتصال ناجح، افحص دوريًا كل 15 ثانية فقط
+  }else{
+    _retryDelay=Math.min(_retryDelay*1.5,15000);
+  }
+  setTimeout(_connectWithRetry,_retryDelay);
+}
+let _everConnected=false;
+_connectWithRetry();
 
 // المرحلة 5 (PWA): تسجيل صامت — فشل التسجيل (ملف:// محليًا، أو متصفح لا
 // يدعم Service Workers) لا يجب أن يمنع الصفحة من العمل كموقع عادي.

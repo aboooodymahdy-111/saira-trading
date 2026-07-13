@@ -18,7 +18,44 @@ impl Drop for BackendProcess {
     }
 }
 
+// المشروع الرئيسي (C:\Users\...\Saira-Trading\src) فيه أدوات جان الحقيقية
+// (gann_increment_selection.py، full_universe_analysis.py، إلخ) التي
+// app/config.py's PROJECT_ROOT يفترض وجودها بمسار نسبي (API_ROOT.parent /
+// "src") — صحيح فقط عند التشغيل من داخل saira-api/ الأصلي مباشرة، وليس من
+// موارد Tauri المنسوخة (src-tauri/target/.../resources)، حيث src/ غير
+// منسوخة أصلًا. بدل نسخ كل المشروع الرئيسي داخل حزمة التطبيق (يضاعف الحجم
+// ويحتاج إعادة بناء يدوية عند أي تحديث)، نمرّر SAIRA_ROOT كمتغير بيئة
+// يشير مباشرة لمكانه الحقيقي على القرص — قابل للتخصيص عبر
+// SAIRA_ROOT_OVERRIDE لو المستخدم ثبّت المشروع في مكان مختلف عن الافتراضي.
+fn find_project_src_dir() -> Option<std::path::PathBuf> {
+    if let Ok(over) = std::env::var("SAIRA_ROOT_OVERRIDE") {
+        let p = std::path::PathBuf::from(over);
+        if p.join("full_universe_analysis.py").exists() {
+            return Some(p);
+        }
+    }
+    if let Some(home) = dirs_next_home() {
+        let candidate = home.join("Saira-Trading").join("src");
+        if candidate.join("full_universe_analysis.py").exists() {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
+fn dirs_next_home() -> Option<std::path::PathBuf> {
+    std::env::var_os("USERPROFILE").map(std::path::PathBuf::from)
+}
+
 fn spawn_backend(resource_dir: &std::path::Path) -> Option<Child> {
+    let project_src = find_project_src_dir();
+    if project_src.is_none() {
+        log::warn!("لم يُعثر على مجلد src/ الحقيقي للمشروع — أدوات المعايرة \
+                     الحقيقية وربط اللجنة الحية لن تعمل، لكن باقي الميزات \
+                     (الشموع/المؤشرات/الفلك المستقل) ستعمل عاديًا. اضبط \
+                     SAIRA_ROOT_OVERRIDE لو المشروع في مكان غير معتاد.");
+    }
+
     // "python" العادي أولًا (يفترض pip install -r requirements.txt سبق
     // تنفيذه مرة على جهاز المستخدم — راجع resources/run.bat)، مع py -3
     // كبديل على ويندوز لو "python" مش على PATH مباشرة.
@@ -30,6 +67,9 @@ fn spawn_backend(resource_dir: &std::path::Path) -> Option<Child> {
         command
             .args(["-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8787"])
             .current_dir(resource_dir);
+        if let Some(ref src) = project_src {
+            command.env("SAIRA_ROOT", src);
+        }
         #[cfg(windows)]
         {
             use std::os::windows::process::CommandExt;
