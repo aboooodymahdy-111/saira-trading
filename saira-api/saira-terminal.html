@@ -56,8 +56,8 @@
   .srv.off{color:var(--dn)}
 
   /* ===== Layout ===== */
-  .main{display:flex;height:calc(100% - 46px - 40px - 26px);min-height:260px}
-  .chart-wrap{flex:1;position:relative;direction:ltr;min-height:200px}
+  .main{display:flex;height:calc(100% - 46px - 40px - 26px);min-height:340px}
+  .chart-wrap{flex:1;position:relative;direction:ltr;min-height:280px}
   #chart{position:absolute;inset:0}
   .pick-hint{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--gold);color:#141414;padding:5px 14px;border-radius:20px;font-weight:600;font-size:12px;z-index:20;display:none;direction:rtl}
   .chart-corner-controls{position:absolute;bottom:26px;right:6px;z-index:20;display:flex;gap:4px}
@@ -226,7 +226,7 @@
       <h3 data-i18n="fanH3">مروحة جان</h3>
       <div class="note" data-i18n="fanNote">حدد نقطة ارتكاز (قاع أو قمة) بالنقر على الشارت، وستُرسم الزوايا 1×8 حتى 8×1. الزاوية الذهبية هي 1×1. أو استخدم "تلقائي" لاكتشاف آخر قمة وقاع ورسم مروحتين معًا.</div>
       <div class="row"><button class="btn" id="btnFanPick">🎯 <span data-i18n="fanPickBtn">تحديد الارتكاز بالنقر</span></button></div>
-      <div class="row"><label data-i18n="fanUnitLbl">المعايرة (نقطة/شمعة)</label><input type="number" id="fanUnit" step="0.001"><button class="btn small" id="fanAuto" data-i18n-title="fanAutoTitle" title="اكتشاف آخر قمة وقاع تلقائيًا ورسم مروحتين" data-i18n="autoBtn">تلقائي</button></div>
+      <div class="row"><label data-i18n="fanUnitLbl">المعايرة (نقطة/شمعة)</label><input type="number" id="fanUnit" step="0.001"><button class="btn small" id="fanAuto" data-i18n-title="fanAutoTitle" title="اكتشاف آخر قمة أو قاع تلقائيًا ورسم مروحة واحدة منه" data-i18n="autoBtn">تلقائي</button></div>
       <div class="row"><label data-i18n="dirLbl">الاتجاه</label>
         <select class="btn" id="fanDir"><option value="auto" data-i18n="dirAuto">تلقائي</option><option value="up" data-i18n="dirUp">من قاع (صاعدة)</option><option value="down" data-i18n="dirDown">من قمة (هابطة)</option></select>
       </div>
@@ -440,8 +440,8 @@ const I18N={
     tabCyc:'دورات', tabAstro:'فلك', tabScan:'الماسح ⚛', tabConf:'التقاء',
     tabSquare:'موازنة/كسوف', tabSig:'إشارات',
     fanH3:'مروحة جان',
-    fanNote:'حدد نقطة ارتكاز (قاع أو قمة) بالنقر على الشارت، وستُرسم الزوايا 1×8 حتى 8×1. الزاوية الذهبية هي 1×1. أو استخدم "تلقائي" لاكتشاف آخر قمة وقاع ورسم مروحتين معًا.',
-    fanAutoTitle:'اكتشاف آخر قمة وقاع تلقائيًا ورسم مروحتين',
+    fanNote:'حدد نقطة ارتكاز (قاع أو قمة) بالنقر على الشارت، وستُرسم الزوايا 1×8 حتى 8×1. الزاوية الذهبية هي 1×1. أو استخدم "تلقائي" لاكتشاف آخر قمة أو قاع ورسم مروحة واحدة منه.',
+    fanAutoTitle:'اكتشاف آخر قمة أو قاع تلقائيًا ورسم مروحة واحدة منه',
     fanPickBtn:'تحديد الارتكاز بالنقر', fanUnitLbl:'المعايرة (نقطة/شمعة)', autoBtn:'تلقائي',
     dirLbl:'الاتجاه', dirAuto:'تلقائي', dirUp:'من قاع (صاعدة)', dirDown:'من قمة (هابطة)',
     fanClearBtn:'مسح المروحة',
@@ -540,8 +540,8 @@ const I18N={
     tabCyc:'Cycles', tabAstro:'Astro', tabScan:'Scanner ⚛', tabConf:'Confluence',
     tabSquare:'Squaring/Eclipses', tabSig:'Signals',
     fanH3:'Gann Fan',
-    fanNote:'Pick an anchor point (low or high) by clicking the chart — angles 1×8 through 8×1 will be drawn. 1×1 is the golden angle. Or use "Auto" to detect the last swing high/low and draw both fans at once.',
-    fanAutoTitle:'Auto-detect the last swing high/low and draw two fans',
+    fanNote:'Pick an anchor point (low or high) by clicking the chart — angles 1×8 through 8×1 will be drawn. 1×1 is the golden angle. Or use "Auto" to detect the last swing high/low and draw a single fan from it.',
+    fanAutoTitle:'Auto-detect the last swing high/low and draw a single fan from it',
     fanPickBtn:'Pick anchor by click', fanUnitLbl:'Scale (price/bar)', autoBtn:'Auto',
     dirLbl:'Direction', dirAuto:'Auto', dirUp:'From low (up)', dirDown:'From high (down)',
     fanClearBtn:'Clear fan',
@@ -970,10 +970,9 @@ function drawFan(rebuild){
   const inf=$('fanInfo');inf.style.display='block';
   inf.innerHTML=fanInfoLine(P,bestFanName);
 }
-// إعادة رسم أي مروحة/مروحتين قائمتين حاليًا (مثلًا بعد تغيير المعايرة يدويًا).
+// إعادة رسم المروحة القائمة حاليًا (مثلًا بعد تغيير المعايرة يدويًا).
 function redrawFans(){
-  if(S.fan.pivot2){drawFanAuto(false);}
-  else{drawFan(false);}
+  drawFan(false);
 }
 // يكتشف آخر قمة وآخر قاع سوينج تلقائيًا (نفس خوارزمية كاشف السوينج في
 // تبويب "سوينج") ويرسم مروحتين: واحدة صاعدة من آخر قاع، وأخرى هابطة من
@@ -1003,21 +1002,18 @@ function detectSwingPivots(m){
   return pts;
 }
 async function drawFanAuto(runCalibration){
+  // نقطة ارتكاز واحدة فقط — آخر قمة/قاع سوينج أيًا كان الأحدث زمنيًا (بدل
+  // رسم مروحتين من القمة والقاع معًا)، مطابقةً للطريقة الأصلية قبل إضافة
+  // "المروحة المزدوجة".
   const m=+($('swingBars')&&$('swingBars').value)||5;
   const pts=detectSwingPivots(m);
   if(!pts.length){toast('لا توجد بيانات كافية لاكتشاف قمة/قاع');return;}
-  const lastTop=[...pts].reverse().find(p=>p.type==='top');
-  const lastBottom=[...pts].reverse().find(p=>p.type==='bottom');
-  if(!lastTop||!lastBottom){toast('لم يُعثر على قمة وقاع كافيين');return;}
-  S.fan.pivot={time:lastBottom.time,price:lastBottom.value,isLow:true};
-  S.fan.pivot2={time:lastTop.time,price:lastTop.value,isLow:false};
+  const last=pts[pts.length-1];
+  S.fan.pivot={time:last.time,price:last.value,isLow:last.type==='bottom'};
+  S.fan.pivot2=null;
   if(runCalibration!==false&&API.live&&S.serverSym)await runAutoCalibration();
-  clearFan(false);
-  const n1=drawFanFrom(S.fan.pivot);
-  const n2=drawFanFrom(S.fan.pivot2);
-  const inf=$('fanInfo');inf.style.display='block';
-  inf.innerHTML=fanInfoLine(S.fan.pivot,n1)+'<br>'+fanInfoLine(S.fan.pivot2,n2);
-  toast('رُسمت مروحتان تلقائيًا: من آخر قاع وآخر قمة');
+  drawFan(false);
+  toast('رُسمت المروحة تلقائيًا من آخر '+(S.fan.pivot.isLow?'قاع':'قمة'));
 }
 
 /* ================= المعايرة التلقائية الحقيقية =================
@@ -1754,13 +1750,23 @@ function pickSymSuggest(sym){
   $('symSearch').value=sym;
   renderSymOptions(sym);
   $('symSelect').value=sym;
+  symAutoLoaded=sym;
   loadSymbol(sym);
 }
+let symAutoLoaded=''; // آخر رمز فُتح تلقائيًا أثناء الكتابة — يمنع إعادة تحميله بكل ضغطة حرف تالية
 $('symSearch').addEventListener('input',()=>{
   const list=renderSymOptions($('symSearch').value);
   const q=$('symSearch').value.trim();
-  if(!q){closeSymSuggest();return;}
+  if(!q){closeSymSuggest();symAutoLoaded='';return;}
   renderSymSuggest(list);
+  // فتح تلقائي بمجرد مطابقة رمز محلي كامل — بلا حاجة لـ Enter أو نقر، تمامًا
+  // كسلوك منصات التداول المعتادة؛ القائمة المنسدلة تبقى متاحة أيضًا للاختيار
+  // اليدوي عند عدم التأكد من الرمز الكامل.
+  const exact=S.allowedSymbols.find(s=>s.symbol.toUpperCase()===q.toUpperCase()||s.symbol.split('.')[0].toUpperCase()===q.toUpperCase());
+  if(exact&&exact.symbol!==symAutoLoaded){
+    symAutoLoaded=exact.symbol;
+    loadSymbol(exact.symbol);
+  }
 });
 $('symSearch').addEventListener('keydown',e=>{
   const opts=[...symSuggestEl.querySelectorAll('.opt')];
