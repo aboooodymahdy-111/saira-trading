@@ -27,6 +27,14 @@ ALLOWLIST_PATH = Path(os.getenv("SAIRA_ALLOWLIST", API_ROOT.parent / "data" / "t
 HOST = os.getenv("SAIRA_HOST", "127.0.0.1")
 PORT = int(os.getenv("SAIRA_PORT", "8787"))
 
+# المرحلة 4: مُجمِّع Alpaca WebSocket (خطة Basic المجانية — تغذية IEX، لا تتطلب
+# تمويل حساب). المفاتيح فارغة افتراضيًا بالتصميم — aggregator.py يرفض العمل
+# صراحة لو غير موجودة بدل محاولة اتصال هيفشل بصمت أو بخطأ مبهم.
+ALPACA_KEY_ID = os.getenv("ALPACA_KEY_ID", "")
+ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY", "")
+ALPACA_FEED = os.getenv("ALPACA_FEED", "iex")  # iex = مجاني على الخطة الأساسية؛ sip يتطلب اشتراك مدفوع
+ALPACA_STREAM_URL = f"wss://stream.data.alpaca.markets/v2/{ALPACA_FEED}"
+
 
 def load_allowlist() -> set[str]:
     if not ALLOWLIST_PATH.exists():
