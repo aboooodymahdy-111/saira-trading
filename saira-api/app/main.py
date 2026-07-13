@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+import importlib
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query
@@ -50,6 +51,20 @@ def symbols():
         base = row["symbol"].split(".")[0]
         row["allowed"] = (not allow) or base in allow or row["symbol"] in allow
     return {"count": len(rows), "allowlist_size": len(allow), "symbols": rows}
+
+
+@app.get("/screen/{symbol}")
+def screen(symbol: str):
+    """فحص أخلاقي حي لرمز واحد عبر yfinance (بنوك/دفاع/قائمة BDS) — يُستخدم
+    من بحث الواجهة عن رمز غير مخزَّن مسبقًا، حيث لا يوجد كاش جاهز لمعرفة
+    حالته الأخلاقية مقدمًا كما في /symbols."""
+    try:
+        mod = importlib.import_module("ethical_screen")
+    except Exception as exc:
+        raise HTTPException(501, f"ethical_screen غير قابل للاستيراد: {exc}")
+    result = mod.screen_ticker(symbol.upper())
+    return {"symbol": symbol.upper(), "allowed": not result.excluded,
+            "reason": result.reason, "sector": result.sector, "industry": result.industry}
 
 
 # ---------------------------------------------------------------- استيراد وتحديث
