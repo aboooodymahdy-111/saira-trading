@@ -270,7 +270,12 @@
 
     <!-- Signals -->
     <div class="panel" id="pSig">
-      <h3 data-i18n="sigH3">إشارات اللجنة / TS</h3>
+      <h3 data-i18n="liveCommH3">لجنة الإشارات (حي)</h3>
+      <div class="note" data-i18n="liveCommNote">يشغّل committee_signals عبر الخادم على الرمز الحالي فعليًا — يجلب سنتين تاريخ + تصنيف قطاع من yfinance، فقد يتأخر قليلًا. يعرض تصويت المجموعات الأربع (فني/كمي/فلكي/فني متقدم).</div>
+      <div class="row"><button class="btn gold small" id="commRun" data-i18n="liveCommRunBtn">شغّل اللجنة على الرمز الحالي</button></div>
+      <div class="note" id="commInfo" style="display:none"></div>
+
+      <h3 data-i18n="sigH3">إشارات اللجنة (من ملف)</h3>
       <div class="note" data-i18n="sigNote">حمّل ملف CSV يحتوي تاريخًا وكلمة Buy/Sell (أو شراء/بيع) في أي عمود — مثل مخرجات committee_signals. تُعرض كأسهم على الشارت.</div>
       <div class="row"><button class="btn gold" id="btnSig">📂 <span data-i18n="sigLoadBtn">تحميل ملف إشارات</span></button><input type="file" id="sigInput" accept=".csv,.txt" hidden></div>
       <div class="row"><button class="btn small" id="sigClear" data-i18n="sigClearBtn">مسح الإشارات</button></div>
@@ -353,6 +358,15 @@ const I18N={
     mtH3:'حاسبة الزمن الرئيسية',
     mtNote:'مواعيد استحقاق 30/45/60/90/120/135/180/225/270/315/360 يومًا من آخر ارتكاز سوينج (Master Calculator for Time Periods، 1955). لا تتنبأ بالاتجاه — تُراقب سلوك السعر عند كل موعد.',
     mtRunBtn:'ابنِ المسطرة الزمنية', daysWord:'يوم', mtBuilt:'تم بناء المسطرة الزمنية',
+    liveCommH3:'لجنة الإشارات (حي)',
+    liveCommNote:'يشغّل committee_signals عبر الخادم على الرمز الحالي فعليًا — يجلب سنتين تاريخ + تصنيف قطاع من yfinance، فقد يتأخر قليلًا. يعرض تصويت المجموعات الأربع (فني/كمي/فلكي/فني متقدم).',
+    liveCommRunBtn:'شغّل اللجنة على الرمز الحالي',
+    noSymbolPicked:'اختر رمزًا من القائمة أولًا', commRunning:'جارٍ تشغيل اللجنة...',
+    commUnavailable:'اللجنة غير متاحة لهذا الرمز',
+    commTechnical:'فني', commQuantitative:'كمي', commAstro:'فلكي', commAdvTech:'فني متقدم',
+    commTotalVotes:'إجمالي الأصوات', commBuy:'شراء', commSell:'بيع',
+    commEntry:'الدخول', commExit:'الخروج', commStop:'وقف الخسارة',
+    commDone:'اكتملت اللجنة لـ',
     sigH3:'إشارات اللجنة / TS',
     sigNote:'حمّل ملف CSV يحتوي تاريخًا وكلمة Buy/Sell (أو شراء/بيع) في أي عمود — مثل مخرجات committee_signals. تُعرض كأسهم على الشارت.',
     sigLoadBtn:'تحميل ملف إشارات', sigClearBtn:'مسح الإشارات',
@@ -422,6 +436,15 @@ const I18N={
     mtH3:'Master Time Periods calculator',
     mtNote:'Due dates at 30/45/60/90/120/135/180/225/270/315/360 days from the last swing pivot (Master Calculator for Time Periods, 1955). Does not predict direction — it flags dates to watch price behavior at.',
     mtRunBtn:'Build time ruler', daysWord:'days', mtBuilt:'Time ruler built',
+    liveCommH3:'Signal committee (live)',
+    liveCommNote:'Actually runs committee_signals on the server for the current symbol - fetches 2 years of history + sector classification from yfinance, so it may take a moment. Shows the 4 groups\' votes (technical/quantitative/astrological/advanced technical).',
+    liveCommRunBtn:'Run committee on current symbol',
+    noSymbolPicked:'Pick a symbol from the list first', commRunning:'Running committee...',
+    commUnavailable:'Committee unavailable for this symbol',
+    commTechnical:'Technical', commQuantitative:'Quantitative', commAstro:'Astrological', commAdvTech:'Advanced Technical',
+    commTotalVotes:'Total votes', commBuy:'buy', commSell:'sell',
+    commEntry:'Entry', commExit:'Exit', commStop:'Stop loss',
+    commDone:'Committee done for',
     sigH3:'Committee / TS signals',
     sigNote:'Load a CSV with a date and a Buy/Sell word in any column — e.g. committee_signals output. Shown as arrows on the chart.',
     sigLoadBtn:'Load signals file', sigClearBtn:'Clear signals',
@@ -1141,6 +1164,36 @@ $('mtRun').onclick=async()=>{
       `<div${p.upcoming?' class="card"':''}><span>${p.days} ${t('daysWord')}</span><span>${dstr(p.t)}${p.upcoming?' ⏳':''}</span></div>`).join('');
     toast(t('mtBuilt'));
   }catch(e){setSrv(false);toast(t('serverLost'));}
+};
+
+/* ================= Live Committee ================= */
+$('commRun').onclick=async()=>{
+  if(!needServer())return;
+  const sym=S.serverSym||S.symbol;
+  if(!sym){toast(t('noSymbolPicked'));return;}
+  $('commInfo').style.display='block';
+  $('commInfo').textContent=t('commRunning');
+  try{
+    const r=await API.get(`/committee/${encodeURIComponent(sym)}`);
+    if(!r.available){$('commInfo').textContent=r.message||t('commUnavailable');return;}
+    const d=r.result;
+    const rows=[
+      [t('commTechnical'), d.technical_net_vote],
+      [t('commQuantitative'), d.quantitative_net_vote],
+      [t('commAstro'), d.astrological_net_vote],
+      [t('commAdvTech'), d.advanced_technical_net_vote],
+    ];
+    const voteColor=v=>v==='buy'?'#26A69A':(v==='sell'?'#EF5350':'#7C8AA0');
+    $('commInfo').innerHTML=
+      `<b>${r.symbol}</b> — ${t('commTotalVotes')}: `+
+      `<span style="color:#26A69A">${d.total_buy_votes} ${t('commBuy')}</span> / `+
+      `<span style="color:#EF5350">${d.total_sell_votes} ${t('commSell')}</span><br><br>`+
+      rows.map(([label,vote])=>`${label}: <b style="color:${voteColor(vote)}">${vote}</b>`).join('<br>')+
+      `<br><br>${t('commEntry')}: ${fmt(d.entry_price)} (${d.entry_basis})<br>`+
+      `${t('commExit')}: ${fmt(d.exit_price)} (${d.exit_basis})<br>`+
+      `${t('commStop')}: ${fmt(d.stop_loss_price)} (${d.stop_loss_basis})`;
+    toast(t('commDone')+' '+r.symbol);
+  }catch(e){setSrv(false);$('commInfo').textContent=t('serverLost');}
 };
 
 /* ================= Signals ================= */
