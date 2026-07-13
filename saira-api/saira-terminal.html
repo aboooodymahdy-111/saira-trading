@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Saira Terminal — منصة التحليل</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-128.png">
+<link rel="apple-touch-icon" href="icons/icon-256.png">
+<meta name="theme-color" content="#0B0E14">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="lightweight-charts.standalone.production.js"></script>
@@ -1345,6 +1349,12 @@ buildTfButtons();render();
 $('fanUnit').value=autoUnit();$('sq9Price').value=fmt(minLow());$('sunScale').value=autoSunScale();
 window.addEventListener('resize',()=>chart.timeScale().fitContent());
 connect(true).then(ok=>{if(ok)toast(LANG==='ar'?'الخادم متصل — اختر رمزًا من القائمة':'Server connected — pick a symbol');});
+
+// المرحلة 5 (PWA): تسجيل صامت — فشل التسجيل (ملف:// محليًا، أو متصفح لا
+// يدعم Service Workers) لا يجب أن يمنع الصفحة من العمل كموقع عادي.
+if('serviceWorker' in navigator && location.protocol !== 'file:'){
+  navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+}
 </script>
 </body>
 </html>
