@@ -1472,13 +1472,18 @@ function clearAll(msg){
 /* ================= API client (المرحلة 0/1) ================= */
 // ترتيب اختيار عنوان الخادم: ?api= في الرابط، ثم آخر عنوان حفظه المستخدم
 // يدويًا (انقر نقطة الحالة)، ثم افتراضي يعتمد على مكان تشغيل الصفحة نفسها:
-// على localhost (سطح المكتب/Tauri) الخادم على نفس الجهاز فـ127.0.0.1 صالح؛
-// أي مضيف آخر (Cloudflare Pages أو أندرويد/Capacitor) يعني أن الخادم يعمل
-// على جهاز/سحابة أخرى، فالافتراضي يصير عنوان Fly.io العام بدلًا من ذلك.
+// - Capacitor (أندرويد): window.Capacitor موجود دومًا حتى لو androidScheme
+//   يخلي location.hostname="localhost" (نفس اسم مضيف سطح المكتب بالصدفة) —
+//   لازم يُفحص أولًا وإلا يظن التطبيق أن الخادم شغّال على الهاتف نفسه.
+// - localhost/127.0.0.1 بلا Capacitor (سطح المكتب/Tauri): الخادم فعليًا على
+//   نفس الجهاز فـ127.0.0.1:8787 صالح.
+// - أي مضيف آخر (Cloudflare Pages) أو Capacitor: الخادم على جهاز/سحابة أخرى،
+//   فالافتراضي يصير عنوان Fly.io العام.
 const DEFAULT_REMOTE_API='https://saira-api.fly.dev';
+const isCapacitor=typeof window.Capacitor!=='undefined';
 const API={
   base:(new URLSearchParams(location.search).get('api'))||localStorage.getItem('sairaApiBase')||
-    (['localhost','127.0.0.1'].includes(location.hostname)?'http://127.0.0.1:8787':DEFAULT_REMOTE_API),
+    ((!isCapacitor && ['localhost','127.0.0.1'].includes(location.hostname))?'http://127.0.0.1:8787':DEFAULT_REMOTE_API),
   live:false,
   async get(path,timeoutMs=6000){
     const c=new AbortController(),to=setTimeout(()=>c.abort(),timeoutMs);
