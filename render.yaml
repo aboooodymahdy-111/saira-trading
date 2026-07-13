@@ -1,0 +1,20 @@
+# نشر خادم Saira API على Render (الخطة المجانية، بلا بطاقة ائتمانية) — يبني
+# نفس Dockerfile الموجود في saira-api/ لكن بسياق بناء جذر المستودع (src/
+# وdata/ مطلوبان بجانب saira-api/، كما في fly.toml).
+services:
+  - type: web
+    name: saira-api
+    runtime: docker
+    dockerfilePath: ./saira-api/Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: SAIRA_ROOT
+        value: /repo/src
+      - key: SAIRA_ALLOWLIST
+        value: /repo/data/ticker_universe.csv
+      - key: SAIRA_DB
+        value: /repo/saira-api/saira.duckdb
+      - key: SAIRA_HOST
+        value: 0.0.0.0
+    healthCheckPath: /health
