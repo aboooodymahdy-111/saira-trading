@@ -450,3 +450,14 @@ def scan_connected(symbol: str, planet: str, center: str, unit_price: float,
         return scanner.connected_lines(df, planet, center, unit_price, n_lines)
     except ValueError as exc:
         raise HTTPException(400, str(exc))
+
+
+@app.get("/scan/aspect_influence/{symbol}")
+def scan_aspect_influence(symbol: str, tf: str = "D", limit: int = 5000, top: int = 10):
+    """يختبر كل أزواج الكواكب × كل زوايا الاتصال (0/30/45/60/90/120/180)
+    معًا — بعكس /scan/planets الذي يقيّم كل كوكب بمفرده — ويرتب أكثر
+    العلاقات (زوج كوكبين + زاوية) ترافقًا مع ارتكازات سوينج فعلية."""
+    import pandas as pd
+    df = pd.DataFrame(_need_symbol(symbol, tf, limit))
+    return {"symbol": symbol.upper(), "tf": tf,
+            **scanner.aspect_influence_scan(df, top)}
