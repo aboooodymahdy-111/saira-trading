@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Saira Terminal</string>
+    <string name="title_activity_main">Saira Terminal</string>
+    <string name="package_name">com.saira.terminal</string>
+    <string name="custom_url_scheme">com.saira.terminal</string>
+</resources>
