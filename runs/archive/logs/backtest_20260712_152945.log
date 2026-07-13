@@ -1,0 +1,64 @@
+$ATOS: possibly delisted; no price data found  (period=3y)
+$BAI: possibly delisted; no price data found  (period=3y)
+$BALY: possibly delisted; no price data found  (period=3y)
+$BARK: possibly delisted; no price data found  (period=3y)
+$BCHI: possibly delisted; no price data found  (period=3y)
+$BFRG: possibly delisted; no price data found  (period=3y)
+$BIXIW: possibly delisted; no price data found  (period=3y)
+$BMEZ: possibly delisted; no price data found  (period=3y)
+$BON: possibly delisted; no price data found  (period=3y)
+$BOSC: possibly delisted; no price data found  (period=3y)
+$BVC: possibly delisted; no price data found  (period=3y)
+$CCCC: possibly delisted; no price data found  (period=3y)
+$CCII: possibly delisted; no price data found  (period=3y)
+$CDW: possibly delisted; no price data found  (period=3y)
+$CHEC: possibly delisted; no price data found  (period=3y)
+$CHEF: possibly delisted; no price data found  (period=3y)
+$CL: possibly delisted; no price data found  (period=3y)
+$CLGN: possibly delisted; no price data found  (period=3y)
+$CPRI: possibly delisted; no price data found  (period=3y)
+$CRCO: possibly delisted; no price data found  (period=3y)
+$CRGY: possibly delisted; no price data found  (period=3y)
+$SHOP: possibly delisted; no price data found  (period=3y)
+$SII: possibly delisted; no price data found  (period=3y)
+$SNTH: possibly delisted; no price data found  (period=3y)
+$SR: possibly delisted; no price data found  (period=3y)
+Backtesting 400 tickers x 27 sample dates (2025-12-28 to 2026-06-28, every 7 days)...
+  50/400 tickers...
+  100/400 tickers...
+  150/400 tickers...
+  200/400 tickers...
+  250/400 tickers...
+  300/400 tickers...
+  350/400 tickers...
+WARNING: backtest snapshot failed for YHNAU @ 2026-04-19: compute_volume_profile: price range is zero or negative — check input data.
+WARNING: backtest snapshot failed for YHNAU @ 2026-04-26: compute_volume_profile: price range is zero or negative — check input data.
+  400/400 tickers...
+
+Wrote backtest output to C:\Users\Mahdy\Saira-Trading\runs\backtest\backtest_20260712_155959
+# Backtest summary — 20260712_155959
+
+Window: 2025-12-28 to 2026-06-28 (6 months, every 7 days), 400 tickers sampled (seed=42).
+Target: 10.0% within 5 trading days. Analyst consensus excluded (not reconstructable historically).
+
+## Committee (net-buy) calls
+- Total calls: 4570 (4570 resolved)
+- Hit rate: 42.8%
+- Avg days to exit when hit: 2.1
+
+## Base rate (every analyzed snapshot, regardless of vote)
+- Total: 9014 (9014 resolved)
+- Hit rate: 25.3%
+
+## Committee hit rate by month
+- 2025-12: 45.3%
+- 2026-01: 47.3%
+- 2026-02: 41.6%
+- 2026-03: 34.0%
+- 2026-04: 42.0%
+- 2026-05: 43.5%
+- 2026-06: 44.5%
+
+## Conclusion
+Committee beat the base rate by +17.5%.
+Caveat: yfinance prices are adjusted as of today's fetch, not as literally traded on the historical date — affects price-level precision, not signal direction.

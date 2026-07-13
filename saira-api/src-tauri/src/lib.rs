@@ -69,6 +69,15 @@ fn spawn_backend(resource_dir: &std::path::Path) -> Option<Child> {
             .current_dir(resource_dir);
         if let Some(ref src) = project_src {
             command.env("SAIRA_ROOT", src);
+            // كاش الفلترة الأخلاقية الحقيقي (runs/ticker_eligibility_cache.json)
+            // نفس مشكلة SAIRA_ROOT بالضبط: config.py's ELIGIBILITY_CACHE_PATH
+            // مسار نسبي (API_ROOT.parent / "runs") لا يصل لمجلد runs/ الحقيقي
+            // من داخل موارد Tauri — src/ الأب هو Saira-Trading نفسه فنشتق
+            // runs/ منه مباشرة (project_src = Saira-Trading/src).
+            if let Some(project_root) = src.parent() {
+                command.env("SAIRA_ELIGIBILITY_CACHE",
+                           project_root.join("runs").join("ticker_eligibility_cache.json"));
+            }
         }
         #[cfg(windows)]
         {

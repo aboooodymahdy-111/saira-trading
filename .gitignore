@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 .venv/
 .claude/
+Web version/
+saira-api/*.pre-sync-backup.html
