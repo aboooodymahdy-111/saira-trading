@@ -44,7 +44,7 @@
   .btn.small{padding:3px 8px;font-size:11px}
   select.btn{padding:4px 8px}
   .spacer{flex:1}
-  .srv{font-size:15px;color:#555;transition:color .3s;cursor:default}
+  .srv{font-size:15px;color:#555;transition:color .3s;cursor:pointer}
   .srv.on{color:var(--up);text-shadow:0 0 7px rgba(38,166,154,.7)}
   .srv.off{color:var(--dn)}
 
@@ -139,6 +139,7 @@
 
 <div class="toolbar">
   <span class="srv" id="srvDot" data-i18n-title="srvStatus">●</span>
+  <input type="text" class="btn" id="symSearch" data-i18n-placeholder="symSearchPh" style="width:80px" autocomplete="off">
   <select class="btn" id="symSelect" style="min-width:120px"><option value="" data-i18n="localDataOpt">— بيانات محلية —</option></select>
   <button class="btn small" id="btnSync" data-i18n-title="syncTitle">⟳</button>
   <button class="btn gold" id="btnLoad">📂 <span data-i18n="fileBtn">ملف</span></button>
@@ -196,14 +197,11 @@
 
     <!-- Square of 9 -->
     <div class="panel" id="pSq9">
-      <h3 data-i18n="autoCalH3">المعايرة التلقائية الحقيقية</h3>
-      <div class="note" data-i18n="autoCalNote">تختبر كل زاوية/وحدة سعرية مرشحة فعليًا ضد ارتكازات السهم التاريخية (هيت-ريت حقيقي) — لا تقريب مدى/شموع. تُطبَّق على المروحة ومربع 9/144 والنجمة معًا.</div>
-      <div class="row"><button class="btn gold small" id="autoCalRun">شغّل المعايرة الحقيقية</button></div>
       <div class="note" id="autoCalInfo" style="display:none"></div>
 
       <h3 data-i18n="sq9H3">مستويات مربع التسعة</h3>
-      <div class="note" data-i18n="sq9Note">مستويات دعم ومقاومة بزيادات 45° على عجلة جان (دورة كاملة = ‎+2 على الجذر). درجات الصليب الأساسي 90°/180°/270°/360° مميزة بالذهبي.</div>
-      <div class="row"><label data-i18n="pivotPriceLbl">سعر الارتكاز</label><input type="number" id="sq9Price" step="0.01"></div>
+      <div class="note" data-i18n="sq9Note">مستويات دعم ومقاومة بزيادات 45° على عجلة جان (دورة كاملة = ‎+2 على الجذر). درجات الصليب الأساسي 90°/180°/270°/360° مميزة بالذهبي. زر "تلقائي" يختبر كل زاوية فعليًا ضد ارتكازات السهم التاريخية (هيت-ريت حقيقي، لا تقريب).</div>
+      <div class="row"><label data-i18n="pivotPriceLbl">سعر الارتكاز</label><input type="number" id="sq9Price" step="0.01"><button class="btn small" id="sq9Auto" data-i18n="autoBtn">تلقائي</button></div>
       <div class="row">
         <button class="btn small" id="sq9FromLow" data-i18n="fromLowBtn">من أدنى قاع</button>
         <button class="btn small" id="sq9FromHigh" data-i18n="fromHighBtn">من أعلى قمة</button>
@@ -211,7 +209,7 @@
       <div class="row"><button class="btn gold small" id="sq9Draw" data-i18n="drawLevelsBtn">ارسم المستويات</button><button class="btn small" id="sq9Clear" data-i18n="clearBtn">مسح</button></div>
       <div class="lvl-list" id="sq9List"></div>
       <h3 data-i18n="starH3">نجمة جان</h3>
-      <div class="note" data-i18n="starNote">تستخدم نفس سعر الارتكاز أعلاه (مربع 9) — شغّل "المعايرة الحقيقية" فوق أولًا لتعيير سعر الارتكاز والوحدة، ثم ارسم الرؤوس هنا.</div>
+      <div class="note" data-i18n="starNote">تستخدم نفس سعر الارتكاز أعلاه (مربع 9) — دوس "تلقائي" فوق أولًا لتعيير سعر الارتكاز والوحدة، ثم ارسم الرؤوس هنا.</div>
       <div class="row"><label data-i18n="kindLbl">النوع</label>
         <select class="btn" id="starKind"><option value="hexagram" data-i18n="hexOpt">سداسية 60°</option><option value="pentagram" data-i18n="pentOpt">خماسية 72°</option></select>
         <button class="btn gold small" id="starDraw" data-i18n="drawStarBtn">ارسم الرؤوس</button>
@@ -357,6 +355,7 @@ const I18N={
   ar:{
     brandTag:'· نموذج المرحلة 1', srvStatus:'حالة الخادم',
     localDataOpt:'— بيانات محلية —', syncTitle:'إعادة الاتصال بالخادم واستيراد الرموز',
+    symSearchPh:'بحث رمز...',
     fileBtn:'ملف', ctCandles:'شموع يابانية', ctHeikin:'هيكين آشي', ctBars:'أعمدة OHLC',
     ctLine:'خط', ctArea:'مساحة', clearAllBtn:'مسح كل الطبقات', toolsBtn:'🛠 الأدوات',
     pickHint:'انقر على الشارت لتحديد نقطة الارتكاز',
@@ -443,6 +442,7 @@ const I18N={
   en:{
     brandTag:'· Phase 1 prototype', srvStatus:'Server status',
     localDataOpt:'— local data —', syncTitle:'Reconnect to server & import symbols',
+    symSearchPh:'Search symbol...',
     fileBtn:'File', ctCandles:'Candles', ctHeikin:'Heikin Ashi', ctBars:'OHLC bars',
     ctLine:'Line', ctArea:'Area', clearAllBtn:'Clear all layers', toolsBtn:'🛠 Tools',
     pickHint:'Click the chart to pick an anchor point',
@@ -543,6 +543,10 @@ function applyI18n(){
     const key=el.getAttribute('data-i18n-title');
     if(dict[key]!=null)el.title=dict[key];
   });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
+    const key=el.getAttribute('data-i18n-placeholder');
+    if(dict[key]!=null)el.placeholder=dict[key];
+  });
   $('btnLang').textContent=LANG==='ar'?'EN':'ع';
 }
 function t(key){return I18N[LANG][key]||I18N.ar[key]||key;}
@@ -565,6 +569,7 @@ const S={
   ecl:{markers:[]},
   mt:{markers:[]},
   autoCal:null, // نتيجة /gann/auto_calibrate الأخيرة — يُستخدم من المروحة/مربع9/144/النجمة
+  allowedSymbols:[], // كل الرموز المسموحة من آخر /symbols — أساس فلترة مربع البحث محليًا
   pick:null,
 };
 
@@ -796,7 +801,7 @@ chart.subscribeClick(p=>{
 
 /* ================= Gann Fan ================= */
 $('btnFanPick').onclick=()=>{S.pick='fan';$('pickHint').style.display='block';closeTools();};
-$('fanAuto').onclick=()=>{$('fanUnit').value=autoUnit();if(S.fan.pivot)drawFan(false);};
+$('fanAuto').onclick=()=>runAutoCalibration();
 $('fanUnit').onchange=()=>{if(S.fan.pivot)drawFan(false);};
 $('fanClear').onclick=()=>clearFan(true);
 function clearFan(msg){
@@ -835,18 +840,24 @@ function drawFan(rebuild){
   inf.innerHTML='الارتكاز: <span style="font-family:var(--mono);direction:ltr;display:inline-block">'+fmt(P.price)+' @ '+dstr(P.time)+'</span> ('+(P.isLow?'قاع':'قمة')+') — معايرة '+unit+' نقطة/شمعة'+bestInfo;
 }
 
-/* ================= المعايرة التلقائية الحقيقية ================= */
-$('autoCalRun').onclick=async()=>{
+/* ================= المعايرة التلقائية الحقيقية =================
+   مشترَكة بين كل أزرار "تلقائي" (المروحة، مربع 9 — والنجمة/144 يعتمدان
+   على نفس النتيجة) — بدل زر منفصل باسم مختلف، اتساقًا مع تسمية الأزرار
+   الأخرى في الواجهة. */
+async function runAutoCalibration(){
   if(!needServer())return;
   $('autoCalInfo').style.display='block';
   $('autoCalInfo').textContent=t('autoCalRunning');
   try{
-    const r=await API.get(`/gann/auto_calibrate/${S.serverSym}?tf=D&limit=5000`);
+    // لو المستخدم اختار ارتكازًا يدويًا بالنقر (تبويب المروحة)، نمرره
+    // للسيرفر عشان يعاير المروحة من نفس النقطة — بدل ما يتجاهلها ويحسب
+    // دومًا من آخر ارتكاز سوينج (باگ مُصحَّح 2026-07).
+    const anchorParam=S.fan.pivot?`&anchor_t=${S.fan.pivot.time}`:'';
+    const r=await API.get(`/gann/auto_calibrate/${S.serverSym}?tf=D&limit=5000${anchorParam}`);
     S.autoCal=r;
     // الزيادة السعرية الموصى بها -> مروحة جان + مربع 144
     $('fanUnit').value=r.increment.recommended_increment;
     if(S.fan.pivot)drawFan(false);
-    // زاوية مربع 9 المعايرة -> سعر الارتكاز يبقى نفسه، لكن نعرض الزاوية الفائزة
     let lines=[
       `${t('calIncrement')}: <b>${r.increment.recommended_increment}</b> (ATR14=${r.increment.atr_14})`,
     ];
@@ -860,10 +871,20 @@ $('autoCalRun').onclick=async()=>{
     }
     $('autoCalInfo').innerHTML=lines.join('<br>');
     toast(t('autoCalDone'));
-  }catch(e){setSrv(false);$('autoCalInfo').textContent=t('serverLost');}
-};
+    return r;
+  }catch(e){if(isConnError(e))setSrv(false);$('autoCalInfo').textContent=t('serverLost');return null;}
+}
 
 /* ================= Square of 9 ================= */
+$('sq9Auto').onclick=async()=>{
+  // سعر الارتكاز نفسه لسه بيُختار من أدنى قاع/أعلى قمة (نفس منطق مربع 9
+  // الأصلي — لا زاوية "أفضل" لسعر الارتكاز نفسه، المعايرة الحقيقية هنا في
+  // اختيار الزاوية الفائزة من بين 45°/90°/...، لا في السعر). لو مفيش سعر
+  // مُدخَل بالفعل، نبدأ من أدنى قاع كافتراضي معقول قبل تشغيل المعايرة.
+  if(!(+$('sq9Price').value>0))$('sq9Price').value=fmt(minLow());
+  const r=await runAutoCalibration();
+  if(r)$('sq9Draw').onclick();
+};
 $('sq9FromLow').onclick =()=>{$('sq9Price').value=fmt(minLow());};
 $('sq9FromHigh').onclick=()=>{$('sq9Price').value=fmt(maxHigh());};
 $('sq9Clear').onclick=()=>{removeLines(S.sq9);S.sq9.levels=[];$('sq9List').innerHTML='';toast('تم مسح مستويات مربع 9');};
@@ -1022,7 +1043,9 @@ $('sunAuto').onclick=async()=>{
   // متاح ونتيجة اختبار الانعكاس لهذا الكوكب موجودة فعلًا.
   if(needServer()){
     try{
-      const r=await API.get(`/scan/planets/${S.serverSym}?limit=20000&top=10`);
+      // مسح كل الكواكب على تاريخ كامل عملية ثقيلة فعليًا (٢٠-٣٠ ثانية على
+      // أسهم طويلة التاريخ) — تحتاج مهلة أطول من مهلة الـ 6 ثوانٍ الافتراضية.
+      const r=await API.get(`/scan/planets/${S.serverSym}?limit=20000&top=10`,45000);
       const match=(r.planets||[]).find(p=>p.planet===planet&&p.center===center);
       if(match&&match.reversal){
         $('sunScale').value=match.reversal.unit_price_median;
@@ -1031,7 +1054,7 @@ $('sunAuto').onclick=async()=>{
         return;
       }
       toast(t('sunAutoNoMatch'));
-    }catch(e){setSrv(false);}
+    }catch(e){if(isConnError(e))setSrv(false);}
   }
   $('sunScale').value=autoSunScale();
   if(S.sun.on)drawSun();
@@ -1059,7 +1082,7 @@ async function drawSun(){
         lons.push(keys[j].lon);retro.push(keys[j].retro);
       }
       srvName='الخادم · '+planet+(helio?' هيليو':' جيو');
-    }catch(e){setSrv(false);lons=null;}
+    }catch(e){if(isConnError(e))setSrv(false);lons=null;}
   }
   if(!lons){
     if(planet!=='sun'||helio){toast('الخادم مطلوب لهذا الكوكب — محليًا الشمس الجيو فقط');$('sunOn').checked=false;S.sun.on=false;return;}
@@ -1095,7 +1118,7 @@ $('scanRun').onclick=async()=>{
   if(!needServer())return;
   $('scanList').innerHTML='<div style="padding:10px;color:var(--muted)">جارٍ المسح...</div>';
   try{
-    const r=await API.get(`/scan/planets/${S.serverSym}?limit=20000&top=5`);
+    const r=await API.get(`/scan/planets/${S.serverSym}?limit=20000&top=5`,45000);
     if(r.error){$('scanList').innerHTML=`<div style="padding:10px;color:var(--dn)">${r.error}</div>`;return;}
     const NAMES={sun:'الشمس',moon:'القمر',mercury:'عطارد',venus:'الزهرة',mars:'المريخ',jupiter:'المشتري',saturn:'زحل',uranus:'أورانوس',neptune:'نبتون',pluto:'بلوتو'};
     $('scanList').innerHTML=r.planets.map((p,i)=>{
@@ -1166,7 +1189,7 @@ $('scanRun').onclick=async()=>{
       };
     });
     toast(t('topCandidate')+': '+(NAMES[r.planets[0].planet]||r.planets[0].planet)+' '+(r.planets[0].center==='helio'?t('helioLbl'):t('geoLbl'))+' ×'+r.planets[0].combined_confidence);
-  }catch(e){setSrv(false);$('scanList').innerHTML='';toast(t('serverLost'));}
+  }catch(e){if(isConnError(e))setSrv(false);$('scanList').innerHTML='';toast(t('serverLost'));}
 };
 
 /* ================= Star / Sq144 / Confluence (خادم) ================= */
@@ -1185,7 +1208,7 @@ $('starDraw').onclick=async()=>{
     for(const x of r.levels)
       S.star.lines.push(mainSeries.createPriceLine({price:x.price,color:'rgba(255,138,101,.7)',lineWidth:1,lineStyle:LWC.LineStyle.Dashed,axisLabelVisible:true,title:'★'+(x.deg>0?'+':'')+x.deg+'°'}));
     toast(r.levels.length+' رأس نجمة ضمن النطاق');
-  }catch(e){setSrv(false);toast('انقطع الخادم');}
+  }catch(e){if(isConnError(e))setSrv(false);toast('انقطع الخادم');}
 };
 
 $('sq144Clear').onclick=()=>{
@@ -1237,7 +1260,7 @@ $('confRun').onclick=async()=>{
       `<div class="${c.score>=mx*0.8?'card':''}"><span>${fmt(c.price)} (${c.distance_pct>0?'+':''}${c.distance_pct}%)</span><span>⚡${c.score} · ${c.families} أدوات</span></div>`).join('')+
       `<div style="color:var(--muted)">الارتكاز: ${fmt(r.pivot.price)} (${r.pivot.source})</div>`;
     toast('أقوى التقاء: '+fmt(r.clusters[0].price)+' بنتيجة '+r.clusters[0].score);
-  }catch(e){setSrv(false);toast('انقطع الخادم');}
+  }catch(e){if(isConnError(e))setSrv(false);toast('انقطع الخادم');}
 };
 
 /* ================= Squaring Price & Time ================= */
@@ -1258,7 +1281,7 @@ $('sqrRun').onclick=async()=>{
     $('sqrInfo').style.display='block';
     $('sqrInfo').textContent='وحدة السعر المستخدمة: '+r.price_unit+' — '+r.squares.length+' موازنة مكتشفة';
     toast(r.squares.length+' نقطة موازنة سعر/زمن');
-  }catch(e){setSrv(false);toast('انقطع الخادم');}
+  }catch(e){if(isConnError(e))setSrv(false);toast('انقطع الخادم');}
 };
 
 /* ================= Eclipses ================= */
@@ -1266,7 +1289,12 @@ $('eclClear').onclick=()=>{S.ecl.markers=[];applyMarkers();$('eclList').innerHTM
 $('eclRun').onclick=async()=>{
   if(!needServer())return;
   try{
-    const r=await API.get(`/astro/eclipses?t_start=${S.bars[0].t}&t_end=${S.bars[S.bars.length-1].t}`);
+    // الخادم يرفض مدى أطول من 30 سنة (/astro/eclipses) — نقصّ على آخر 29
+    // سنة من البيانات المحمّلة بدل إرسال المدى الكامل، فيعمل الزر فعليًا
+    // على الأسهم القديمة (AAPL وأمثالها) بدل رفض دائم.
+    const tEnd=S.bars[S.bars.length-1].t;
+    const tStart=Math.max(S.bars[0].t,tEnd-29*365*86400);
+    const r=await API.get(`/astro/eclipses?t_start=${tStart}&t_end=${tEnd}`);
     $('eclClear').onclick();
     if(!r.eclipses.length){$('eclList').innerHTML='';toast('لا كسوف/خسوف ضمن مدى البيانات الحالي');return;}
     S.ecl.markers=r.eclipses.map(e=>({time:S.bars[Math.min(nearestIdxByTime(e.t),S.bars.length-1)].t,
@@ -1276,7 +1304,7 @@ $('eclRun').onclick=async()=>{
     $('eclList').innerHTML=r.eclipses.map(e=>
       `<div><span>${dstr(e.t)}</span><span>${e.kind==='solar'?'كسوف شمس ☉':'خسوف قمر ☾'}</span></div>`).join('');
     toast(r.eclipses.length+' حدث كسوف/خسوف على الشارت');
-  }catch(e){setSrv(false);toast(t('serverLost'));}
+  }catch(e){if(isConnError(e))setSrv(false);toast(t('serverLost'));}
 };
 
 /* ================= Master Calculator for Time Periods ================= */
@@ -1295,7 +1323,7 @@ $('mtRun').onclick=async()=>{
     $('mtList').innerHTML=r.periods.map(p=>
       `<div${p.upcoming?' class="card"':''}><span>${p.days} ${t('daysWord')}</span><span>${dstr(p.t)}${p.upcoming?' ⏳':''}</span></div>`).join('');
     toast(t('mtBuilt'));
-  }catch(e){setSrv(false);toast(t('serverLost'));}
+  }catch(e){if(isConnError(e))setSrv(false);toast(t('serverLost'));}
 };
 
 /* ================= Live Committee ================= */
@@ -1306,7 +1334,10 @@ $('commRun').onclick=async()=>{
   $('commInfo').style.display='block';
   $('commInfo').textContent=t('commRunning');
   try{
-    const r=await API.get(`/committee/${encodeURIComponent(sym)}`);
+    // يجلب سنتين تاريخ + تصنيف قطاع من yfinance فعليًا (~6 ثوانٍ محليًا حتى
+    // بشبكة سريعة) — قريب جدًا من مهلة 6 ثوانٍ الافتراضية فيسقط بسهولة على
+    // شبكة أبطأ (كموبايل)، فيحتاج مهلة أطول بوضوح.
+    const r=await API.get(`/committee/${encodeURIComponent(sym)}`,25000);
     if(!r.available){$('commInfo').textContent=r.message||t('commUnavailable');return;}
     const d=r.result;
     const rows=[
@@ -1325,7 +1356,7 @@ $('commRun').onclick=async()=>{
       `${t('commExit')}: ${fmt(d.exit_price)} (${d.exit_basis})<br>`+
       `${t('commStop')}: ${fmt(d.stop_loss_price)} (${d.stop_loss_basis})`;
     toast(t('commDone')+' '+r.symbol);
-  }catch(e){setSrv(false);$('commInfo').textContent=t('serverLost');}
+  }catch(e){if(isConnError(e))setSrv(false);$('commInfo').textContent=t('serverLost');}
 };
 
 /* ================= Signals ================= */
@@ -1395,18 +1426,30 @@ function clearAll(msg){
 }
 
 /* ================= API client (المرحلة 0/1) ================= */
+// ترتيب اختيار عنوان الخادم: ?api= في الرابط، ثم آخر عنوان حفظه المستخدم
+// يدويًا (انقر نقطة الحالة)، ثم افتراضي يعتمد على مكان تشغيل الصفحة نفسها:
+// على localhost (سطح المكتب/Tauri) الخادم على نفس الجهاز فـ127.0.0.1 صالح؛
+// أي مضيف آخر (Cloudflare Pages أو أندرويد/Capacitor) يعني أن الخادم يعمل
+// على جهاز/سحابة أخرى، فالافتراضي يصير عنوان Fly.io العام بدلًا من ذلك.
+const DEFAULT_REMOTE_API='https://saira-api.fly.dev';
 const API={
-  base:(new URLSearchParams(location.search).get('api'))||'http://127.0.0.1:8787',
+  base:(new URLSearchParams(location.search).get('api'))||localStorage.getItem('sairaApiBase')||
+    (['localhost','127.0.0.1'].includes(location.hostname)?'http://127.0.0.1:8787':DEFAULT_REMOTE_API),
   live:false,
-  async get(path){
-    const c=new AbortController(),to=setTimeout(()=>c.abort(),6000);
+  async get(path,timeoutMs=6000){
+    const c=new AbortController(),to=setTimeout(()=>c.abort(),timeoutMs);
     try{
       const r=await fetch(this.base+path,{signal:c.signal});
-      if(!r.ok)throw new Error('HTTP '+r.status);
+      if(!r.ok){const e=new Error('HTTP '+r.status);e.httpStatus=r.status;throw e;}
       return await r.json();
     }finally{clearTimeout(to);}
   }
 };
+// خطأ اتصال حقيقي (تعذر الوصول للخادم أصلًا) مقابل رفض الخادم لطلب واحد
+// بعينه (400/404/...) بينما هو متصل وبقية الأدوات تعمل بشكل طبيعي — الفرق
+// مهم: أداة واحدة ترفض طلبًا (مثل مدى تاريخ أطول من حد الكسوف) لا يجب أن
+// تُطفئ "متصل" وتعطّل كل الأدوات الأخرى حتى يعيد المستخدم الاتصال يدويًا.
+function isConnError(e){return e.name==='AbortError'||e instanceof TypeError;}
 function setSrv(on){
   API.live=on;
   const d=$('srvDot');
@@ -1414,19 +1457,26 @@ function setSrv(on){
   d.title=on?('متصل بالخادم — '+API.base):'الخادم غير متاح — الوضع المحلي (تحميل ملف)';
 }
 
+function renderSymOptions(filterText){
+  const sel=$('symSelect');
+  const prev=sel.value;
+  const q=(filterText||'').trim().toUpperCase();
+  const list=q?S.allowedSymbols.filter(s=>s.symbol.includes(q)):S.allowedSymbols;
+  sel.innerHTML='<option value="">— بيانات محلية —</option>'+
+    list.map(s=>`<option value="${s.symbol}">${s.symbol} (${s.bars})</option>`).join('');
+  if(prev&&list.some(s=>s.symbol===prev))sel.value=prev;
+}
+$('symSearch').addEventListener('input',()=>renderSymOptions($('symSearch').value));
+
 async function connect(quiet){
   try{
     await API.get('/health');
     const r=await API.get('/symbols');
     setSrv(true);
-    const sel=$('symSelect');
-    const prev=sel.value;
-    sel.innerHTML='<option value="">— بيانات محلية —</option>'+
-      r.symbols.filter(s=>s.allowed!==false)
-       .map(s=>`<option value="${s.symbol}">${s.symbol} (${s.bars})</option>`).join('');
-    if(prev)sel.value=prev;
-    const blocked=r.symbols.length-r.symbols.filter(s=>s.allowed!==false).length;
-    if(!quiet)toast('متصل — '+(sel.options.length-1)+' رمز'+(blocked?` (${blocked} خارج القائمة الأخلاقية)`:''));
+    S.allowedSymbols=r.symbols.filter(s=>s.allowed!==false);
+    renderSymOptions($('symSearch').value);
+    const blocked=r.symbols.length-S.allowedSymbols.length;
+    if(!quiet)toast('متصل — '+S.allowedSymbols.length+' رمز'+(blocked?` (${blocked} خارج القائمة الأخلاقية)`:''));
     return true;
   }catch(e){
     setSrv(false);
@@ -1435,6 +1485,19 @@ async function connect(quiet){
   }
 }
 $('btnSync').onclick=()=>connect(false);
+// نقطة حالة الخادم قابلة للنقر لتغيير عنوانه يدويًا — ضروري على أندرويد
+// (Capacitor) حيث "127.0.0.1" يشير لجهاز الهاتف نفسه لا لجهاز الخادم على
+// الشبكة المحلية. يُحفظ العنوان في localStorage فيُستخدم في كل مرة لاحقة.
+$('srvDot').addEventListener('click',async()=>{
+  const next=prompt('عنوان خادم Saira (مثال: http://192.168.1.10:8787)',API.base);
+  if(next===null)return;
+  const trimmed=next.trim().replace(/\/+$/,'');
+  if(!trimmed)return;
+  API.base=trimmed;
+  localStorage.setItem('sairaApiBase',trimmed);
+  toast('يتصل بـ '+trimmed+' ...');
+  await connect(false);
+});
 
 async function loadSymbol(sym){
   if(!sym){S.serverSym=null;return;}
@@ -1457,9 +1520,14 @@ $('symSelect').onchange=e=>loadSymbol(e.target.value);
 /* --- أدوات جان: تُحسب على الخادم عند توفره، ومحليًا عند غيابه --- */
 const sq9DrawLocal=$('sq9Draw').onclick;
 $('sq9Draw').onclick=async()=>{
-  if(API.live&&S.serverSym){
+  const p=+$('sq9Price').value;
+  if(API.live&&S.serverSym&&p>0){
     try{
-      const r=await API.get(`/gann/sq9/${S.serverSym}?side=${+$('sq9Price').value<=(minLow()+maxHigh())/2?'low':'high'}`);
+      // /gann/sq9?price=X (لا /gann/sq9/{symbol}) — لأن الأخير يتجاهل سعر
+      // الارتكاز المُدخل يدويًا ويحسب دومًا من أدنى قاع/أعلى قمة المدى
+      // الظاهر فقط (باگ 2026-07: كتابة سعر ارتكاز يدوي كانت تُتجاهل تمامًا).
+      const lo=minLow()*0.9,hi=maxHigh()*1.1;
+      const r=await API.get(`/gann/sq9?price=${p}&lo=${lo}&hi=${hi}`);
       removeLines(S.sq9);S.sq9.levels=[];
       const bestDeg=(S.autoCal&&S.autoCal.square9&&S.autoCal.square9.angle!=null)?S.autoCal.square9.angle:null;
       for(const x of r.levels){
@@ -1476,7 +1544,7 @@ $('sq9Draw').onclick=async()=>{
       }).join('');
       toast(r.levels.length+' مستوى (محسوب على الخادم)');
       return;
-    }catch(e){setSrv(false);}
+    }catch(e){if(isConnError(e))setSrv(false);}
   }
   sq9DrawLocal();
 };
@@ -1503,7 +1571,7 @@ $('cycRun').onclick=async()=>{
         toast('أقوى دورة: '+S.cyc.cycles[0].p+' شمعة (الخادم)');
         return;
       }
-    }catch(e){setSrv(false);}
+    }catch(e){if(isConnError(e))setSrv(false);}
   }
   cycRunLocal();
 };
@@ -1528,7 +1596,7 @@ $('swingOn').onchange=async e=>{
         inf.textContent='عدد الارتكازات: '+pts.length+' — الاتجاه الحالي: '+(r.direction>=0?'صاعد':'هابط')+' (الخادم)';
         return;
       }
-    }catch(e){setSrv(false);}
+    }catch(e){if(isConnError(e))setSrv(false);}
   }
   swingDraw();
 };

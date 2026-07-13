@@ -1,0 +1,11 @@
+runs/
+deprecated_ts/
+saira-api/node_modules/
+saira-api/android/
+saira-api/src-tauri/target/
+saira-api/www/
+saira-api/*.duckdb
+.git/
+.venv/
+__pycache__/
+*.pyc

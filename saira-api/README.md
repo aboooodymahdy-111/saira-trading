@@ -84,6 +84,63 @@ DuckDB — لا حاجة لأي تعديل في `store.py`/`main.py` لدعم ه
 Capacitor/Google Play (25$ لمرة واحدة) اختيارية ولاحقة فقط لو احتجت نشرًا
 رسميًا على المتجر.
 
+## النشر العام المجاني (Fly.io + Cloudflare Pages)
+
+القرار المتخذ: **Fly.io** للباك-إند الحي (يعمل 24/7 على سحابتهم — جهازك لا
+يحتاج يبقى مفتوحًا) و**Cloudflare Pages** للواجهة الثابتة (CDN عالمي مجاني).
+
+### أ) الباك-إند على Fly.io
+
+1. ثبّت `flyctl` (مرة واحدة فقط): [fly.io/docs/flyctl/install](https://fly.io/docs/flyctl/install/)
+   على ويندوز عبر PowerShell:
+
+   ```powershell
+   pwsh -Command "iwr https://fly.io/install.ps1 -useb | iex"
+   ```
+
+2. سجّل/ادخل: `fly auth signup` (أو `fly auth login` لو عندك حساب).
+3. **مهم:** نفّذ الأمر التالي من **جذر المستودع** (`Saira-Trading/`)، وليس من
+   داخل `saira-api/` — لأن `Dockerfile` يحتاج `src/` و`data/` بجانب
+   `saira-api/` كسياق بناء واحد:
+
+   ```powershell
+   cd C:\Users\Mahdy\Saira-Trading
+   fly launch --config saira-api/fly.toml --dockerfile saira-api/Dockerfile --no-deploy
+   ```
+
+   وافق على اسم التطبيق (أو اتركه `saira-api` كما في `fly.toml`) وعلى المنطقة، وارفض
+   إنشاء أي قاعدة بيانات/Redis إضافية يقترحها (غير مطلوبة هنا).
+4. انشر فعليًا:
+
+   ```powershell
+   fly deploy --config saira-api/fly.toml --dockerfile saira-api/Dockerfile
+   ```
+
+5. تأكد أنه يعمل: `fly status` ثم افتح `https://<اسم-تطبيقك>.fly.dev/health`
+   في المتصفح — يجب أن يظهر `{"ok":true,...}`.
+6. لو اسم التطبيق مختلف عن `saira-api`، حدّث `DEFAULT_REMOTE_API` في
+   `saira-terminal.html` (بحث عن `fly.dev`) بعنوانك الفعلي قبل نشر الواجهة.
+
+**ملاحظة الخطة المجانية:** Fly.io يوقف الآلة تلقائيًا بلا طلبات (`auto_stop_machines`)
+ويعيد تشغيلها عند أول طلب جديد (`auto_start_machines`) — أول طلب بعد فترة خمول
+قد يستغرق بضع ثوانٍ إضافية، وهذا طبيعي وليس عطلًا.
+
+### ب) الواجهة على Cloudflare Pages
+
+1. ادفع المستودع لو لسه مش مدفوع: `git push`.
+2. من [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages**
+   → **Create** → **Pages** → **Connect to Git** → اختر مستودع `saira-trading`.
+3. إعدادات البناء:
+   - **مجلد الجذر (Root directory):** `saira-api`
+   - **أمر البناء (Build command):** `npm install --omit=dev && npm run sync-web`
+   - **مجلد الإخراج (Build output directory):** `web`
+4. اضغط **Save and Deploy** — كلاودفلير هيدّيك رابط `https://<اسم>.pages.dev`
+   يعمل فورًا، ويعيد النشر تلقائيًا مع كل `git push` جديد.
+5. (اختياري) دومين مخصص لاحقًا من نفس لوحة المشروع → **Custom domains**.
+
+بعد الخطوتين، الموقع بيشتغل بالكامل من أي جهاز/متصفح بدون تشغيل أي حاجة على
+جهازك — الواجهة على Cloudflare والباك-إند على Fly.io، وكلاهما مجاني ويعمل 24/7.
+
 ## نقاط النهاية
 
 | النقطة | الوظيفة |
