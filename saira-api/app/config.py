@@ -24,6 +24,15 @@ DB_PATH = Path(os.getenv("SAIRA_DB", API_ROOT / "saira.duckdb"))
 # "allowed: true" هنا يعني فقط أنه ضمن الكون الممسوح، لا أنه اجتاز الفلتر الأخلاقي.
 ALLOWLIST_PATH = Path(os.getenv("SAIRA_ALLOWLIST", API_ROOT.parent / "data" / "ticker_universe.csv"))
 
+# كاش الأهلية الأخلاقية الحقيقي (مُحسوَب سلفًا بواسطة full_universe_analysis.py
+# اليومي — فحص قطاع فعلي عبر yfinance + استبعاد بنوك/دفاع/BDS، وليس مجرد
+# قائمة تغطية). استيراد Stooq الافتراضي (بلا all_symbols=true أو symbols=
+# صريح) يستخدم هذا الكاش تحديدًا (status=="eligible" فقط) بدل ALLOWLIST_PATH
+# الخام — راجع 2026-07: كان الاستيراد الافتراضي يجلب كل كون التغطية (6000+
+# رمز) بلا أي فلترة أخلاقية فعلية، رغم وجود الفحص الحقيقي جاهزًا في هذا الملف.
+ELIGIBILITY_CACHE_PATH = Path(os.getenv("SAIRA_ELIGIBILITY_CACHE",
+                                        API_ROOT.parent / "runs" / "ticker_eligibility_cache.json"))
+
 HOST = os.getenv("SAIRA_HOST", "127.0.0.1")
 PORT = int(os.getenv("SAIRA_PORT", "8787"))
 
@@ -44,3 +53,18 @@ def load_allowlist() -> set[str]:
         for line in ALLOWLIST_PATH.read_text(encoding="utf-8").splitlines()
         if line.strip() and not line.startswith("#") and line.strip().upper() != "TICKER"
     }
+
+
+def load_eligible_tickers() -> set[str] | None:
+    """رموز اجتازت الفلتر الأخلاقي الحقيقي فعليًا (status=="eligible" في
+    كاش full_universe_analysis.py) — None لو الكاش غير موجود بعد (لم يُشغَّل
+    full_universe_analysis.py على هذا الجهاز ولو مرة)، ليتعامل المستدعي مع
+    غياب الفلترة صراحة بدل الرجوع الصامت لكل كون التغطية غير المفلتر."""
+    import json
+    if not ELIGIBILITY_CACHE_PATH.exists():
+        return None
+    try:
+        cache = json.loads(ELIGIBILITY_CACHE_PATH.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    return {t.upper() for t, entry in cache.items() if entry.get("status") == "eligible"}

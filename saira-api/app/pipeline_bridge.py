@@ -25,12 +25,17 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 def run_committee(symbol: str) -> dict:
     symbol = symbol.upper()
+    # الرموز في مخزن الشموع بصيغة Stooq (AAPL.US) — أما full_universe_analysis
+    # وyfinance فيتوقعان الرمز المجرد (AAPL). بلا هذا الفصل، كل رمز فعلي من
+    # القائمة الجانبية (كلها .US) كان يفشل بصمت في analyze_ticker (yfinance
+    # لا يعرف "AAPL.US")، فتظهر رسالة استبعاد مضلِّلة رغم أن الرمز صالح تمامًا.
+    bare_symbol = symbol.split(".")[0]
     try:
         mod = importlib.import_module("full_universe_analysis")
     except Exception as exc:
         return {"available": False, "message": f"full_universe_analysis غير قابل للاستيراد: {exc}"}
     try:
-        result = mod.analyze_ticker(symbol, {})
+        result = mod.analyze_ticker(bare_symbol, {})
     except Exception as exc:
         return {"available": False, "message": f"خطأ أثناء التشغيل: {exc}"}
     if result is None:

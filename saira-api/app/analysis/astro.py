@@ -146,3 +146,93 @@ def eclipses(t_start: float, t_end: float) -> list[dict]:
         d = ephem.Date(min(float(nm), float(fm)) + 1)
     out.sort(key=lambda e: e["t"])
     return out
+
+
+# ---------------------------------------------------------------- العلاقات الكوكبية (Aspects)
+# الزوايا التقليدية الخمس بين كوكبين + هامش السماحية (orb) القياسي لكل
+# منها — نفس القيم المستخدمة في التنجيم الكلاسيكي (اقتران/مقابلة أوسع
+# سماحية من التسديس مثلًا، لأن تأثيرهما أقوى وأبطأ حركة نسبيًا حول الزاوية
+# المضبوطة). المستخدم يقدر يغيّر السماحية صراحة عبر orb_deg في الطلب.
+ASPECTS: dict[str, dict] = {
+    "conjunction": {"angle": 0.0, "orb": 8.0, "ar": "اقتران"},
+    "sextile":     {"angle": 60.0, "orb": 4.0, "ar": "تسديس"},
+    "square":      {"angle": 90.0, "orb": 6.0, "ar": "تربيع"},
+    "trine":       {"angle": 120.0, "orb": 6.0, "ar": "تثليث"},
+    "opposition":  {"angle": 180.0, "orb": 8.0, "ar": "مقابلة"},
+}
+
+
+def _angular_separation(lon_a: float, lon_b: float) -> float:
+    """أصغر فرق زاوي بين خطي طول (0-180°، بلا إشارة اتجاه)."""
+    diff = abs(lon_a - lon_b) % 360
+    return diff if diff <= 180 else 360 - diff
+
+
+def aspect_status(lon_a: float, lon_b: float, aspect: str,
+                  orb_deg: float | None = None) -> dict:
+    """يفحص هل خطا الطول lon_a وlon_b يشكّلان aspect المحدد ضمن السماحية
+    الآن، ومدى قرب الفصل الفعلي من الزاوية المضبوطة بالتمام (0 = تمام
+    الزاوية بالضبط، السماحية الكاملة = أبعد نقطة لا تزال "داخل" العلاقة)."""
+    if aspect not in ASPECTS:
+        raise ValueError(f"علاقة غير معروفة: {aspect}. الخيارات: {sorted(ASPECTS)}")
+    spec = ASPECTS[aspect]
+    orb = orb_deg if orb_deg is not None else spec["orb"]
+    sep = _angular_separation(lon_a, lon_b)
+    delta = abs(sep - spec["angle"])
+    is_active = delta <= orb
+    return {
+        "aspect": aspect, "aspect_ar": spec["ar"], "target_angle": spec["angle"],
+        "orb_deg": orb, "separation_deg": round(sep, 3),
+        "delta_from_exact_deg": round(delta, 3), "is_active": is_active,
+        "exactness_pct": round(max(0.0, 1 - delta / orb) * 100, 1) if orb > 0 else (100.0 if delta == 0 else 0.0),
+    }
+
+
+def scan_aspect(planet_a: str, mode_a: str, planet_b: str, mode_b: str,
+                aspect: str, t_start: float, t_end: float,
+                natal_t: float | None = None, orb_deg: float | None = None,
+                step_days: float = 1.0, helio_a: bool = False,
+                helio_b: bool = False) -> dict:
+    """يمسح مدى زمني بحثًا عن أيام تكون فيها العلاقة المحددة بين كوكبين
+    نشطة (ضمن السماحية) — يدعم أربع تركيبات: عبور-عبور (كلا الكوكبين
+    يتحركان)، ميلاد-عبور أو عبور-ميلاد (أحدهما ثابت عند natal_t، مثل
+    تاريخ IPO كخريطة ميلاد للسهم — مطابق لملاحظة الخطة عن IPO)، أو
+    ميلاد-ميلاد (كلاهما ثابت — علاقة واحدة أبدية، لا مسح زمني فعليًا).
+
+    mode_a/mode_b: "transit" (يتحرك مع الزمن) أو "natal" (يُثبَّت عند
+    natal_t لحظة واحدة ولا يتغيّر خلال المسح).
+    """
+    for mode in (mode_a, mode_b):
+        if mode not in ("transit", "natal"):
+            raise ValueError(f"mode يجب أن يكون transit أو natal، ليس {mode}")
+    if ("natal" in (mode_a, mode_b)) and natal_t is None:
+        raise ValueError("natal_t مطلوب عند استخدام mode=natal لأي كوكب")
+
+    fn_a = helio_longitude if helio_a else geo_longitude
+    fn_b = helio_longitude if helio_b else geo_longitude
+
+    natal_lon_a = fn_a(planet_a, natal_t) if mode_a == "natal" else None
+    natal_lon_b = fn_b(planet_b, natal_t) if mode_b == "natal" else None
+
+    step = max(step_days, 1 / 24) * 86400
+    events: list[dict] = []
+    t = t_start
+    prev_active = False
+    while t <= t_end:
+        lon_a = natal_lon_a if mode_a == "natal" else fn_a(planet_a, t)
+        lon_b = natal_lon_b if mode_b == "natal" else fn_b(planet_b, t)
+        status = aspect_status(lon_a, lon_b, aspect, orb_deg)
+        # نسجّل فقط بداية كل نافذة نشاط (لا كل يوم داخلها) — تجنبًا لإغراق
+        # النتيجة بمئات الصفوف المتتالية لعلاقة بطيئة الحركة (كواكب خارجية).
+        if status["is_active"] and not prev_active:
+            events.append({"t": int(t), **status,
+                           "lon_a": round(lon_a, 3), "lon_b": round(lon_b, 3)})
+        prev_active = status["is_active"]
+        t += step
+
+    return {
+        "planet_a": planet_a, "mode_a": mode_a,
+        "planet_b": planet_b, "mode_b": mode_b,
+        "aspect": aspect, "orb_deg": orb_deg if orb_deg is not None else ASPECTS[aspect]["orb"],
+        "natal_t": natal_t, "events": events,
+    }

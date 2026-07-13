@@ -43,16 +43,25 @@
   .btn.gold{background:var(--gold);color:#141414;border-color:var(--gold);font-weight:600}
   .btn.small{padding:3px 8px;font-size:11px}
   select.btn{padding:4px 8px}
+  .sym-search-wrap{position:relative}
+  .sym-suggest{display:none;position:absolute;top:calc(100% + 4px);inset-inline-start:0;min-width:160px;max-height:260px;overflow-y:auto;background:var(--bg2);border:1px solid var(--line);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:50;direction:ltr;text-align:left}
+  .sym-suggest.open{display:block}
+  .sym-suggest .opt{padding:6px 10px;cursor:pointer;font-family:var(--mono);font-size:12px;display:flex;justify-content:space-between;gap:10px;color:var(--txt)}
+  .sym-suggest .opt:hover,.sym-suggest .opt.active{background:var(--bg0);color:var(--gold)}
+  .sym-suggest .opt span{color:var(--muted)}
   .spacer{flex:1}
   .srv{font-size:15px;color:#555;transition:color .3s;cursor:pointer}
   .srv.on{color:var(--up);text-shadow:0 0 7px rgba(38,166,154,.7)}
   .srv.off{color:var(--dn)}
 
   /* ===== Layout ===== */
-  .main{display:flex;height:calc(100% - 46px - 40px - 26px)}
-  .chart-wrap{flex:1;position:relative;direction:ltr}
+  .main{display:flex;height:calc(100% - 46px - 40px - 26px);min-height:260px}
+  .chart-wrap{flex:1;position:relative;direction:ltr;min-height:200px}
   #chart{position:absolute;inset:0}
   .pick-hint{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--gold);color:#141414;padding:5px 14px;border-radius:20px;font-weight:600;font-size:12px;z-index:20;display:none;direction:rtl}
+  .chart-corner-controls{position:absolute;bottom:26px;right:6px;z-index:20;display:flex;gap:4px}
+  .chart-corner-controls .btn{padding:3px 8px;font-size:10.5px;background:rgba(23,30,43,.9)}
+  .chart-corner-controls .btn.on{background:var(--gold);color:#141414;font-weight:600;border-color:var(--gold)}
 
   /* ===== Side panel ===== */
   aside{width:308px;min-width:308px;background:var(--bg1);border-inline-start:1px solid var(--line);display:flex;flex-direction:column}
@@ -139,7 +148,10 @@
 
 <div class="toolbar">
   <span class="srv" id="srvDot" data-i18n-title="srvStatus">●</span>
-  <input type="text" class="btn" id="symSearch" data-i18n-placeholder="symSearchPh" style="width:80px" autocomplete="off">
+  <div class="sym-search-wrap">
+    <input type="text" class="btn" id="symSearch" data-i18n-placeholder="symSearchPh" style="width:80px" autocomplete="off">
+    <div id="symSuggest" class="sym-suggest"></div>
+  </div>
   <select class="btn" id="symSelect" style="min-width:120px"><option value="" data-i18n="localDataOpt">— بيانات محلية —</option></select>
   <button class="btn small" id="btnSync" data-i18n-title="syncTitle">⟳</button>
   <button class="btn gold" id="btnLoad">📂 <span data-i18n="fileBtn">ملف</span></button>
@@ -161,6 +173,9 @@
   <div class="chart-wrap">
     <div id="chart"></div>
     <div class="pick-hint" id="pickHint" data-i18n="pickHint">انقر على الشارت لتحديد نقطة الارتكاز</div>
+    <div class="chart-corner-controls">
+      <button class="btn on" id="btnAutoScale" data-i18n="autoScaleBtn" data-i18n-title="autoScaleTitle" title="تحجيم تلقائي للسعر">Auto</button>
+    </div>
   </div>
 
   <div id="asideBackdrop"></div>
@@ -185,9 +200,9 @@
     <!-- Gann Fan -->
     <div class="panel on" id="pGann">
       <h3 data-i18n="fanH3">مروحة جان</h3>
-      <div class="note" data-i18n="fanNote">حدد نقطة ارتكاز (قاع أو قمة) بالنقر على الشارت، وستُرسم الزوايا 1×8 حتى 8×1. الزاوية الذهبية هي 1×1.</div>
+      <div class="note" data-i18n="fanNote">حدد نقطة ارتكاز (قاع أو قمة) بالنقر على الشارت، وستُرسم الزوايا 1×8 حتى 8×1. الزاوية الذهبية هي 1×1. أو استخدم "تلقائي" لاكتشاف آخر قمة وقاع ورسم مروحتين معًا.</div>
       <div class="row"><button class="btn" id="btnFanPick">🎯 <span data-i18n="fanPickBtn">تحديد الارتكاز بالنقر</span></button></div>
-      <div class="row"><label data-i18n="fanUnitLbl">المعايرة (نقطة/شمعة)</label><input type="number" id="fanUnit" step="0.001"><button class="btn small" id="fanAuto" data-i18n="autoBtn">تلقائي</button></div>
+      <div class="row"><label data-i18n="fanUnitLbl">المعايرة (نقطة/شمعة)</label><input type="number" id="fanUnit" step="0.001"><button class="btn small" id="fanAuto" data-i18n-title="fanAutoTitle" title="اكتشاف آخر قمة وقاع تلقائيًا ورسم مروحتين" data-i18n="autoBtn">تلقائي</button></div>
       <div class="row"><label data-i18n="dirLbl">الاتجاه</label>
         <select class="btn" id="fanDir"><option value="auto" data-i18n="dirAuto">تلقائي</option><option value="up" data-i18n="dirUp">من قاع (صاعدة)</option><option value="down" data-i18n="dirDown">من قمة (هابطة)</option></select>
       </div>
@@ -205,6 +220,7 @@
       <div class="row">
         <button class="btn small" id="sq9FromLow" data-i18n="fromLowBtn">من أدنى قاع</button>
         <button class="btn small" id="sq9FromHigh" data-i18n="fromHighBtn">من أعلى قمة</button>
+        <button class="btn small" id="sq9FromLast" data-i18n="fromLastBtn">آخر سعر</button>
       </div>
       <div class="row"><button class="btn gold small" id="sq9Draw" data-i18n="drawLevelsBtn">ارسم المستويات</button><button class="btn small" id="sq9Clear" data-i18n="clearBtn">مسح</button></div>
       <div class="lvl-list" id="sq9List"></div>
@@ -274,6 +290,42 @@
         <select class="btn" id="sunHarm"><option value="360">360°</option><option value="180">180°</option><option value="90">90°</option></select>
       </div>
       <div class="note" id="astroInfo" style="display:none"></div>
+
+      <h3 data-i18n="aspH3">العلاقات الكوكبية (Aspects)</h3>
+      <div class="note" data-i18n="aspNote">اختر كوكبين ونوع كل منهما (عبور: يتحرك مع الزمن، أو ميلاد: ثابت عند تاريخ محدد مثل IPO)، ونوع العلاقة والتوافقية (السماحية) — يبحث عن كل التواريخ التي تتحقق فيها ضمن مدى الشارت.</div>
+      <div class="row"><label data-i18n="planetALbl">الكوكب الأول</label>
+        <select class="btn" id="aspPlanetA">
+          <option value="sun" data-i18n="plSun">الشمس</option><option value="moon" data-i18n="plMoon">القمر</option>
+          <option value="mercury" data-i18n="plMercury">عطارد</option><option value="venus" data-i18n="plVenus">الزهرة</option>
+          <option value="mars" selected data-i18n="plMars">المريخ</option><option value="jupiter" data-i18n="plJupiter">المشتري</option>
+          <option value="saturn" data-i18n="plSaturn">زحل</option><option value="uranus" data-i18n="plUranus">أورانوس</option>
+          <option value="neptune" data-i18n="plNeptune">نبتون</option><option value="pluto" data-i18n="plPluto">بلوتو</option>
+        </select>
+        <select class="btn" id="aspModeA"><option value="transit" data-i18n="modeTransit">عبور</option><option value="natal" data-i18n="modeNatal">ميلاد</option></select>
+      </div>
+      <div class="row"><label data-i18n="planetBLbl">الكوكب الثاني</label>
+        <select class="btn" id="aspPlanetB">
+          <option value="sun" data-i18n="plSun">الشمس</option><option value="moon" data-i18n="plMoon">القمر</option>
+          <option value="mercury" data-i18n="plMercury">عطارد</option><option value="venus" data-i18n="plVenus">الزهرة</option>
+          <option value="mars" data-i18n="plMars">المريخ</option><option value="jupiter" selected data-i18n="plJupiter">المشتري</option>
+          <option value="saturn" data-i18n="plSaturn">زحل</option><option value="uranus" data-i18n="plUranus">أورانوس</option>
+          <option value="neptune" data-i18n="plNeptune">نبتون</option><option value="pluto" data-i18n="plPluto">بلوتو</option>
+        </select>
+        <select class="btn" id="aspModeB"><option value="transit" selected data-i18n="modeTransit">عبور</option><option value="natal" data-i18n="modeNatal">ميلاد</option></select>
+      </div>
+      <div class="row" id="aspNatalRow" style="display:none"><label data-i18n="natalDateLbl">تاريخ الميلاد/IPO</label><input type="date" id="aspNatalDate"></div>
+      <div class="row"><label data-i18n="aspectTypeLbl">نوع العلاقة</label>
+        <select class="btn" id="aspType">
+          <option value="conjunction" data-i18n="aspConjunction">اقتران 0°</option>
+          <option value="sextile" data-i18n="aspSextile">تسديس 60°</option>
+          <option value="square" data-i18n="aspSquare">تربيع 90°</option>
+          <option value="trine" data-i18n="aspTrine">تثليث 120°</option>
+          <option value="opposition" data-i18n="aspOpposition">مقابلة 180°</option>
+        </select>
+      </div>
+      <div class="row"><label data-i18n="orbLbl">السماحية (توافقية°)</label><input type="number" id="aspOrb" step="0.5" placeholder="افتراضي"></div>
+      <div class="row"><button class="btn gold small" id="aspRun" data-i18n="aspRunBtn">ابحث عن العلاقة</button><button class="btn small" id="aspClear" data-i18n="clearBtn">مسح</button></div>
+      <div class="lvl-list" id="aspList" style="max-height:220px"></div>
     </div>
 
     <!-- Planetary Scanner -->
@@ -359,17 +411,19 @@ const I18N={
     fileBtn:'ملف', ctCandles:'شموع يابانية', ctHeikin:'هيكين آشي', ctBars:'أعمدة OHLC',
     ctLine:'خط', ctArea:'مساحة', clearAllBtn:'مسح كل الطبقات', toolsBtn:'🛠 الأدوات',
     pickHint:'انقر على الشارت لتحديد نقطة الارتكاز',
+    autoScaleBtn:'تلقائي', autoScaleTitle:'تحجيم تلقائي للسعر (Auto Scale)',
     tabFan:'مروحة جان', tabSq9:'مربع 9', tabRet:'الأثمان', tabSwing:'سوينج',
     tabCyc:'دورات', tabAstro:'فلك', tabScan:'الماسح ⚛', tabConf:'التقاء',
     tabSquare:'موازنة/كسوف', tabSig:'إشارات',
     fanH3:'مروحة جان',
-    fanNote:'حدد نقطة ارتكاز (قاع أو قمة) بالنقر على الشارت، وستُرسم الزوايا 1×8 حتى 8×1. الزاوية الذهبية هي 1×1.',
+    fanNote:'حدد نقطة ارتكاز (قاع أو قمة) بالنقر على الشارت، وستُرسم الزوايا 1×8 حتى 8×1. الزاوية الذهبية هي 1×1. أو استخدم "تلقائي" لاكتشاف آخر قمة وقاع ورسم مروحتين معًا.',
+    fanAutoTitle:'اكتشاف آخر قمة وقاع تلقائيًا ورسم مروحتين',
     fanPickBtn:'تحديد الارتكاز بالنقر', fanUnitLbl:'المعايرة (نقطة/شمعة)', autoBtn:'تلقائي',
     dirLbl:'الاتجاه', dirAuto:'تلقائي', dirUp:'من قاع (صاعدة)', dirDown:'من قمة (هابطة)',
     fanClearBtn:'مسح المروحة',
     sq9H3:'مستويات مربع التسعة',
     sq9Note:'مستويات دعم ومقاومة بزيادات 45° على عجلة جان (دورة كاملة = ‎+2 على الجذر). درجات الصليب الأساسي 90°/180°/270°/360° مميزة بالذهبي.',
-    pivotPriceLbl:'سعر الارتكاز', fromLowBtn:'من أدنى قاع', fromHighBtn:'من أعلى قمة',
+    pivotPriceLbl:'سعر الارتكاز', fromLowBtn:'من أدنى قاع', fromHighBtn:'من أعلى قمة', fromLastBtn:'آخر سعر',
     drawLevelsBtn:'ارسم المستويات', clearBtn:'مسح',
     starH3:'نجمة جان', kindLbl:'النوع', hexOpt:'سداسية 60°', pentOpt:'خماسية 72°',
     drawStarBtn:'ارسم الرؤوس',
@@ -425,6 +479,17 @@ const I18N={
     calibratedAngle:'الزاوية المعايرة', hitRate:'هيت-ريت',
     starNote:'تستخدم نفس سعر الارتكاز أعلاه (مربع 9) — شغّل "المعايرة الحقيقية" فوق أولًا لتعيير سعر الارتكاز والوحدة، ثم ارسم الرؤوس هنا.',
     sunAutoMeasured:'وحدة مقاسة فعليًا من الماسح الكوكبي', sunAutoNoMatch:'لا نتيجة انعكاس لهذا الكوكب — استخدم التقريب',
+    aspH3:'العلاقات الكوكبية (Aspects)',
+    aspNote:'اختر كوكبين ونوع كل منهما (عبور: يتحرك مع الزمن، أو ميلاد: ثابت عند تاريخ محدد مثل IPO)، ونوع العلاقة والتوافقية (السماحية) — يبحث عن كل التواريخ التي تتحقق فيها ضمن مدى الشارت.',
+    planetALbl:'الكوكب الأول', planetBLbl:'الكوكب الثاني',
+    modeTransit:'عبور', modeNatal:'ميلاد', natalDateLbl:'تاريخ الميلاد/IPO',
+    aspectTypeLbl:'نوع العلاقة',
+    aspConjunction:'اقتران 0°', aspSextile:'تسديس 60°', aspSquare:'تربيع 90°',
+    aspTrine:'تثليث 120°', aspOpposition:'مقابلة 180°',
+    orbLbl:'السماحية (توافقية°)', aspRunBtn:'ابحث عن العلاقة',
+    aspNeedNatalDate:'أدخل تاريخ الميلاد/IPO أولًا', aspSearching:'جارٍ البحث عن العلاقة...',
+    aspNoEvents:'لا علاقة ضمن مدى البيانات الحالي', aspFound:'علاقة موجودة على الشارت',
+    exactness:'دقة التمام',
     sigH3:'إشارات اللجنة / TS',
     sigNote:'حمّل ملف CSV يحتوي تاريخًا وكلمة Buy/Sell (أو شراء/بيع) في أي عمود — مثل مخرجات committee_signals. تُعرض كأسهم على الشارت.',
     sigLoadBtn:'تحميل ملف إشارات', sigClearBtn:'مسح الإشارات',
@@ -446,17 +511,19 @@ const I18N={
     fileBtn:'File', ctCandles:'Candles', ctHeikin:'Heikin Ashi', ctBars:'OHLC bars',
     ctLine:'Line', ctArea:'Area', clearAllBtn:'Clear all layers', toolsBtn:'🛠 Tools',
     pickHint:'Click the chart to pick an anchor point',
+    autoScaleBtn:'Auto', autoScaleTitle:'Auto Scale (fit price range automatically)',
     tabFan:'Gann Fan', tabSq9:'Square of 9', tabRet:'Retracements', tabSwing:'Swing',
     tabCyc:'Cycles', tabAstro:'Astro', tabScan:'Scanner ⚛', tabConf:'Confluence',
     tabSquare:'Squaring/Eclipses', tabSig:'Signals',
     fanH3:'Gann Fan',
-    fanNote:'Pick an anchor point (low or high) by clicking the chart — angles 1×8 through 8×1 will be drawn. 1×1 is the golden angle.',
+    fanNote:'Pick an anchor point (low or high) by clicking the chart — angles 1×8 through 8×1 will be drawn. 1×1 is the golden angle. Or use "Auto" to detect the last swing high/low and draw both fans at once.',
+    fanAutoTitle:'Auto-detect the last swing high/low and draw two fans',
     fanPickBtn:'Pick anchor by click', fanUnitLbl:'Scale (price/bar)', autoBtn:'Auto',
     dirLbl:'Direction', dirAuto:'Auto', dirUp:'From low (up)', dirDown:'From high (down)',
     fanClearBtn:'Clear fan',
     sq9H3:'Square of Nine levels',
     sq9Note:'Support/resistance levels in 45° increments on the Gann wheel (a full cycle = +2 on the square root). Cardinal cross degrees 90°/180°/270°/360° are highlighted gold.',
-    pivotPriceLbl:'Anchor price', fromLowBtn:'From lowest low', fromHighBtn:'From highest high',
+    pivotPriceLbl:'Anchor price', fromLowBtn:'From lowest low', fromHighBtn:'From highest high', fromLastBtn:'Last price',
     drawLevelsBtn:'Draw levels', clearBtn:'Clear',
     starH3:'Gann Star', kindLbl:'Type', hexOpt:'Hexagram 60°', pentOpt:'Pentagram 72°',
     drawStarBtn:'Draw points',
@@ -512,6 +579,17 @@ const I18N={
     calibratedAngle:'Calibrated angle', hitRate:'hit rate',
     starNote:'Uses the same anchor price as above (Square of 9) - run "Real calibration" above first to calibrate the anchor price and unit, then draw the star points here.',
     sunAutoMeasured:'Unit actually measured by the planetary scanner', sunAutoNoMatch:'No reversal result for this planet - falling back to approximation',
+    aspH3:'Planetary Aspects',
+    aspNote:'Pick two planets and each one\'s mode (transit: moves with time, or natal: fixed at a given date like an IPO), an aspect type, and an orb (tolerance) - searches for every date it becomes active within the chart\'s range.',
+    planetALbl:'First planet', planetBLbl:'Second planet',
+    modeTransit:'Transit', modeNatal:'Natal', natalDateLbl:'Natal/IPO date',
+    aspectTypeLbl:'Aspect type',
+    aspConjunction:'Conjunction 0°', aspSextile:'Sextile 60°', aspSquare:'Square 90°',
+    aspTrine:'Trine 120°', aspOpposition:'Opposition 180°',
+    orbLbl:'Orb (tolerance°)', aspRunBtn:'Find aspect',
+    aspNeedNatalDate:'Enter the natal/IPO date first', aspSearching:'Searching for the aspect...',
+    aspNoEvents:'No aspect within the current data range', aspFound:'aspect(s) found on the chart',
+    exactness:'exactness',
     sigH3:'Committee / TS signals',
     sigNote:'Load a CSV with a date and a Buy/Sell word in any column — e.g. committee_signals output. Shown as arrows on the chart.',
     sigLoadBtn:'Load signals file', sigClearBtn:'Clear signals',
@@ -568,6 +646,7 @@ const S={
   sqr:{markers:[]},
   ecl:{markers:[]},
   mt:{markers:[]},
+  asp:{markers:[]},
   autoCal:null, // نتيجة /gann/auto_calibrate الأخيرة — يُستخدم من المروحة/مربع9/144/النجمة
   allowedSymbols:[], // كل الرموز المسموحة من آخر /symbols — أساس فلترة مربع البحث محليًا
   pick:null,
@@ -584,6 +663,16 @@ const chart=LWC.createChart($('chart'),{
     horzLine:{color:'#3A4560',labelBackgroundColor:'#171E2B'}},
 });
 new ResizeObserver(()=>chart.applyOptions({width:$('chart').clientWidth,height:$('chart').clientHeight})).observe($('chart'));
+
+/* Auto Scale — يتحكم في rightPriceScale.autoScale (تلقائي افتراضيًا، مطابق
+   لسلوك lightweight-charts القياسي). تعطيله يجمّد نطاق السعر الحالي فيسمح
+   بالتمرير/الزووم الرأسي اليدوي دون أن يعيد الشارت ضبط النطاق تلقائيًا. */
+let autoScaleOn=true;
+$('btnAutoScale').onclick=()=>{
+  autoScaleOn=!autoScaleOn;
+  chart.priceScale('right').applyOptions({autoScale:autoScaleOn});
+  $('btnAutoScale').classList.toggle('on',autoScaleOn);
+};
 
 let mainSeries=null, volSeries=null;
 
@@ -629,7 +718,7 @@ function render(){
   // re-apply overlays
   applyMarkers();
   redrawPriceLines();
-  if(S.fan.pivot) drawFan(true);
+  if(S.fan.pivot) redrawFans();
   if(S.swing.on) drawSwing();
   if(S.sun.on) drawSun();
   if(S.cyc.cycles.length && $('cycOverlay').checked) drawCycOverlay();
@@ -761,13 +850,14 @@ function demo(){
 /* ================= Helpers ================= */
 const minLow =()=>Math.min(...S.bars.map(b=>b.l));
 const maxHigh=()=>Math.max(...S.bars.map(b=>b.h));
+const lastPrice=()=>S.bars.length?S.bars[S.bars.length-1].c:0;
 const autoUnit=()=>{const u=(maxHigh()-minLow())/S.bars.length;return +u.toPrecision(2);};
 const barInterval=()=>S.bars.length>1?Math.round((S.bars[S.bars.length-1].t-S.bars[0].t)/(S.bars.length-1)):86400;
 
 function applyMarkers(){
   if(!mainSeries)return;
   const all=[...S.sig.markers,...(S.swing.on&&$('swingMarks').checked?S.swing.markers:[]),
-    ...S.sqr.markers,...S.ecl.markers,...S.mt.markers];
+    ...S.sqr.markers,...S.ecl.markers,...S.mt.markers,...S.asp.markers];
   all.sort((a,b)=>a.time-b.time);
   mainSeries.setMarkers(all);
 }
@@ -794,6 +884,7 @@ chart.subscribeClick(p=>{
     const b=S.bars[i];
     const isLow=$('fanDir').value==='auto'?Math.abs(price-b.l)<=Math.abs(price-b.h):$('fanDir').value==='up';
     S.fan.pivot={time:b.t,price:isLow?b.l:b.h,isLow};
+    S.fan.pivot2=null;
     drawFan(false);
   }
   S.pick=null;$('pickHint').style.display='none';
@@ -801,25 +892,22 @@ chart.subscribeClick(p=>{
 
 /* ================= Gann Fan ================= */
 $('btnFanPick').onclick=()=>{S.pick='fan';$('pickHint').style.display='block';closeTools();};
-$('fanAuto').onclick=()=>runAutoCalibration();
-$('fanUnit').onchange=()=>{if(S.fan.pivot)drawFan(false);};
+$('fanAuto').onclick=()=>drawFanAuto();
+$('fanUnit').onchange=()=>{if(S.fan.pivot)redrawFans();};
 $('fanClear').onclick=()=>clearFan(true);
 function clearFan(msg){
   for(const s of S.fan.series){try{chart.removeSeries(s);}catch(e){}}
   S.fan.series=[];$('fanInfo').style.display='none';
-  if(msg){S.fan.pivot=null;toast('تم مسح المروحة');}
+  if(msg){S.fan.pivot=null;S.fan.pivot2=null;toast('تم مسح المروحة');}
 }
 const FAN_ANGLES=[[1,8],[1,4],[1,2],[1,1],[2,1],[4,1],[8,1]];
-function drawFan(rebuild){
-  clearFan(false);
-  const P=S.fan.pivot;if(!P)return;
+// يرسم مروحة واحدة من نقطة ارتكاز P فوق الرسوم الحالية دون مسحها —
+// drawFanAuto يستدعيها مرتين (قمة وقاع)، والوضع اليدوي مرة واحدة فقط.
+function drawFanFrom(P){
   const unit=+$('fanUnit').value||autoUnit();
   const i0=nearestIdxByTime(P.time);
   const lo=minLow(),hi=maxHigh(),pad=(hi-lo)*0.6;
   const sign=P.isLow?1:-1;
-  // لو عندنا معايرة حقيقية (auto_calibrate) للزاوية الفائزة، نميّزها بدل
-  // 1×1 الافتراضية دومًا — لكن فقط لو الارتكاز الحالي هو نفسه ارتكاز
-  // المعايرة (بيانات المعايرة قد تكون من ارتكاز آخر لو المستخدم غيّر يدويًا).
   const bestFanName=(S.autoCal&&S.autoCal.fan&&S.autoCal.fan.anchor_t===P.time)?S.autoCal.fan.angle_name:null;
   for(const[p,t]of FAN_ANGLES){
     const slope=sign*unit*p/t;
@@ -835,9 +923,69 @@ function drawFan(rebuild){
     const s=chart.addLineSeries({color:is11?'#E0B341':'rgba(224,179,65,.4)',lineWidth:is11?2:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
     s.setData(data);S.fan.series.push(s);
   }
-  const inf=$('fanInfo');inf.style.display='block';
+  return bestFanName;
+}
+function fanInfoLine(P,bestFanName){
+  const unit=+$('fanUnit').value||autoUnit();
   const bestInfo=bestFanName?` — ${t('calibratedAngle')}: <b style="color:#E0B341">${bestFanName}</b> (${t('hitRate')} ${(S.autoCal.fan.hit_rate*100).toFixed(0)}%)`:'';
-  inf.innerHTML='الارتكاز: <span style="font-family:var(--mono);direction:ltr;display:inline-block">'+fmt(P.price)+' @ '+dstr(P.time)+'</span> ('+(P.isLow?'قاع':'قمة')+') — معايرة '+unit+' نقطة/شمعة'+bestInfo;
+  return 'الارتكاز: <span style="font-family:var(--mono);direction:ltr;display:inline-block">'+fmt(P.price)+' @ '+dstr(P.time)+'</span> ('+(P.isLow?'قاع':'قمة')+') — معايرة '+unit+' نقطة/شمعة'+bestInfo;
+}
+// وضع التحديد اليدوي (نقر على الشارت) — مروحة واحدة من نقطة واحدة.
+function drawFan(rebuild){
+  clearFan(false);
+  const P=S.fan.pivot;if(!P)return;
+  const bestFanName=drawFanFrom(P);
+  const inf=$('fanInfo');inf.style.display='block';
+  inf.innerHTML=fanInfoLine(P,bestFanName);
+}
+// إعادة رسم أي مروحة/مروحتين قائمتين حاليًا (مثلًا بعد تغيير المعايرة يدويًا).
+function redrawFans(){
+  if(S.fan.pivot2){drawFanAuto(false);}
+  else{drawFan(false);}
+}
+// يكتشف آخر قمة وآخر قاع سوينج تلقائيًا (نفس خوارزمية كاشف السوينج في
+// تبويب "سوينج") ويرسم مروحتين: واحدة صاعدة من آخر قاع، وأخرى هابطة من
+// آخر قمة — بدل الاكتفاء بمعايرة الزاوية على ارتكاز مُختار يدويًا.
+function detectSwingPivots(m){
+  const bars=S.bars;
+  if(bars.length<m+2)return[];
+  let dir=0,hh=bars[0].h,hhI=0,ll=bars[0].l,llI=0,dn=0,up=0;
+  const piv=[];
+  for(let i=1;i<bars.length;i++){
+    const b=bars[i],p=bars[i-1];
+    if(dir>=0){
+      if(b.h>hh){hh=b.h;hhI=i;dn=0;}
+      dn=b.l<p.l?dn+1:0;
+      if(dir===0&&b.h>p.h)dir=1;
+      if(dn>=m){piv.push({i:hhI,price:hh,type:'top'});dir=-1;ll=b.l;llI=i;dn=0;up=0;}
+    }else{
+      if(b.l<ll){ll=b.l;llI=i;up=0;}
+      up=b.h>p.h?up+1:0;
+      if(up>=m){piv.push({i:llI,price:ll,type:'bottom'});dir=1;hh=b.h;hhI=i;up=0;dn=0;}
+    }
+  }
+  piv.push(dir>=0?{i:hhI,price:hh,type:'top'}:{i:llI,price:ll,type:'bottom'});
+  const seen=new Set(),pts=[];
+  for(const x of piv){const bt=bars[x.i].t;if(seen.has(bt))continue;seen.add(bt);pts.push({time:bt,value:x.price,type:x.type});}
+  pts.sort((a,b)=>a.time-b.time);
+  return pts;
+}
+async function drawFanAuto(runCalibration){
+  const m=+($('swingBars')&&$('swingBars').value)||5;
+  const pts=detectSwingPivots(m);
+  if(!pts.length){toast('لا توجد بيانات كافية لاكتشاف قمة/قاع');return;}
+  const lastTop=[...pts].reverse().find(p=>p.type==='top');
+  const lastBottom=[...pts].reverse().find(p=>p.type==='bottom');
+  if(!lastTop||!lastBottom){toast('لم يُعثر على قمة وقاع كافيين');return;}
+  S.fan.pivot={time:lastBottom.time,price:lastBottom.value,isLow:true};
+  S.fan.pivot2={time:lastTop.time,price:lastTop.value,isLow:false};
+  if(runCalibration!==false&&API.live&&S.serverSym)await runAutoCalibration();
+  clearFan(false);
+  const n1=drawFanFrom(S.fan.pivot);
+  const n2=drawFanFrom(S.fan.pivot2);
+  const inf=$('fanInfo');inf.style.display='block';
+  inf.innerHTML=fanInfoLine(S.fan.pivot,n1)+'<br>'+fanInfoLine(S.fan.pivot2,n2);
+  toast('رُسمت مروحتان تلقائيًا: من آخر قاع وآخر قمة');
 }
 
 /* ================= المعايرة التلقائية الحقيقية =================
@@ -857,7 +1005,7 @@ async function runAutoCalibration(){
     S.autoCal=r;
     // الزيادة السعرية الموصى بها -> مروحة جان + مربع 144
     $('fanUnit').value=r.increment.recommended_increment;
-    if(S.fan.pivot)drawFan(false);
+    if(S.fan.pivot)redrawFans();
     let lines=[
       `${t('calIncrement')}: <b>${r.increment.recommended_increment}</b> (ATR14=${r.increment.atr_14})`,
     ];
@@ -887,6 +1035,7 @@ $('sq9Auto').onclick=async()=>{
 };
 $('sq9FromLow').onclick =()=>{$('sq9Price').value=fmt(minLow());};
 $('sq9FromHigh').onclick=()=>{$('sq9Price').value=fmt(maxHigh());};
+$('sq9FromLast').onclick=()=>{$('sq9Price').value=fmt(lastPrice());};
 $('sq9Clear').onclick=()=>{removeLines(S.sq9);S.sq9.levels=[];$('sq9List').innerHTML='';toast('تم مسح مستويات مربع 9');};
 $('sq9Draw').onclick=()=>{
   const p=+$('sq9Price').value;if(!p||p<=0){toast('أدخل سعر ارتكاز صالح');return;}
@@ -1045,7 +1194,7 @@ $('sunAuto').onclick=async()=>{
     try{
       // مسح كل الكواكب على تاريخ كامل عملية ثقيلة فعليًا (٢٠-٣٠ ثانية على
       // أسهم طويلة التاريخ) — تحتاج مهلة أطول من مهلة الـ 6 ثوانٍ الافتراضية.
-      const r=await API.get(`/scan/planets/${S.serverSym}?limit=20000&top=10`,45000);
+      const r=await API.get(`/scan/planets/${S.serverSym}?limit=3000&top=10`,45000);
       const match=(r.planets||[]).find(p=>p.planet===planet&&p.center===center);
       if(match&&match.reversal){
         $('sunScale').value=match.reversal.unit_price_median;
@@ -1110,6 +1259,44 @@ async function drawSun(){
   else{const inf=$('astroInfo');inf.style.display='block';inf.textContent=srvName+' — الأحمر المتقطع = تراجع';}
 }
 
+/* ================= العلاقات الكوكبية (Aspects) ================= */
+S.asp={markers:[]};
+$('aspModeA').addEventListener('change',updateAspNatalRow);
+$('aspModeB').addEventListener('change',updateAspNatalRow);
+function updateAspNatalRow(){
+  $('aspNatalRow').style.display=($('aspModeA').value==='natal'||$('aspModeB').value==='natal')?'flex':'none';
+}
+$('aspClear').onclick=()=>{S.asp.markers=[];applyMarkers();$('aspList').innerHTML='';};
+$('aspRun').onclick=async()=>{
+  if(!needServer())return;
+  const modeA=$('aspModeA').value,modeB=$('aspModeB').value;
+  let natalT=null;
+  if(modeA==='natal'||modeB==='natal'){
+    const dateVal=$('aspNatalDate').value;
+    if(!dateVal){toast(t('aspNeedNatalDate'));return;}
+    natalT=Math.floor(Date.parse(dateVal+'T00:00:00Z')/1000);
+  }
+  const orbVal=$('aspOrb').value;
+  const orbParam=orbVal?`&orb_deg=${orbVal}`:'';
+  const natalParam=natalT!=null?`&natal_t=${natalT}`:'';
+  $('aspList').innerHTML=`<div style="padding:10px;color:var(--muted)">${t('aspSearching')}</div>`;
+  try{
+    const tStart=S.bars[0].t,tEnd=S.bars[S.bars.length-1].t;
+    const url=`/astro/aspects?planet_a=${$('aspPlanetA').value}&mode_a=${modeA}`+
+      `&planet_b=${$('aspPlanetB').value}&mode_b=${modeB}&aspect=${$('aspType').value}`+
+      `&t_start=${tStart}&t_end=${tEnd}${natalParam}${orbParam}`;
+    const r=await API.get(url,45000);
+    if(!r.events.length){$('aspList').innerHTML='';toast(t('aspNoEvents'));return;}
+    S.asp.markers=r.events.map(e=>({time:S.bars[Math.min(nearestIdxByTime(e.t),S.bars.length-1)].t,
+      position:'aboveBar',color:'#9C8CF8',shape:'circle',text:e.aspect_ar}));
+    applyMarkers();
+    $('aspList').innerHTML=r.events.map(e=>
+      `<div><span>${dstr(e.t)}</span><span>${e.aspect_ar} (${t('exactness')} ${e.exactness_pct}%)</span></div>`).join('');
+    chart.timeScale().fitContent();
+    toast(r.events.length+' '+t('aspFound'));
+  }catch(e){if(isConnError(e))setSrv(false);$('aspList').innerHTML='';toast(t('serverLost'));}
+};
+
 /* ================= Planetary Scanner (خادم فقط) ================= */
 S.scan={series:[]};
 $('scanClear').onclick=()=>{for(const s of S.scan.series){try{chart.removeSeries(s);}catch(e){}}S.scan.series=[];$('scanInfo').style.display='none';};
@@ -1118,7 +1305,7 @@ $('scanRun').onclick=async()=>{
   if(!needServer())return;
   $('scanList').innerHTML='<div style="padding:10px;color:var(--muted)">جارٍ المسح...</div>';
   try{
-    const r=await API.get(`/scan/planets/${S.serverSym}?limit=20000&top=5`,45000);
+    const r=await API.get(`/scan/planets/${S.serverSym}?limit=3000&top=5`,45000);
     if(r.error){$('scanList').innerHTML=`<div style="padding:10px;color:var(--dn)">${r.error}</div>`;return;}
     const NAMES={sun:'الشمس',moon:'القمر',mercury:'عطارد',venus:'الزهرة',mars:'المريخ',jupiter:'المشتري',saturn:'زحل',uranus:'أورانوس',neptune:'نبتون',pluto:'بلوتو'};
     $('scanList').innerHTML=r.planets.map((p,i)=>{
@@ -1276,11 +1463,15 @@ $('sqrRun').onclick=async()=>{
       position:s.pivot_type==='top'?'aboveBar':'belowBar',color:'#FFB74D',
       shape:'circle',text:'□'+s.diff_bars}));
     applyMarkers();
-    $('sqrList').innerHTML=r.squares.map(s=>
+    $('sqrList').innerHTML=r.squares.map((s,i)=>
       `<div><span>${dstr(s.pivot_t)} (${s.pivot_type==='top'?'قمة':'قاع'})</span><span>±${s.diff_bars} شمعة</span></div>`).join('');
     $('sqrInfo').style.display='block';
     $('sqrInfo').textContent='وحدة السعر المستخدمة: '+r.price_unit+' — '+r.squares.length+' موازنة مكتشفة';
-    toast(r.squares.length+' نقطة موازنة سعر/زمن');
+    // النقاط المكتشفة غالبًا في تاريخ قديم (ارتكازات بعيدة) قد تقع خارج
+    // نطاق الرؤية الحالي للشارت — نوسّع العرض ليشملها بدل ترك المستخدم
+    // يظن أن العلامات لم تُرسم أصلًا بينما هي فقط خارج الرؤية.
+    chart.timeScale().fitContent();
+    toast(r.squares.length+' نقطة موازنة سعر/زمن — تم توسيع العرض لإظهارها');
   }catch(e){if(isConnError(e))setSrv(false);toast('انقطع الخادم');}
 };
 
@@ -1303,6 +1494,7 @@ $('eclRun').onclick=async()=>{
     applyMarkers();
     $('eclList').innerHTML=r.eclipses.map(e=>
       `<div><span>${dstr(e.t)}</span><span>${e.kind==='solar'?'كسوف شمس ☉':'خسوف قمر ☾'}</span></div>`).join('');
+    chart.timeScale().fitContent();
     toast(r.eclipses.length+' حدث كسوف/خسوف على الشارت');
   }catch(e){if(isConnError(e))setSrv(false);toast(t('serverLost'));}
 };
@@ -1322,6 +1514,7 @@ $('mtRun').onclick=async()=>{
     applyMarkers();
     $('mtList').innerHTML=r.periods.map(p=>
       `<div${p.upcoming?' class="card"':''}><span>${p.days} ${t('daysWord')}</span><span>${dstr(p.t)}${p.upcoming?' ⏳':''}</span></div>`).join('');
+    chart.timeScale().fitContent();
     toast(t('mtBuilt'));
   }catch(e){if(isConnError(e))setSrv(false);toast(t('serverLost'));}
 };
@@ -1412,7 +1605,7 @@ $('asideBackdrop').addEventListener('click',closeTools);
 $('chartType').onchange=e=>{S.type=e.target.value;render();};
 $('btnClearAll').onclick=()=>clearAll(true);
 function clearAll(msg){
-  clearFan(false);S.fan.pivot=null;
+  clearFan(false);S.fan.pivot=null;S.fan.pivot2=null;
   removeAllPriceLines();S.sq9.levels=[];S.ret.levels=[];$('sq9List').innerHTML='';$('retList').innerHTML='';
   S.swing.on=false;$('swingOn').checked=false;clearSwing();
   clearCyc(false);
@@ -1421,6 +1614,7 @@ function clearAll(msg){
   S.sqr.markers=[];$('sqrList').innerHTML='';$('sqrInfo').style.display='none';
   S.ecl.markers=[];$('eclList').innerHTML='';
   S.mt.markers=[];$('mtList').innerHTML='';
+  S.asp.markers=[];$('aspList').innerHTML='';
   applyMarkers();
   if(msg)toast('تم مسح كل الطبقات');
 }
@@ -1428,13 +1622,29 @@ function clearAll(msg){
 /* ================= API client (المرحلة 0/1) ================= */
 // ترتيب اختيار عنوان الخادم: ?api= في الرابط، ثم آخر عنوان حفظه المستخدم
 // يدويًا (انقر نقطة الحالة)، ثم افتراضي يعتمد على مكان تشغيل الصفحة نفسها:
-// على localhost (سطح المكتب/Tauri) الخادم على نفس الجهاز فـ127.0.0.1 صالح؛
-// أي مضيف آخر (Cloudflare Pages أو أندرويد/Capacitor) يعني أن الخادم يعمل
-// على جهاز/سحابة أخرى، فالافتراضي يصير عنوان Fly.io العام بدلًا من ذلك.
+// على localhost (ويب محلي) أو tauri.localhost (سطح المكتب — Tauri v2 يخدم
+// الصفحة من هذا المضيف الداخلي تحديدًا، لا localhost/127.0.0.1 الفعليين،
+// راجع location.hostname الحقيقي في تطبيق سطح المكتب) الخادم على نفس
+// الجهاز فـ127.0.0.1 صالح؛ أي مضيف آخر (Cloudflare Pages أو أندرويد/
+// Capacitor) يعني أن الخادم يعمل على جهاز/سحابة أخرى، فالافتراضي يصير
+// عنوان Fly.io العام بدلًا من ذلك. **مُصحَّح 2026-07**: نسيان
+// tauri.localhost كان يجعل تطبيق سطح المكتب يحاول الاتصال بـ Fly.io دومًا
+// بدل الخادم المحلي المُشغَّل فعليًا بجانبه، فيفشل بصمت لو لا اتصال إنترنت
+// أو لم يُنشر الخادم العام بعد.
 const DEFAULT_REMOTE_API='https://saira-api.fly.dev';
+const LOCAL_HOSTNAMES=['localhost','127.0.0.1','tauri.localhost'];
+const _isLocalHost=LOCAL_HOSTNAMES.includes(location.hostname);
+// لو كنا فعليًا على سطح المكتب/localhost لكن العنوان المحفوظ سابقًا (من
+// قبل تصحيح tauri.localhost أعلاه، أو من تعديل يدوي بالغلط) بعيد (fly.dev)،
+// نتجاهله وننظّف التخزين — الأرجح أنه أثر جانبي لنفس الباگ لا اختيارًا
+// واعيًا، وإبقاؤه يعني بقاء التطبيق معطوبًا صامتًا حتى بعد إصلاح الكود.
+if(_isLocalHost){
+  const saved=localStorage.getItem('sairaApiBase');
+  if(saved&&!LOCAL_HOSTNAMES.some(h=>saved.includes(h)))localStorage.removeItem('sairaApiBase');
+}
 const API={
   base:(new URLSearchParams(location.search).get('api'))||localStorage.getItem('sairaApiBase')||
-    (['localhost','127.0.0.1'].includes(location.hostname)?'http://127.0.0.1:8787':DEFAULT_REMOTE_API),
+    (_isLocalHost?'http://127.0.0.1:8787':DEFAULT_REMOTE_API),
   live:false,
   async get(path,timeoutMs=6000){
     const c=new AbortController(),to=setTimeout(()=>c.abort(),timeoutMs);
@@ -1465,8 +1675,60 @@ function renderSymOptions(filterText){
   sel.innerHTML='<option value="">— بيانات محلية —</option>'+
     list.map(s=>`<option value="${s.symbol}">${s.symbol} (${s.bars})</option>`).join('');
   if(prev&&list.some(s=>s.symbol===prev))sel.value=prev;
+  return list;
 }
-$('symSearch').addEventListener('input',()=>renderSymOptions($('symSearch').value));
+
+/* قائمة الاقتراحات المنسدلة تحت مربع البحث — الاختيار (نقر/Enter) يفتح
+   السهم فورًا عبر loadSymbol، بلا حاجة لاستخدام select يدويًا. */
+const symSuggestEl=$('symSuggest');
+let symSuggestActive=-1;
+function closeSymSuggest(){symSuggestEl.classList.remove('open');symSuggestEl.innerHTML='';symSuggestActive=-1;}
+function renderSymSuggest(list){
+  if(!list.length){closeSymSuggest();return;}
+  symSuggestActive=-1;
+  symSuggestEl.innerHTML=list.slice(0,30).map((s,i)=>
+    `<div class="opt" data-sym="${s.symbol}" data-i="${i}">${s.symbol}<span>${s.bars}</span></div>`).join('');
+  symSuggestEl.classList.add('open');
+}
+function pickSymSuggest(sym){
+  closeSymSuggest();
+  $('symSearch').value=sym;
+  renderSymOptions(sym);
+  $('symSelect').value=sym;
+  loadSymbol(sym);
+}
+$('symSearch').addEventListener('input',()=>{
+  const list=renderSymOptions($('symSearch').value);
+  const q=$('symSearch').value.trim();
+  if(!q){closeSymSuggest();return;}
+  renderSymSuggest(list);
+});
+$('symSearch').addEventListener('keydown',e=>{
+  const opts=[...symSuggestEl.querySelectorAll('.opt')];
+  if(e.key==='ArrowDown'&&opts.length){
+    e.preventDefault();symSuggestActive=Math.min(symSuggestActive+1,opts.length-1);
+    opts.forEach((o,i)=>o.classList.toggle('active',i===symSuggestActive));
+    opts[symSuggestActive].scrollIntoView({block:'nearest'});
+  }else if(e.key==='ArrowUp'&&opts.length){
+    e.preventDefault();symSuggestActive=Math.max(symSuggestActive-1,0);
+    opts.forEach((o,i)=>o.classList.toggle('active',i===symSuggestActive));
+    opts[symSuggestActive].scrollIntoView({block:'nearest'});
+  }else if(e.key==='Enter'){
+    e.preventDefault();
+    const sym=symSuggestActive>=0?opts[symSuggestActive].dataset.sym:
+      (S.allowedSymbols.find(s=>s.symbol===$('symSearch').value.trim().toUpperCase())||{}).symbol;
+    if(sym)pickSymSuggest(sym);
+  }else if(e.key==='Escape'){
+    closeSymSuggest();
+  }
+});
+symSuggestEl.addEventListener('mousedown',e=>{
+  const opt=e.target.closest('.opt');
+  if(opt)pickSymSuggest(opt.dataset.sym);
+});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.sym-search-wrap'))closeSymSuggest();
+});
 
 async function connect(quiet){
   try{
