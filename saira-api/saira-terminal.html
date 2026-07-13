@@ -212,6 +212,7 @@
       <button class="tab on" data-p="pGann" data-i18n="tabFan">مروحة جان</button>
       <button class="tab" data-p="pSq9" data-i18n="tabSq9">مربع 9</button>
       <button class="tab" data-p="pRet" data-i18n="tabRet">الأثمان</button>
+      <button class="tab" data-p="pInd" data-i18n="tabInd">مؤشرات</button>
       <button class="tab" data-p="pSwing" data-i18n="tabSwing">سوينج</button>
       <button class="tab" data-p="pCyc" data-i18n="tabCyc">دورات</button>
       <button class="tab" data-p="pAstro" data-i18n="tabAstro">فلك</button>
@@ -266,6 +267,20 @@
       <div class="note" data-i18n="retNote">تقسيم المدى بين أكبر قاع وأعلى قمة إلى أثمان. مستوى 50% هو الأهم عند جان (بالذهبي).</div>
       <div class="row"><button class="btn gold small" id="retDraw" data-i18n="retDrawBtn">ارسم من مدى البيانات</button><button class="btn small" id="retClear" data-i18n="clearBtn">مسح</button></div>
       <div class="lvl-list" id="retList"></div>
+    </div>
+
+    <!-- Indicators -->
+    <div class="panel" id="pInd">
+      <h3 data-i18n="indH3">المتوسطات والمؤشرات</h3>
+      <div class="note" data-i18n="indNote">تُحسب دائمًا على الشموع المعروضة حاليًا على الشارت فقط (بعد إعادة التجميع للفريم الزمني والنطاق المرئي)، لا على كامل التاريخ — فتتحدث تلقائيًا مع أي تغيير في الفريم أو الرمز.</div>
+      <div class="row"><label data-i18n="indSmaLbl">SMA</label><input type="number" id="indSmaN" value="20" min="2" step="1" style="width:60px"><button class="btn small" id="indSmaAdd" data-i18n="indAddBtn">إضافة</button></div>
+      <div class="row"><label data-i18n="indEmaLbl">EMA</label><input type="number" id="indEmaN" value="50" min="2" step="1" style="width:60px"><button class="btn small" id="indEmaAdd" data-i18n="indAddBtn">إضافة</button></div>
+      <div class="lvl-list" id="indMaList"></div>
+      <div class="row"><label><input type="checkbox" id="indRsi"> RSI(14)</label></div>
+      <div class="row"><label><input type="checkbox" id="indMacd"> MACD(12,26,9)</label></div>
+      <div class="row"><label><input type="checkbox" id="indBb"> Bollinger(20,2)</label></div>
+      <div class="row"><label><input type="checkbox" id="indAdx"> ADX(14)</label></div>
+      <div class="row"><button class="btn small" id="indClear" data-i18n="clearAllBtn">مسح كل الطبقات</button></div>
     </div>
 
     <!-- Swing -->
@@ -436,9 +451,12 @@ const I18N={
     ctLine:'خط', ctArea:'مساحة', clearAllBtn:'مسح كل الطبقات', toolsBtn:'🛠 الأدوات',
     pickHint:'انقر على الشارت لتحديد نقطة الارتكاز',
     autoScaleBtn:'تلقائي', autoScaleTitle:'تحجيم تلقائي للسعر (Auto Scale)',
-    tabFan:'مروحة جان', tabSq9:'مربع 9', tabRet:'الأثمان', tabSwing:'سوينج',
+    tabFan:'مروحة جان', tabSq9:'مربع 9', tabRet:'الأثمان', tabInd:'مؤشرات', tabSwing:'سوينج',
     tabCyc:'دورات', tabAstro:'فلك', tabScan:'الماسح ⚛', tabConf:'التقاء',
     tabSquare:'موازنة/كسوف', tabSig:'إشارات',
+    indH3:'المتوسطات والمؤشرات',
+    indNote:'تُحسب دائمًا على الشموع المعروضة حاليًا على الشارت فقط (بعد إعادة التجميع للفريم الزمني والنطاق المرئي)، لا على كامل التاريخ — فتتحدث تلقائيًا مع أي تغيير في الفريم أو الرمز.',
+    indSmaLbl:'SMA', indEmaLbl:'EMA', indAddBtn:'إضافة',
     fanH3:'مروحة جان',
     fanNote:'حدد نقطة ارتكاز (قاع أو قمة) بالنقر على الشارت، وستُرسم الزوايا 1×8 حتى 8×1. الزاوية الذهبية هي 1×1. أو استخدم "تلقائي" لاكتشاف آخر قمة أو قاع ورسم مروحة واحدة منه.',
     fanAutoTitle:'اكتشاف آخر قمة أو قاع تلقائيًا ورسم مروحة واحدة منه',
@@ -536,9 +554,12 @@ const I18N={
     ctLine:'Line', ctArea:'Area', clearAllBtn:'Clear all layers', toolsBtn:'🛠 Tools',
     pickHint:'Click the chart to pick an anchor point',
     autoScaleBtn:'Auto', autoScaleTitle:'Auto Scale (fit price range automatically)',
-    tabFan:'Gann Fan', tabSq9:'Square of 9', tabRet:'Retracements', tabSwing:'Swing',
+    tabFan:'Gann Fan', tabSq9:'Square of 9', tabRet:'Retracements', tabInd:'Indicators', tabSwing:'Swing',
     tabCyc:'Cycles', tabAstro:'Astro', tabScan:'Scanner ⚛', tabConf:'Confluence',
     tabSquare:'Squaring/Eclipses', tabSig:'Signals',
+    indH3:'Moving Averages & Indicators',
+    indNote:'Always computed from the candles currently shown on the chart (after timeframe resampling), not the full history — updates automatically with any timeframe or symbol change.',
+    indSmaLbl:'SMA', indEmaLbl:'EMA', indAddBtn:'Add',
     fanH3:'Gann Fan',
     fanNote:'Pick an anchor point (low or high) by clicking the chart — angles 1×8 through 8×1 will be drawn. 1×1 is the golden angle. Or use "Auto" to detect the last swing high/low and draw a single fan from it.',
     fanAutoTitle:'Auto-detect the last swing high/low and draw a single fan from it',
@@ -671,6 +692,7 @@ const S={
   ecl:{markers:[]},
   mt:{markers:[]},
   asp:{markers:[]},
+  ind:{sma:[],ema:[],rsiOn:false,macdOn:false,bbOn:false,adxOn:false,series:[],rsiSeries:null,macdSeries:[],adxSeries:[]},
   autoCal:null, // نتيجة /gann/auto_calibrate الأخيرة — يُستخدم من المروحة/مربع9/144/النجمة
   allowedSymbols:[], // كل الرموز المسموحة من آخر /symbols — أساس فلترة مربع البحث محليًا
   pick:null,
@@ -754,6 +776,7 @@ function render(){
   if(S.swing.on) drawSwing();
   if(S.sun.on) drawSun();
   if(S.cyc.cycles.length && $('cycOverlay').checked) drawCycOverlay();
+  if(indActive()) drawIndicators();
   updateStatus();
 }
 
@@ -1155,6 +1178,205 @@ function drawSwing(){
   const inf=$('swingInfo');inf.style.display='block';
   inf.textContent='عدد الارتكازات: '+(pts.length-1)+' — الاتجاه الحالي: '+(dir>=0?'صاعد':'هابط');
 }
+
+/* ================= Indicators =================
+   تُحسب محليًا في المتصفح على S.bars (الشموع المُعاد تجميعها للفريم الزمني
+   الحالي فقط)، لا عبر الخادم على كامل التاريخ — فأي تغيير في الفريم الزمني
+   أو الرمز يعيد حسابها تلقائيًا ضمن دورة render() العادية دون أي منطق إضافي
+   لتتبع "النطاق المرئي". */
+function smaSeries(vals,n){
+  const out=new Array(vals.length).fill(null);
+  let sum=0;
+  for(let i=0;i<vals.length;i++){
+    sum+=vals[i];
+    if(i>=n)sum-=vals[i-n];
+    if(i>=n-1)out[i]=sum/n;
+  }
+  return out;
+}
+function emaSeries(vals,n){
+  const out=new Array(vals.length).fill(null);
+  const k=2/(n+1);let prev=null;
+  for(let i=0;i<vals.length;i++){
+    if(i<n-1)continue;
+    if(prev==null){
+      let sum=0;for(let j=i-n+1;j<=i;j++)sum+=vals[j];
+      prev=sum/n;
+    }else{
+      prev=vals[i]*k+prev*(1-k);
+    }
+    out[i]=prev;
+  }
+  return out;
+}
+function rsiSeries(vals,n){
+  const out=new Array(vals.length).fill(null);
+  if(vals.length<n+1)return out;
+  let gain=0,loss=0;
+  for(let i=1;i<=n;i++){const d=vals[i]-vals[i-1];if(d>=0)gain+=d;else loss-=d;}
+  gain/=n;loss/=n;
+  out[n]=loss===0?100:100-100/(1+gain/loss);
+  for(let i=n+1;i<vals.length;i++){
+    const d=vals[i]-vals[i-1];
+    gain=(gain*(n-1)+Math.max(d,0))/n;
+    loss=(loss*(n-1)+Math.max(-d,0))/n;
+    out[i]=loss===0?100:100-100/(1+gain/loss);
+  }
+  return out;
+}
+function macdSeries(vals,fast,slow,signal){
+  const ef=emaSeries(vals,fast),es=emaSeries(vals,slow);
+  const line=vals.map((_,i)=>(ef[i]!=null&&es[i]!=null)?ef[i]-es[i]:null);
+  const lineVals=line.filter(v=>v!=null);
+  const sigCompact=emaSeries(lineVals,signal);
+  const sig=new Array(vals.length).fill(null);
+  let j=0;
+  for(let i=0;i<vals.length;i++){if(line[i]!=null){sig[i]=sigCompact[j];j++;}}
+  const hist=vals.map((_,i)=>(line[i]!=null&&sig[i]!=null)?line[i]-sig[i]:null);
+  return{line,sig,hist};
+}
+function bollingerSeries(vals,n,k){
+  const mid=smaSeries(vals,n);
+  const up=new Array(vals.length).fill(null),dn=new Array(vals.length).fill(null);
+  for(let i=n-1;i<vals.length;i++){
+    let sum=0;for(let j=i-n+1;j<=i;j++)sum+=(vals[j]-mid[i])**2;
+    const sd=Math.sqrt(sum/n);
+    up[i]=mid[i]+k*sd;dn[i]=mid[i]-k*sd;
+  }
+  return{mid,up,dn};
+}
+function adxSeries(bars,n){
+  const len=bars.length,out=new Array(len).fill(null);
+  if(len<n*2)return out;
+  const plusDM=new Array(len).fill(0),minusDM=new Array(len).fill(0),tr=new Array(len).fill(0);
+  for(let i=1;i<len;i++){
+    const up=bars[i].h-bars[i-1].h,dn=bars[i-1].l-bars[i].l;
+    plusDM[i]=(up>dn&&up>0)?up:0;
+    minusDM[i]=(dn>up&&dn>0)?dn:0;
+    tr[i]=Math.max(bars[i].h-bars[i].l,Math.abs(bars[i].h-bars[i-1].c),Math.abs(bars[i].l-bars[i-1].c));
+  }
+  const smooth=arr=>{
+    const s=new Array(len).fill(null);let acc=0;
+    for(let i=1;i<=n;i++)acc+=arr[i]||0;
+    s[n]=acc;
+    for(let i=n+1;i<len;i++)s[i]=s[i-1]-s[i-1]/n+arr[i];
+    return s;
+  };
+  const trS=smooth(tr),pdS=smooth(plusDM),mdS=smooth(minusDM);
+  const dx=new Array(len).fill(null);
+  for(let i=n;i<len;i++){
+    if(!trS[i])continue;
+    const pdi=100*pdS[i]/trS[i],mdi=100*mdS[i]/trS[i];
+    const sum=pdi+mdi;
+    dx[i]=sum?100*Math.abs(pdi-mdi)/sum:0;
+  }
+  let adxPrev=null;
+  for(let i=n;i<len;i++){
+    if(dx[i]==null)continue;
+    if(adxPrev==null){
+      const window=dx.slice(Math.max(0,i-n+1),i+1).filter(v=>v!=null);
+      if(window.length<n)continue;
+      adxPrev=window.reduce((a,b)=>a+b,0)/window.length;
+    }else{
+      adxPrev=(adxPrev*(n-1)+dx[i])/n;
+    }
+    out[i]=adxPrev;
+  }
+  return out;
+}
+function clearIndSeries(){
+  for(const s of S.ind.series)chart.removeSeries(s);
+  S.ind.series=[];
+  if(S.ind.rsiSeries){chart.removeSeries(S.ind.rsiSeries);S.ind.rsiSeries=null;}
+  for(const s of S.ind.macdSeries)chart.removeSeries(s);
+  S.ind.macdSeries=[];
+  for(const s of S.ind.adxSeries)chart.removeSeries(s);
+  S.ind.adxSeries=[];
+}
+const MA_COLORS=['#4FC3F7','#E0B341','#9C8CF8','#26A69A','#EF5350'];
+function renderIndMaList(){
+  const rows=S.ind.sma.map((n,i)=>`<div class="lvl-row">SMA${n}<button class="btn small" data-kind="sma" data-n="${n}">✕</button></div>`)
+    .concat(S.ind.ema.map((n,i)=>`<div class="lvl-row">EMA${n}<button class="btn small" data-kind="ema" data-n="${n}">✕</button></div>`));
+  $('indMaList').innerHTML=rows.join('');
+  $('indMaList').querySelectorAll('button').forEach(b=>{
+    b.onclick=()=>{
+      const n=+b.dataset.n;
+      if(b.dataset.kind==='sma')S.ind.sma=S.ind.sma.filter(x=>x!==n);
+      else S.ind.ema=S.ind.ema.filter(x=>x!==n);
+      drawIndicators();
+    };
+  });
+}
+function drawIndicators(){
+  clearIndSeries();
+  renderIndMaList();
+  const bars=S.bars;
+  if(!bars.length)return;
+  const closes=bars.map(b=>b.c);
+  let colorI=0;
+  for(const n of S.ind.sma){
+    const vals=smaSeries(closes,n);
+    const s=chart.addLineSeries({color:MA_COLORS[colorI++%MA_COLORS.length],lineWidth:2,priceLineVisible:false,lastValueVisible:true,crosshairMarkerVisible:false,title:'SMA'+n});
+    s.setData(bars.map((b,i)=>vals[i]!=null?{time:b.t,value:vals[i]}:null).filter(Boolean));
+    S.ind.series.push(s);
+  }
+  for(const n of S.ind.ema){
+    const vals=emaSeries(closes,n);
+    const s=chart.addLineSeries({color:MA_COLORS[colorI++%MA_COLORS.length],lineWidth:2,lineStyle:2,priceLineVisible:false,lastValueVisible:true,crosshairMarkerVisible:false,title:'EMA'+n});
+    s.setData(bars.map((b,i)=>vals[i]!=null?{time:b.t,value:vals[i]}:null).filter(Boolean));
+    S.ind.series.push(s);
+  }
+  if(S.ind.bbOn){
+    const bb=bollingerSeries(closes,20,2);
+    for(const[key,color]of[['up','rgba(124,138,160,.7)'],['mid','#E0B341'],['dn','rgba(124,138,160,.7)']]){
+      const s=chart.addLineSeries({color,lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+      s.setData(bars.map((b,i)=>bb[key][i]!=null?{time:b.t,value:bb[key][i]}:null).filter(Boolean));
+      S.ind.series.push(s);
+    }
+  }
+  if(S.ind.rsiOn){
+    const vals=rsiSeries(closes,14);
+    S.ind.rsiSeries=chart.addLineSeries({color:'#9C8CF8',lineWidth:2,priceScaleId:'ind-rsi',priceLineVisible:false,crosshairMarkerVisible:false,title:'RSI14'});
+    chart.priceScale('ind-rsi').applyOptions({scaleMargins:{top:0.78,bottom:0.02}});
+    S.ind.rsiSeries.setData(bars.map((b,i)=>vals[i]!=null?{time:b.t,value:vals[i]}:null).filter(Boolean));
+  }
+  if(S.ind.macdOn){
+    const m=macdSeries(closes,12,26,9);
+    const line=chart.addLineSeries({color:'#4FC3F7',lineWidth:2,priceScaleId:'ind-macd',priceLineVisible:false,crosshairMarkerVisible:false,title:'MACD'});
+    const sig=chart.addLineSeries({color:'#EF5350',lineWidth:1,priceScaleId:'ind-macd',priceLineVisible:false,crosshairMarkerVisible:false});
+    chart.priceScale('ind-macd').applyOptions({scaleMargins:{top:0.78,bottom:0.02}});
+    line.setData(bars.map((b,i)=>m.line[i]!=null?{time:b.t,value:m.line[i]}:null).filter(Boolean));
+    sig.setData(bars.map((b,i)=>m.sig[i]!=null?{time:b.t,value:m.sig[i]}:null).filter(Boolean));
+    S.ind.macdSeries.push(line,sig);
+  }
+  if(S.ind.adxOn){
+    const vals=adxSeries(bars,14);
+    const s=chart.addLineSeries({color:'#26A69A',lineWidth:2,priceScaleId:'ind-adx',priceLineVisible:false,crosshairMarkerVisible:false,title:'ADX14'});
+    chart.priceScale('ind-adx').applyOptions({scaleMargins:{top:0.78,bottom:0.02}});
+    s.setData(bars.map((b,i)=>vals[i]!=null?{time:b.t,value:vals[i]}:null).filter(Boolean));
+    S.ind.adxSeries.push(s);
+  }
+}
+function indActive(){return S.ind.sma.length||S.ind.ema.length||S.ind.rsiOn||S.ind.macdOn||S.ind.bbOn||S.ind.adxOn;}
+$('indSmaAdd').onclick=()=>{
+  const n=+$('indSmaN').value;if(!n||n<2)return;
+  if(!S.ind.sma.includes(n))S.ind.sma.push(n);
+  drawIndicators();
+};
+$('indEmaAdd').onclick=()=>{
+  const n=+$('indEmaN').value;if(!n||n<2)return;
+  if(!S.ind.ema.includes(n))S.ind.ema.push(n);
+  drawIndicators();
+};
+$('indRsi').onchange=e=>{S.ind.rsiOn=e.target.checked;drawIndicators();};
+$('indMacd').onchange=e=>{S.ind.macdOn=e.target.checked;drawIndicators();};
+$('indBb').onchange=e=>{S.ind.bbOn=e.target.checked;drawIndicators();};
+$('indAdx').onchange=e=>{S.ind.adxOn=e.target.checked;drawIndicators();};
+$('indClear').onclick=()=>{
+  S.ind.sma=[];S.ind.ema=[];S.ind.rsiOn=S.ind.macdOn=S.ind.bbOn=S.ind.adxOn=false;
+  $('indRsi').checked=$('indMacd').checked=$('indBb').checked=$('indAdx').checked=false;
+  drawIndicators();
+};
 
 /* ================= Cycles (DFT) ================= */
 $('cycRun').onclick=runCycles;
@@ -1655,6 +1877,9 @@ function clearAll(msg){
   S.ecl.markers=[];$('eclList').innerHTML='';
   S.mt.markers=[];$('mtList').innerHTML='';
   S.asp.markers=[];$('aspList').innerHTML='';
+  S.ind.sma=[];S.ind.ema=[];S.ind.rsiOn=S.ind.macdOn=S.ind.bbOn=S.ind.adxOn=false;
+  $('indRsi').checked=$('indMacd').checked=$('indBb').checked=$('indAdx').checked=false;
+  clearIndSeries();renderIndMaList();
   applyMarkers();
   if(msg)toast('تم مسح كل الطبقات');
 }
