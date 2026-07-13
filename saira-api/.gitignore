@@ -4,3 +4,10 @@ __pycache__/
 node_modules/
 src-tauri/target/
 src-tauri/frontend/
+www/
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/app/release/
+*.apk
