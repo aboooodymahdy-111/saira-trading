@@ -2205,9 +2205,23 @@ async function loadSymbol(sym){
     render();
     $('fanUnit').value=autoUnit();$('sq9Price').value=fmt(minLow());$('sunScale').value=autoSunScale();
     toast(sym+' — '+r.bars.length+' شمعة من الخادم');
+    fetchFirstTradeDate(sym);
   }catch(e){
     setSrv(false);toast('انقطع الاتصال بالخادم');
   }
+}
+// يملأ حقل "تاريخ الميلاد/IPO" تلقائيًا بأول يوم تداول فعلي للرمز (لا تاريخ
+// تأسيس الشركة) من yfinance عند اختيار سهم — فقط لو الحقل فارغ، كي لا يُلغي
+// تاريخًا أدخله المستخدم يدويًا لغرض آخر (كميلاد شخصي بدل IPO مثلًا).
+async function fetchFirstTradeDate(sym){
+  if(!API.live||$('aspNatalDate').value)return;
+  try{
+    const r=await API.get(`/first_trade/${encodeURIComponent(sym)}`,10000);
+    if(r.first_trade_t){
+      const d=new Date(r.first_trade_t*1000);
+      $('aspNatalDate').value=d.toISOString().slice(0,10);
+    }
+  }catch(e){/* غير حرج — الحقل يبقى فارغًا لإدخال يدوي */}
 }
 $('symSelect').onchange=e=>loadSymbol(e.target.value);
 
