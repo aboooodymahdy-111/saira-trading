@@ -98,14 +98,19 @@ Capacitor/Google Play (25$ لمرة واحدة) اختيارية ولاحقة ف
    pwsh -Command "iwr https://fly.io/install.ps1 -useb | iex"
    ```
 
-2. سجّل/ادخل: `fly auth signup` (أو `fly auth login` لو عندك حساب).
-3. **مهم:** نفّذ الأمر التالي من **جذر المستودع** (`Saira-Trading/`)، وليس من
-   داخل `saira-api/` — لأن `Dockerfile` يحتاج `src/` و`data/` بجانب
-   `saira-api/` كسياق بناء واحد:
+2. سجّل/ادخل: `fly auth signup` (أو `fly auth login` لو عندك حساب). **Fly.io
+   يطلب بطاقة ائتمانية للتحقق حتى ضمن الحد المجاني** (بلا محاولة تحاسب طالما
+   بقيت ضمنه) — أضفها من لوحة تحكم الحساب لو ظهر لك خطأ
+   `requested machine count exceeds organization limit` عند `fly launch`.
+3. **مهم:** `fly.toml` موجود في **جذر المستودع** (`Saira-Trading/fly.toml`)
+   وليس داخل `saira-api/` — لأن `dockerfile` بداخله يشير لـ
+   `saira-api/Dockerfile` بينما سياق البناء (build context) لازم يكون جذر
+   المستودع كله (`Dockerfile` يحتاج `src/` و`data/` بجانب `saira-api/`).
+   نفّذ من جذر المستودع مباشرة، بلا أي `--config`/`--dockerfile` إضافية:
 
    ```powershell
    cd C:\Users\Mahdy\Saira-Trading
-   fly launch --config saira-api/fly.toml --dockerfile saira-api/Dockerfile --no-deploy
+   fly launch --no-deploy
    ```
 
    وافق على اسم التطبيق (أو اتركه `saira-api` كما في `fly.toml`) وعلى المنطقة، وارفض
@@ -113,7 +118,7 @@ Capacitor/Google Play (25$ لمرة واحدة) اختيارية ولاحقة ف
 4. انشر فعليًا:
 
    ```powershell
-   fly deploy --config saira-api/fly.toml --dockerfile saira-api/Dockerfile
+   fly deploy
    ```
 
 5. تأكد أنه يعمل: `fly status` ثم افتح `https://<اسم-تطبيقك>.fly.dev/health`
@@ -125,18 +130,37 @@ Capacitor/Google Play (25$ لمرة واحدة) اختيارية ولاحقة ف
 ويعيد تشغيلها عند أول طلب جديد (`auto_start_machines`) — أول طلب بعد فترة خمول
 قد يستغرق بضع ثوانٍ إضافية، وهذا طبيعي وليس عطلًا.
 
+**بديل بلا بطاقة ائتمانية إطلاقًا:** `render.yaml` في جذر المستودع جاهز
+لنفس النشر على [Render](https://render.com) (خطة Free، بلا أي بطاقة) — الوحيد
+اللي يفرق إن أول طلب بعد 15 دقيقة خمول ياخد ~30-60 ثانية ليستيقظ. من
+Render Dashboard: **New** → **Blueprint** → اختر مستودع `saira-trading` —
+هيقرأ `render.yaml` تلقائيًا.
+
 ### ب) الواجهة على Cloudflare Pages
 
 1. ادفع المستودع لو لسه مش مدفوع: `git push`.
 2. من [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages**
-   → **Create** → **Pages** → **Connect to Git** → اختر مستودع `saira-trading`.
-3. إعدادات البناء:
-   - **مجلد الجذر (Root directory):** `saira-api`
-   - **أمر البناء (Build command):** `npm install --omit=dev && npm run sync-web`
-   - **مجلد الإخراج (Build output directory):** `web`
-4. اضغط **Save and Deploy** — كلاودفلير هيدّيك رابط `https://<اسم>.pages.dev`
+   → **Create application** → لو فتحت صفحة "Create a Worker" (الافتراضي
+   الجديد)، دوّر تحت الصفحة على رابط **"Looking to deploy Pages? Get
+   started"** واضغطه — **لا تكمل من مسار Worker العادي**، لازم Pages تحديدًا
+   (Worker بيحتاج `wrangler deploy` ومش مناسب لموقع ثابت).
+3. من شاشة "Get started" اختار **"Import an existing Git repository"** →
+   **Get started** → اختر مستودع `saira-trading` → **Begin setup**.
+4. إعدادات البناء:
+   - **Production branch:** `main`
+   - **Framework preset:** `None`
+   - **Build command:** `npm install --omit=dev && npm run sync-web`
+   - **Build output directory:** `web`
+   - **Root directory (Path)** (تحت "Root directory (advanced)"): `saira-api`
+5. اضغط **Save and Deploy** — كلاودفلير هيدّيك رابط `https://<اسم>.pages.dev`
    يعمل فورًا، ويعيد النشر تلقائيًا مع كل `git push` جديد.
-5. (اختياري) دومين مخصص لاحقًا من نفس لوحة المشروع → **Custom domains**.
+6. (اختياري) دومين مخصص لاحقًا من نفس لوحة المشروع → **Custom domains**.
+
+**ملاحظة مهمة:** Cloudflare Pages يشغّل `npm ci` تلقائيًا **قبل** أمر البناء
+المذكور أعلاه — لازم `saira-api/package-lock.json` متزامن تمامًا مع
+`package.json` (شغّل `npm install` محليًا فيه بعد أي تعديل على devDependencies
+وارفع الملفين معًا)، وإلا يفشل البناء برسالة
+`npm ci can only install packages when your package.json and package-lock.json ... are in sync`.
 
 بعد الخطوتين، الموقع بيشتغل بالكامل من أي جهاز/متصفح بدون تشغيل أي حاجة على
 جهازك — الواجهة على Cloudflare والباك-إند على Fly.io، وكلاهما مجاني ويعمل 24/7.
