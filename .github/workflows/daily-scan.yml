@@ -80,6 +80,12 @@ jobs:
           mkdir -p runs/archive/reports
           cp runs/report.html "runs/archive/reports/report_$(date -u +%Y%m%d_%H%M%S).html"
 
+      # GitHub Pages serves index.html for the root URL (the one emailed to
+      # Abdo via page_url below); build_report.py writes report.html, so
+      # without this copy the emailed root link 404s while /report.html works.
+      - name: Copy report as index.html for the Pages root URL
+        run: cp runs/report.html runs/index.html
+
       - name: Commit updated results back to the repo
         run: |
           git config user.name "github-actions[bot]"
