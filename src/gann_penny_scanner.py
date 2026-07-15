@@ -49,10 +49,10 @@ CONFIG = {
     "tolerance_pct": 0.015,        # هامش خطأ التوافق بين المستويات (1.5%)
     "volume_spike_ratio": 3.0,     # الفوليوم لازم يبقى 3 أضعاف المتوسط
     "volume_avg_period": 20,       # عدد الأيام لحساب متوسط الفوليوم
-    "min_price": 0.10,             # أقل سعر مقبول (بيني ستوكس)
-    "max_price": 20.0,             # أعلى سعر مقبول
-    "min_breakout_pct": 50.0,      # أقل نسبة طفرة سعرية % لاعتبارها بريك ثرو
-    "breakout_lookback_days": 5,   # المدى الزمني لقياس الطفرة (بالأيام)
+    "min_price": 0.10,             # أقل سعر مقبول - أي سهم بالنطاق ده وارد يتفحص
+    "max_price": 20.0,             # أعلى سعر مقبول - أي سهم بالنطاق ده وارد يتفحص
+    "min_breakout_pct": 15.0,      # أقل نسبة تغيّر % خلال آخر جلسة تداول عشان تتحسب طفرة
+    "breakout_lookback_days": 5,   # المدى الزمني (بالأيام) لحساب مستويات مربع9/فيبوناتشي فقط
     "sq9_break_confirm_pct": 0.5,  # % فوق زاوية مربع9 عشان تتأكد إنها "كسرت واستمرت"
     "min_total_votes_for_alert": 5,  # الحد الأدنى الإجمالي لعدد الأصوات عشان يتبعت تنبيه
 }
@@ -365,10 +365,52 @@ class BreakoutCandidate:
     confluence: ConfluenceResult
 
 
+def get_penny_stock_universe(min_price: float = None, max_price: float = None,
+                              min_breakout_pct: float = None,
+                              max_results: int = 250) -> List[str]:
+    """
+    بيجيب أي سهم أمريكي متداول دلوقتي ضمن نطاق السعر المطلوب (min_price-max_price)
+    وحقق نسبة تغيّر (صعود) >= min_breakout_pct خلال آخر جلسة تداول - مباشرة من
+    Yahoo Finance Screener، مفيش قايمة أسهم ثابتة متسجلة مسبقًا في الكود.
+    """
+    min_price = CONFIG["min_price"] if min_price is None else min_price
+    max_price = CONFIG["max_price"] if max_price is None else max_price
+    min_breakout_pct = CONFIG["min_breakout_pct"] if min_breakout_pct is None else min_breakout_pct
+
+    query = yf.EquityQuery("and", [
+        yf.EquityQuery("btwn", ["intradayprice", min_price, max_price]),
+        yf.EquityQuery("gte", ["percentchange", min_breakout_pct]),
+        yf.EquityQuery("eq", ["region", "us"]),
+    ])
+
+    tickers: List[str] = []
+    offset = 0
+    page_size = 250
+    while len(tickers) < max_results:
+        try:
+            resp = yf.screen(query, offset=offset, size=page_size,
+                              sortField="percentchange", sortAsc=False)
+        except Exception as e:
+            print(f"⚠️ فشل الاستعلام من Yahoo Screener: {e}")
+            break
+
+        quotes = (resp or {}).get("quotes", [])
+        if not quotes:
+            break
+
+        tickers.extend(q["symbol"] for q in quotes if q.get("symbol"))
+
+        if len(quotes) < page_size:
+            break
+        offset += page_size
+
+    return tickers[:max_results]
+
+
 def scan_penny_stock_breakouts(tickers: List[str],
                                 planets: Dict[str, float] = None,
                                 period: str = "3mo") -> List[BreakoutCandidate]:
-    """يفحص قائمة بيني ستوكس ويرجع المرشحين اللي عندهم طفرة سعرية + تصويت."""
+    """يفحص قائمة الأسهم المُمررة ويرجع المرشحين اللي عندهم طفرة سعرية + تصويت."""
     candidates = []
     planets = planets or get_current_planet_longitudes()
 
@@ -377,7 +419,7 @@ def scan_penny_stock_breakouts(tickers: List[str],
             t = yf.Ticker(symbol)
             hist = t.history(period=period)
 
-            if hist.empty or len(hist) < CONFIG["breakout_lookback_days"] + 1:
+            if hist.empty or len(hist) < 2:
                 continue
 
             current_price = float(hist["Close"].iloc[-1])
@@ -386,15 +428,16 @@ def scan_penny_stock_breakouts(tickers: List[str],
             if not (CONFIG["min_price"] <= current_price <= CONFIG["max_price"]):
                 continue
 
-            lookback = CONFIG["breakout_lookback_days"]
-            price_before = float(hist["Close"].iloc[-(lookback + 1)])
-            if price_before <= 0:
+            if prev_price <= 0:
                 continue
 
-            breakout_pct = ((current_price - price_before) / price_before) * 100
+            # الطفرة = نسبة تغيّر السعر خلال آخر جلسة تداول (مقارنة بإغلاق الجلسة
+            # السابقة)، سواء حصلت الحركة في دقيقة أو ساعة أو طول الجلسة بالكامل
+            breakout_pct = ((current_price - prev_price) / prev_price) * 100
             if breakout_pct < CONFIG["min_breakout_pct"]:
                 continue
 
+            lookback = CONFIG["breakout_lookback_days"]
             high_price = float(hist["High"].iloc[-lookback:].max())
             low_price = float(hist["Low"].iloc[-lookback:].min())
 
@@ -501,10 +544,12 @@ def is_within_us_trading_window() -> bool:
 # ==========================================
 # 10. نقطة التشغيل الرئيسية (تُستدعى من GitHub Actions كل 5 دقايق)
 # ==========================================
-def run_scan_once(tickers: List[str], planets: Dict[str, float] = None):
+def run_scan_once(planets: Dict[str, float] = None):
     """
     تشغيل واحد للسكانر - ده اللي بيتنادى من GitHub Actions كل 5 دقايق.
-    بيبعت تنبيه تيليجرام فقط للأسهم اللي عدّت الـ threshold الكامل:
+    مفيش قايمة أسهم ثابتة: بيجيب ديناميكيًا أي سهم أمريكي سعره ضمن النطاق
+    المطلوب وحقق طفرة (تغيّر) >= الحد الأدنى خلال آخر جلسة تداول، ثم يبعت
+    تنبيه تيليجرام فقط للأسهم اللي عدّت الـ threshold الكامل:
       - فوليوم شراء (spike + شمعة صاعدة) إجباري
       - ارتداد عند كوكب واحد على الأقل إجباري
       - إجمالي 5 أصوات على الأقل (شامل الفوليوم والكوكب أنفسهم)
@@ -515,7 +560,12 @@ def run_scan_once(tickers: List[str], planets: Dict[str, float] = None):
         print("⏸️ خارج أوقات التداول الأمريكية (بريما ركت + الجلسة الرسمية) - تم تخطي السكان.")
         return
 
-    print(f"🔎 بدء السكان على {len(tickers)} سهم...")
+    tickers = get_penny_stock_universe()
+    if not tickers:
+        print("لا يوجد أسهم ضمن نطاق السعر المطلوب حققت طفرة كافية خلال آخر جلسة تداول.")
+        return
+
+    print(f"🔎 بدء السكان على {len(tickers)} سهم (تم اكتشافهم ديناميكيًا حسب السعر والطفرة)...")
     candidates = scan_penny_stock_breakouts(tickers, planets=planets)
 
     alerted = [c for c in candidates if c.confluence.passes_threshold]
@@ -531,7 +581,4 @@ def run_scan_once(tickers: List[str], planets: Dict[str, float] = None):
 
 
 if __name__ == "__main__":
-    # قائمة الأسهم المراقبة - عدّلها براحتك أو حمّلها من ملف/API خارجي
-    penny_watchlist = ["SIRI", "NOK", "SNDL", "GEVO", "CTRM", "MULN", "NKLA"]
-
-    run_scan_once(penny_watchlist, planets=get_current_planet_longitudes())
+    run_scan_once(planets=get_current_planet_longitudes())
