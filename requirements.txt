@@ -11,5 +11,4 @@ scikit-learn
 xgboost
 lightgbm
 pandas_market_calendars
-pyswisseph
-requests
+openpyxl
