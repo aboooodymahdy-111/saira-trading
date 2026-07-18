@@ -28,11 +28,6 @@ on:
         description: "Limit to first N tickers from the universe (blank = all 200)"
         required: false
         default: ""
-      force_run:
-        description: "Bypass the NYSE trading-day gate for this manual run only (testing only — the scheduled run always respects it)"
-        type: boolean
-        required: false
-        default: false
 
 permissions:
   contents: write
@@ -70,7 +65,7 @@ jobs:
       # TA-Lib is optional (feature_table.py degrades gracefully without it,
       # falling back to lag/momentum features only) — never fails the run.
       - name: Try installing TA-Lib (optional, non-fatal)
-        if: steps.trading_day.outputs.is_trading_day == 'true' || inputs.force_run == true
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         continue-on-error: true
         run: |
           sudo apt-get update
@@ -90,24 +85,24 @@ jobs:
       # so cloud_build_feature_tables.py is a same-logic, different-data-source
       # twin used only in this cloud workflow.
       - name: Build feature tables from live Yahoo data
-        if: steps.trading_day.outputs.is_trading_day == 'true' || inputs.force_run == true
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         run: python astro_engine_1/cloud_build_feature_tables.py
 
       - name: Train models (full retrain — free on this public repo)
-        if: steps.trading_day.outputs.is_trading_day == 'true' || inputs.force_run == true
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         run: |
           TICKERS=$(python -c "import pandas as pd; print(' '.join(pd.read_csv('../data/ai_catch_win_universe.csv')['ticker'].tolist()))")
           python astro_engine_1/train_model.py daily $TICKERS
 
       - name: Predict + build trade plans + send Telegram alert
-        if: steps.trading_day.outputs.is_trading_day == 'true' || inputs.force_run == true
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python astro_engine_1/ai_catch_win.py
 
       - name: Commit results back to the repo
-        if: steps.trading_day.outputs.is_trading_day == 'true' || inputs.force_run == true
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -121,11 +116,11 @@ jobs:
       # email-only, unchanged). Same Resend setup as daily-scan.yml — see
       # that workflow's own comment for why Resend over Gmail SMTP.
       - name: Build email summary HTML
-        if: steps.trading_day.outputs.is_trading_day == 'true' || inputs.force_run == true
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         run: python astro_engine_1/ai_catch_win_email.py
 
       - name: Email the AI Catch & Win summary
-        if: steps.trading_day.outputs.is_trading_day == 'true' || inputs.force_run == true
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         run: |
           BODY=$(cat ../runs/astro_engine_1/ai_catch_win_email.html | python3 -c "import sys, json; print(json.dumps(sys.stdin.read()))")
           curl -fsS -X POST https://api.resend.com/emails \
