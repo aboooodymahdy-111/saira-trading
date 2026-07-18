@@ -24,6 +24,18 @@ def is_nyse_trading_day(check_date: date | None = None) -> bool:
 
 
 if __name__ == "__main__":
+    import os
+
     today_is_trading_day = is_nyse_trading_day()
     print(f"{date.today().isoformat()}: {'trading day' if today_is_trading_day else 'NOT a trading day'}")
-    sys.exit(0 if today_is_trading_day else 1)
+
+    # يكتب النتيجة كـstep output (GITHUB_OUTPUT) بدل الاعتماد على exit code —
+    # كده باقي خطوات الورك-فلو بتتخطّى (skip) نظيفة عبر `if:` بدل ما التشغيلة
+    # كلها تظهر "فشل" أحمر على GitHub مع إن التخطّي ده متعمد ومقصود تمامًا،
+    # مش عطل حقيقي (راجع .github/workflows/ai-catch-win.yml).
+    github_output = os.environ.get("GITHUB_OUTPUT")
+    if github_output:
+        with open(github_output, "a", encoding="utf-8") as f:
+            f.write(f"is_trading_day={'true' if today_is_trading_day else 'false'}\n")
+
+    sys.exit(0)  # النجاح هنا يعني "الفحص اتنفّذ صح"، لا "النهاردة يوم تداول"

@@ -52,18 +52,20 @@ jobs:
       # (Abdo's explicit request: "خلي التحليل والتقرير يتموا أيام التداول
       # فقط") — pandas_market_calendars' real NYSE calendar, not just a
       # Sat/Sun check, so Thanksgiving/Christmas/etc. are correctly skipped
-      # too. continue-on-error + checking steps.trading_day.outcome below
-      # (rather than letting this step's failure fail the whole job) is what
-      # lets every later step cleanly no-op instead of the run showing red.
+      # too. is_trading_day.py always exits 0 and writes its true/false
+      # result to $GITHUB_OUTPUT (not the exit code) — first real run
+      # (2026-07-18, a Saturday) showed the OLD exit-code-based version
+      # makes GitHub show the whole run as a red "failure" even though
+      # skipping was fully intentional; this output-based version keeps
+      # every later step's `if:` gate but the run itself shows green.
       - name: Check if today is a NYSE trading day
         id: trading_day
-        continue-on-error: true
         run: python astro_engine_1/is_trading_day.py
 
       # TA-Lib is optional (feature_table.py degrades gracefully without it,
       # falling back to lag/momentum features only) — never fails the run.
       - name: Try installing TA-Lib (optional, non-fatal)
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         continue-on-error: true
         run: |
           sudo apt-get update
@@ -83,24 +85,24 @@ jobs:
       # so cloud_build_feature_tables.py is a same-logic, different-data-source
       # twin used only in this cloud workflow.
       - name: Build feature tables from live Yahoo data
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         run: python astro_engine_1/cloud_build_feature_tables.py
 
       - name: Train models (full retrain — free on this public repo)
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         run: |
           TICKERS=$(python -c "import pandas as pd; print(' '.join(pd.read_csv('../data/ai_catch_win_universe.csv')['ticker'].tolist()))")
           python astro_engine_1/train_model.py daily $TICKERS
 
       - name: Predict + build trade plans + send Telegram alert
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python astro_engine_1/ai_catch_win.py
 
       - name: Commit results back to the repo
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -114,11 +116,11 @@ jobs:
       # email-only, unchanged). Same Resend setup as daily-scan.yml — see
       # that workflow's own comment for why Resend over Gmail SMTP.
       - name: Build email summary HTML
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         run: python astro_engine_1/ai_catch_win_email.py
 
       - name: Email the AI Catch & Win summary
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         run: |
           BODY=$(cat ../runs/astro_engine_1/ai_catch_win_email.html | python3 -c "import sys, json; print(json.dumps(sys.stdin.read()))")
           curl -fsS -X POST https://api.resend.com/emails \

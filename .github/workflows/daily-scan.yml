@@ -50,19 +50,21 @@ jobs:
       # التداول فقط") — astro_engine_1/is_trading_day.py uses
       # pandas_market_calendars' real NYSE calendar, not just a Sat/Sun
       # check, so Thanksgiving/Christmas/etc. are correctly skipped too.
-      # continue-on-error + checking steps.trading_day.outcome below (rather
-      # than letting this step's failure fail the whole job) is what lets
-      # every later step cleanly no-op instead of the run showing red.
+      # is_trading_day.py always exits 0 and writes its true/false result to
+      # $GITHUB_OUTPUT (not the exit code) — an exit-code-based version was
+      # tried first in ai-catch-win.yml but made GitHub show the whole run as
+      # a red "failure" even on an intentional skip (confirmed on the first
+      # real run, a Saturday); this output-based version keeps every later
+      # step's `if:` gate but the run itself shows green.
       - name: Check if today is a NYSE trading day
         id: trading_day
-        continue-on-error: true
         run: python src/astro_engine_1/is_trading_day.py
 
       # TA-Lib is optional (advanced_technical_tools.py degrades gracefully
       # without it — see its module docstring); a failed build here should
       # never fail the whole run, just reduce one group's sub-signals.
       - name: Try installing TA-Lib (optional, non-fatal)
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         continue-on-error: true
         run: |
           sudo apt-get update
@@ -76,23 +78,23 @@ jobs:
           pip install TA-Lib
 
       - name: Configure GitHub Pages
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         id: pages
         uses: actions/configure-pages@v5
 
       - name: Run full universe scan
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         run: python src/full_universe_analysis.py
 
       # Appends today's net-buy candidates to the outcome ledger and rechecks
       # previously-pending ones, so build_report.py (next) can show a real
       # "Track record" stat — see track_outcomes.py's own docstring.
       - name: Track recommendation outcomes
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         run: python src/track_outcomes.py
 
       - name: Build report
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         env:
           REPORT_BASE_URL: ${{ steps.pages.outputs.base_url }}
         run: python src/build_report.py
@@ -101,7 +103,7 @@ jobs:
       # own comment), reimplemented here since this job runs on Linux, not
       # Abdo's Windows machine.
       - name: Archive this run's report
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         run: |
           mkdir -p runs/archive/reports
           cp runs/report.html "runs/archive/reports/report_$(date -u +%Y%m%d_%H%M%S).html"
@@ -110,11 +112,11 @@ jobs:
       # Abdo via page_url below); build_report.py writes report.html, so
       # without this copy the emailed root link 404s while /report.html works.
       - name: Copy report as index.html for the Pages root URL
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         run: cp runs/report.html runs/index.html
 
       - name: Commit updated results back to the repo
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -124,13 +126,13 @@ jobs:
           git push
 
       - name: Upload Pages artifact
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: runs
 
       - name: Deploy to GitHub Pages
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         id: deployment
         uses: actions/deploy-pages@v4
 
@@ -144,7 +146,7 @@ jobs:
       # verification as long as the recipient is the same address the
       # Resend account itself was signed up with.
       - name: Email the report link
-        if: steps.trading_day.outcome == 'success'
+        if: steps.trading_day.outputs.is_trading_day == 'true'
         run: |
           curl -fsS -X POST https://api.resend.com/emails \
             -H "Authorization: Bearer ${{ secrets.RESEND_API_KEY }}" \
