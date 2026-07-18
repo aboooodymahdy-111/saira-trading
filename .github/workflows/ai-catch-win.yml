@@ -101,6 +101,21 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python astro_engine_1/ai_catch_win.py
 
+      # المرحلة الثانية للتعلّم من النتائج الحية (طلب عبده 2026-07-18: "ابني
+      # أداة تتعلم من تحقق الأهداف مع الوقت في المستقبل وتحسن التوقعات") —
+      # بعد predict.py مباشرة (لا قبله): predict.py أولاً يسجّل توقعات
+      # النهاردة (log_predictions)، وبعدين full_cycle يقيّم أي توقعات أقدم
+      # عدّى ميعاد استحقاقها ويحدّث المعايرة الحية. الترتيب هنا لا يغيّر نتائج
+      # توقع النهاردة (predict.py لسه بيقرأ معامل المعايرة من نتائج التدريب
+      # فقط، لا من live_calibration.csv بعد) — لو حصل يومًا ربط مباشر بينهم،
+      # الترتيب المطلوب وقتها يبقى tracker قبل predict، لا بعده.
+      # continue-on-error: فشل جلب سعر فعلي لسهم واحد (مثلاً توقّف تداوله)
+      # ما ينفعش يوقف تسليم تقرير/إيميل/تليجرام اليوم الحالي.
+      - name: Score due predictions + recalibrate + check retrain drift
+        if: steps.trading_day.outputs.is_trading_day == 'true'
+        continue-on-error: true
+        run: python astro_engine_1/prediction_tracker.py full_cycle
+
       - name: Commit results back to the repo
         if: steps.trading_day.outputs.is_trading_day == 'true'
         run: |
