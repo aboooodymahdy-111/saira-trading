@@ -6,13 +6,20 @@ name: Daily scan + report
 # (Abdo's call, 2026-07) so GitHub Pages' free tier can serve the report
 # directly — no third-party host needed.
 #
-# 21:00 EST/EDT (Abdo's stated schedule, register_scheduled_task.ps1) is
-# 01:00 or 02:00 UTC depending on US daylight saving — cron below is fixed at
-# 01:00 UTC (9 PM EDT / 8 PM EST), so the run lands an hour earlier during
-# EST (winter). Adjust if that drift matters.
+# SCHEDULE CORRECTED 2026-07-18 (Abdo's explicit request): he wants the
+# report at 16:00 Cairo time — 30 minutes before the US market opens (9:30 AM
+# ET = 16:30 Cairo during current mutual DST) — not the old 21:00 EST/EDT
+# schedule. 13:00 UTC = 16:00 Cairo (UTC+3, current summer DST for both Egypt
+# and the US) = 9:00 AM EDT. NOTE: Egypt and the US don't necessarily flip
+# DST on the same calendar date, so this cron will drift by up to an hour
+# around late-Oct/Nov transitions — re-check then if exact timing matters.
+# Same cron as ai-catch-win.yml (both land together, per Abdo's request).
+# DELIVERY: this (the original/older) report stays EMAIL-ONLY, per Abdo's
+# explicit instruction — the NEW "AI Catch & Win" tool (ai-catch-win.yml) is
+# the one that goes to both email AND Telegram.
 on:
   schedule:
-    - cron: "0 1 * * *"
+    - cron: "0 13 * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -38,10 +45,24 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
+      # Skip the rest of the run entirely on weekends/US market holidays
+      # (Abdo's explicit request 2026-07-18: "خلي التحليل والتقرير يتموا أيام
+      # التداول فقط") — astro_engine_1/is_trading_day.py uses
+      # pandas_market_calendars' real NYSE calendar, not just a Sat/Sun
+      # check, so Thanksgiving/Christmas/etc. are correctly skipped too.
+      # continue-on-error + checking steps.trading_day.outcome below (rather
+      # than letting this step's failure fail the whole job) is what lets
+      # every later step cleanly no-op instead of the run showing red.
+      - name: Check if today is a NYSE trading day
+        id: trading_day
+        continue-on-error: true
+        run: python src/astro_engine_1/is_trading_day.py
+
       # TA-Lib is optional (advanced_technical_tools.py degrades gracefully
       # without it — see its module docstring); a failed build here should
       # never fail the whole run, just reduce one group's sub-signals.
       - name: Try installing TA-Lib (optional, non-fatal)
+        if: steps.trading_day.outcome == 'success'
         continue-on-error: true
         run: |
           sudo apt-get update
@@ -55,19 +76,23 @@ jobs:
           pip install TA-Lib
 
       - name: Configure GitHub Pages
+        if: steps.trading_day.outcome == 'success'
         id: pages
         uses: actions/configure-pages@v5
 
       - name: Run full universe scan
+        if: steps.trading_day.outcome == 'success'
         run: python src/full_universe_analysis.py
 
       # Appends today's net-buy candidates to the outcome ledger and rechecks
       # previously-pending ones, so build_report.py (next) can show a real
       # "Track record" stat — see track_outcomes.py's own docstring.
       - name: Track recommendation outcomes
+        if: steps.trading_day.outcome == 'success'
         run: python src/track_outcomes.py
 
       - name: Build report
+        if: steps.trading_day.outcome == 'success'
         env:
           REPORT_BASE_URL: ${{ steps.pages.outputs.base_url }}
         run: python src/build_report.py
@@ -76,11 +101,20 @@ jobs:
       # own comment), reimplemented here since this job runs on Linux, not
       # Abdo's Windows machine.
       - name: Archive this run's report
+        if: steps.trading_day.outcome == 'success'
         run: |
           mkdir -p runs/archive/reports
           cp runs/report.html "runs/archive/reports/report_$(date -u +%Y%m%d_%H%M%S).html"
 
+      # GitHub Pages serves index.html for the root URL (the one emailed to
+      # Abdo via page_url below); build_report.py writes report.html, so
+      # without this copy the emailed root link 404s while /report.html works.
+      - name: Copy report as index.html for the Pages root URL
+        if: steps.trading_day.outcome == 'success'
+        run: cp runs/report.html runs/index.html
+
       - name: Commit updated results back to the repo
+        if: steps.trading_day.outcome == 'success'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -90,11 +124,13 @@ jobs:
           git push
 
       - name: Upload Pages artifact
+        if: steps.trading_day.outcome == 'success'
         uses: actions/upload-pages-artifact@v3
         with:
           path: runs
 
       - name: Deploy to GitHub Pages
+        if: steps.trading_day.outcome == 'success'
         id: deployment
         uses: actions/deploy-pages@v4
 
@@ -108,6 +144,7 @@ jobs:
       # verification as long as the recipient is the same address the
       # Resend account itself was signed up with.
       - name: Email the report link
+        if: steps.trading_day.outcome == 'success'
         run: |
           curl -fsS -X POST https://api.resend.com/emails \
             -H "Authorization: Bearer ${{ secrets.RESEND_API_KEY }}" \
