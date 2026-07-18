@@ -39,7 +39,7 @@ import xgboost as xgb
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # مطلق، لا "." هش — راجع cloud_build_feature_tables.py
 
-from astro_engine_1.feature_table import PREDICTION_HORIZONS_DAYS, build_feature_table
+from astro_engine_1.feature_table import OUTPUT_ROOT, PREDICTION_HORIZONS_DAYS, build_feature_table
 from astro_engine_1.prediction_tracker import log_predictions
 from astro_engine_1.train_model import NON_FEATURE_COLUMNS
 
@@ -107,6 +107,33 @@ def _fit_best_model(X: pd.DataFrame, y: pd.Series) -> xgb.XGBRegressor:
     return best_model
 
 
+def _load_feature_table(ticker: str) -> pd.DataFrame | None:
+    """
+    يفضّل جدول ميزات مبني مسبقًا (runs/astro_engine_1/feature_tables/{ticker}.csv
+    — سواء بناه feature_table.py محليًا من الأرشيف المحلي، أو
+    cloud_build_feature_tables.py سحابيًا من yfinance مباشرة، راجع ذلك الملف)
+    بدل إعادة البناء الحي هنا. **لماذا**: build_feature_table الأصلية تعتمد
+    على build_local_ticker_index/load_local_history (الأرشيف المحلي بتاع عبده
+    فقط) — على GitHub Actions (لا أرشيف محلي)، كل استدعاء لها كان يفشل بصمت
+    بـValueError لكل الـ200 سهم (اكتُشف فعليًا 2026-07-18، أول تشغيلة سحابية
+    كاملة: كل الأسهم "تخطّي" رغم نجاح خطوة بناء الجداول السحابية قبلها مباشرة
+    في نفس الورك-فلو). يرجع None لو لا الجدول الجاهز ولا إعادة البناء الحي
+    (المسار المحلي فقط) نجحا.
+    """
+    cached_path = OUTPUT_ROOT / f"{ticker}.csv"
+    if cached_path.exists() and cached_path.stat().st_size > 0:
+        try:
+            df = pd.read_csv(cached_path)
+            if not df.empty:
+                return df
+        except pd.errors.EmptyDataError:
+            pass  # ملف تالف/فارغ (مثلاً fetch فشل نص طريقه) — كمّل لإعادة البناء الحي تحت
+    try:
+        return build_feature_table(ticker)
+    except ValueError:
+        return None
+
+
 def predict_ticker_all_horizons(ticker: str, accuracy_table: pd.DataFrame,
                                  target_kind: str = "high") -> dict | None:
     """
@@ -114,9 +141,8 @@ def predict_ticker_all_horizons(ticker: str, accuracy_table: pd.DataFrame,
     أفق (h1/h5/h10/h20) على نفس target_kind (high/low/close)، ويرجّع صفًا
     واحدًا يحمل %التغيّر + الدقة التاريخية لكل أفق في أعمدة منفصلة.
     """
-    try:
-        df = build_feature_table(ticker)
-    except ValueError:
+    df = _load_feature_table(ticker)
+    if df is None:
         return None
 
     excluded = NON_FEATURE_COLUMNS | {f"target_{kind}_h{h}" for h in PREDICTION_HORIZONS_DAYS
