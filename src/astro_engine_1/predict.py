@@ -37,7 +37,7 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 
-sys.path.insert(0, ".")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # مطلق، لا "." هش — راجع cloud_build_feature_tables.py
 
 from astro_engine_1.feature_table import PREDICTION_HORIZONS_DAYS, build_feature_table
 from astro_engine_1.prediction_tracker import log_predictions

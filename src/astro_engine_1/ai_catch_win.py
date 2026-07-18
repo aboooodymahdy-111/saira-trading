@@ -34,7 +34,11 @@ from pathlib import Path
 
 import pandas as pd
 
-sys.path.insert(0, ".")
+# مسار مطلق (src/) بدل "." النسبي — "." اعتمد على أن CWD وقت التشغيل يبقى
+# src/ بالظبط، وده اتأكد إنه مش موثوق دايمًا على كل بيئة (فشل فعليًا على
+# GitHub Actions Linux runner بـModuleNotFoundError رغم نجاحه محليًا على
+# Windows بنفس الاستدعاء بالظبط — راجع cloud_build_feature_tables.py).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from advanced_technical_tools import compute_fibonacci_levels, compute_pivot_points
 from full_universe_analysis import compute_entry_exit_levels

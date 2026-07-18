@@ -21,7 +21,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, ".")
+# مسار مطلق (src/) بدل "." النسبي — "." اعتمد على أن CWD وقت التشغيل يبقى
+# src/ بالظبط، وده اتأكد إنه مش موثوق دايمًا (فشل فعليًا على GitHub Actions
+# Linux runner بـModuleNotFoundError لـyahoo_fetch رغم نجاحه محليًا على
+# Windows بنفس الاستدعاء بالظبط — راجع الفحص الفعلي 2026-07-18).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from astro_engine_1.feature_table import OUTPUT_ROOT, PREDICTION_HORIZONS_DAYS
 from yahoo_fetch import fetch_ohlc
