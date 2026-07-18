@@ -33,6 +33,12 @@ ALLOWLIST_PATH = Path(os.getenv("SAIRA_ALLOWLIST", API_ROOT.parent / "data" / "t
 ELIGIBILITY_CACHE_PATH = Path(os.getenv("SAIRA_ELIGIBILITY_CACHE",
                                         API_ROOT.parent / "runs" / "ticker_eligibility_cache.json"))
 
+# كاش تواريخ أول تداول (لا تأسيس الشركة) لكل رمز — يتراكم تدريجيًا في هذا
+# الملف مع كل استدعاء لـ /first_trade جديد، فيقلّل الاعتماد المتكرر على
+# yfinance لنفس الرمز (استعلام .info بطيء نسبيًا، ~1-2 ثانية لكل رمز).
+FIRST_TRADE_CACHE_PATH = Path(os.getenv("SAIRA_FIRST_TRADE_CACHE",
+                                        API_ROOT.parent / "runs" / "first_trade_cache.json"))
+
 HOST = os.getenv("SAIRA_HOST", "127.0.0.1")
 PORT = int(os.getenv("SAIRA_PORT", "8787"))
 
@@ -68,3 +74,25 @@ def load_eligible_tickers() -> set[str] | None:
     except (json.JSONDecodeError, OSError):
         return None
     return {t.upper() for t, entry in cache.items() if entry.get("status") == "eligible"}
+
+
+def load_first_trade_cache() -> dict[str, int]:
+    """{symbol: epoch_seconds} — فارغ لو الملف غير موجود بعد أو تالف."""
+    import json
+    if not FIRST_TRADE_CACHE_PATH.exists():
+        return {}
+    try:
+        return json.loads(FIRST_TRADE_CACHE_PATH.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def save_first_trade(symbol: str, epoch_seconds: int) -> None:
+    """يضيف/يحدّث رمزًا واحدًا في الكاش ويحفظه — عملية قراءة-تعديل-كتابة
+    بسيطة (الملف صغير، لا حاجة لقفل ملفات عبر عمليات متعددة هنا)."""
+    import json
+    cache = load_first_trade_cache()
+    cache[symbol.upper()] = int(epoch_seconds)
+    FIRST_TRADE_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    FIRST_TRADE_CACHE_PATH.write_text(
+        json.dumps(cache, ensure_ascii=False, indent=1), encoding="utf-8")

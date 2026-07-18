@@ -1,0 +1,132 @@
+name: AI Catch & Win — volatile-ticker predictions + trade plans
+
+# Fully cloud-based (no dependency on Abdo's local machine data): reads the
+# frozen volatile-ticker list committed at data/ai_catch_win_universe.csv
+# (refreshed every ~3 days from Abdo's own machine via
+# src/astro_engine_1/volatility_screen.py — see that file's docstring),
+# fetches fresh yfinance data for just those tickers, retrains the XGBoost
+# model fully each run (cheap here: public repo = unlimited free GitHub
+# Actions minutes, so a nightly full retrain costs nothing but time), predicts,
+# builds real entry/stop/target trade plans (astro_engine_1.ai_catch_win's
+# own _reorder_targets_by_ai_goal, guided but never invented from AI's
+# %target — see that function's docstring for why), and alerts Telegram +
+# email + commits a JSON the front end can read directly from
+# raw.githubusercontent.com (no saira-api endpoint — see ai_catch_win.py's
+# docstring for why: saira-api's single always-on 512MB machine can't afford
+# a live 200-ticker XGBoost retrain per request, and a second independent
+# GitHub Pages deploy step here would race daily-scan.yml's own deploy and
+# could clobber it, since neither is aware of the other's snapshot).
+#
+# Scheduled the same time as daily-scan.yml (13:00 UTC = 16:00 Cairo, 30 min
+# before the 16:30 Cairo / 9:30 AM ET US market open) so both land together.
+on:
+  schedule:
+    - cron: "0 13 * * *"
+  workflow_dispatch:
+    inputs:
+      n_tickers:
+        description: "Limit to first N tickers from the universe (blank = all 200)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  predict-and-alert:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install -r ../requirements.txt
+
+      # Skip the rest of the run entirely on weekends/US market holidays
+      # (Abdo's explicit request: "خلي التحليل والتقرير يتموا أيام التداول
+      # فقط") — pandas_market_calendars' real NYSE calendar, not just a
+      # Sat/Sun check, so Thanksgiving/Christmas/etc. are correctly skipped
+      # too. continue-on-error + checking steps.trading_day.outcome below
+      # (rather than letting this step's failure fail the whole job) is what
+      # lets every later step cleanly no-op instead of the run showing red.
+      - name: Check if today is a NYSE trading day
+        id: trading_day
+        continue-on-error: true
+        run: python astro_engine_1/is_trading_day.py
+
+      # TA-Lib is optional (feature_table.py degrades gracefully without it,
+      # falling back to lag/momentum features only) — never fails the run.
+      - name: Try installing TA-Lib (optional, non-fatal)
+        if: steps.trading_day.outcome == 'success'
+        continue-on-error: true
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential wget
+          wget -q https://github.com/ta-lib/ta-lib/releases/download/v0.6.4/ta-lib-0.6.4-src.tar.gz
+          tar -xzf ta-lib-0.6.4-src.tar.gz
+          cd ta-lib-0.6.4
+          ./configure --prefix=/usr
+          make
+          sudo make install
+          pip install TA-Lib
+
+      # Builds feature tables (no astrology, no natal-date gate — see
+      # feature_table.py's module docstring, section 9.18) for the committed
+      # universe, straight from fresh yfinance data — the local archive
+      # feature_table.py normally reads from only exists on Abdo's machine,
+      # so cloud_build_feature_tables.py is a same-logic, different-data-source
+      # twin used only in this cloud workflow.
+      - name: Build feature tables from live Yahoo data
+        if: steps.trading_day.outcome == 'success'
+        run: python astro_engine_1/cloud_build_feature_tables.py
+
+      - name: Train models (full retrain — free on this public repo)
+        if: steps.trading_day.outcome == 'success'
+        run: |
+          TICKERS=$(python -c "import pandas as pd; print(' '.join(pd.read_csv('../data/ai_catch_win_universe.csv')['ticker'].tolist()))")
+          python astro_engine_1/train_model.py daily $TICKERS
+
+      - name: Predict + build trade plans + send Telegram alert
+        if: steps.trading_day.outcome == 'success'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python astro_engine_1/ai_catch_win.py
+
+      - name: Commit results back to the repo
+        if: steps.trading_day.outcome == 'success'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ../runs/astro_engine_1/
+          git diff --cached --quiet || git commit -m "AI Catch & Win daily run $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git pull --rebase
+          git push
+
+      # Per Abdo's explicit instruction: this NEW tool's report goes to BOTH
+      # email and Telegram (the original daily-scan.yml report stays
+      # email-only, unchanged). Same Resend setup as daily-scan.yml — see
+      # that workflow's own comment for why Resend over Gmail SMTP.
+      - name: Build email summary HTML
+        if: steps.trading_day.outcome == 'success'
+        run: python astro_engine_1/ai_catch_win_email.py
+
+      - name: Email the AI Catch & Win summary
+        if: steps.trading_day.outcome == 'success'
+        run: |
+          BODY=$(cat ../runs/astro_engine_1/ai_catch_win_email.html | python3 -c "import sys, json; print(json.dumps(sys.stdin.read()))")
+          curl -fsS -X POST https://api.resend.com/emails \
+            -H "Authorization: Bearer ${{ secrets.RESEND_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"from\": \"Saira Trading Bot <onboarding@resend.dev>\",
+              \"to\": [\"aboooodymahdy@gmail.com\"],
+              \"subject\": \"AI Catch & Win — daily predictions ready\",
+              \"html\": $BODY
+            }"

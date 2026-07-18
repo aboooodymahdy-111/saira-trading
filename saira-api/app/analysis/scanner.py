@@ -242,11 +242,13 @@ def planetary_grid(df: pd.DataFrame, planet: str, center: str,
 
 # ---------------------------------------------------------------- شبكة الخطوط المترابطة
 # مجلد 1، ملاحظة 1: إذا أثّر خط تربيع كوكبٍ ما على السهم، تُرسم تلقائيًا
-# بقية خطوطه (تثليث/مقابلة). الزوايا الكلاسيكية الخمس فقط (سداسي مستثنى من
+# بقية خطوطه (تثليث/مقابلة). الزوايا الكلاسيكية الخمس (سداسي مستثنى من
 # القائمة الأساسية في الملاحظة الأصلية، لكنه مضاف هنا لأن star_levels()
 # نفسه يدعم 60° أصلًا في هذا المشروع — التناسق مع باقي الأدوات أولى من
-# الالتزام الحرفي بقائمة لم تستثنِه لسبب معلوم).
-ASPECT_ANGLES_DEG: tuple[float, ...] = (0.0, 60.0, 90.0, 120.0, 180.0)
+# الالتزام الحرفي بقائمة لم تستثنِه لسبب معلوم) + نصف السداسي 30° ونصف
+# التربيع 45° (زوايا ثانوية شائعة في التنجيم المالي لجان، أضعف تأثيرًا من
+# الخمسة الأساسية لكنها مفيدة لرصد نقاط توتر مبكرة).
+ASPECT_ANGLES_DEG: tuple[float, ...] = (0.0, 30.0, 45.0, 60.0, 90.0, 120.0, 180.0)
 
 
 def connected_lines(df: pd.DataFrame, planet: str, center: str,
@@ -315,4 +317,88 @@ def connected_lines(df: pd.DataFrame, planet: str, center: str,
         "anchor": {"t": anchor["t"], "price": anchor_price,
                    "lon": round(anchor_lon, 2)},
         "aspects": aspects,
+    }
+
+
+# ---------------------------------------------------------------- أكثر علاقات الكواكب تأثيرًا
+# اختبار مستقل عن scan_symbol (اللي يختبر كوكبًا واحدًا بمفرده): هنا نختبر
+# أزواج الكواكب معًا — لكل زوج ولكل زاوية في ASPECT_ANGLES_DEG، نحسب عدد
+# ارتكازات السوينج (قمم/قيعان) التي وقعت ضمن سماحية قريبة من لحظة تحقق تلك
+# الزاوية بين الكوكبين، مقابل ما هو متوقع بالصدفة على مدى عشوائي — فيعطي
+# ترتيبًا لأكثر العلاقات (زوج كوكبين + زاوية) ترافقًا مع انعكاسات فعلية.
+_ORB_INFLUENCE_DEG = 3.0
+
+
+def _pair_aspect_hits(times_all: list[int], lon_a: np.ndarray, lon_b: np.ndarray,
+                      deg: float, pivot_times: set[int], orb: float) -> tuple[int, int]:
+    """يعيد (عدد التطابقات مع ارتكاز فعلي، إجمالي مرات تحقق الزاوية)."""
+    sep = np.abs(np.vectorize(_wrap_delta)(lon_a - lon_b, 0.0))
+    # المسافة الزاوية بين الكوكبين (0-180) مقارنة بالزاوية المستهدفة، بمراعاة
+    # أن deg قد يكون أكبر من 180 (لن يحدث هنا لأن كل قيم ASPECT_ANGLES_DEG <= 180)
+    hit_mask = np.abs(sep - deg) <= orb
+    hit_idx = np.where(hit_mask)[0]
+    if len(hit_idx) == 0:
+        return 0, 0
+    total = len(hit_idx)
+    matched = 0
+    for i in hit_idx:
+        t = times_all[i]
+        # أقرب ارتكاز فعلي ضمن نافذة ±5 أيام من لحظة تحقق الزاوية
+        if any(abs(t - pt) <= 5 * 86400 for pt in pivot_times):
+            matched += 1
+    return matched, total
+
+
+def aspect_influence_scan(df: pd.DataFrame, top: int = 10) -> dict:
+    """يمسح كل أزواج الكواكب × كل الزوايا في ASPECT_ANGLES_DEG، ويرتبها
+    حسب نسبة تطابق تحقق الزاوية مع ارتكازات سوينج فعلية على السهم — إجابة
+    مباشرة على "أي علاقة كوكبية الأكثر تأثيرًا على هذا السهم تحديدًا"،
+    بعكس scan_symbol الذي يقيّم كل كوكب بمفرده بلا اعتبار لعلاقته بكوكب آخر.
+    """
+    sw = gann.swing_pivots(df, m=2)
+    pivots = sw["pivots"]
+    if len(pivots) < 5:
+        return {"error": f"ارتكازات غير كافية ({len(pivots)}/5)", "pairs": []}
+    pivot_times = {int(p["t"]) for p in pivots}
+
+    t_arr = df["t"].astype(int).to_numpy()
+    step = max(1, len(df) // 800)
+    times_all = t_arr[::step].tolist()
+
+    lon_cache: dict[tuple[str, str], np.ndarray] = {}
+
+    def lons_for(planet: str, center: str) -> np.ndarray | None:
+        key = (planet, center)
+        if key in lon_cache:
+            return lon_cache[key]
+        arr = _lon_series(planet, center, times_all)
+        lon_cache[key] = arr
+        return arr
+
+    all_planets = ("sun", "moon") + _PLANETS
+    results = []
+    for i, pa in enumerate(all_planets):
+        for pb in all_planets[i + 1:]:
+            for center in _CENTERS:
+                lon_a = lons_for(pa, center)
+                lon_b = lons_for(pb, center)
+                if lon_a is None or lon_b is None:
+                    continue
+                for deg in ASPECT_ANGLES_DEG:
+                    matched, total = _pair_aspect_hits(
+                        times_all, lon_a, lon_b, deg, pivot_times, _ORB_INFLUENCE_DEG)
+                    if total < 2:
+                        continue
+                    hit_rate = matched / total
+                    results.append({
+                        "planet_a": pa, "planet_b": pb, "center": center,
+                        "aspect_deg": deg, "occurrences": total,
+                        "matched_pivots": matched,
+                        "hit_rate": round(hit_rate, 3),
+                    })
+
+    results.sort(key=lambda r: (-r["hit_rate"], -r["occurrences"]))
+    return {
+        "pivots_analyzed": len(pivots),
+        "pairs": results[:top],
     }

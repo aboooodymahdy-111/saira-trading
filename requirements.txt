@@ -2,5 +2,14 @@ pandas
 numpy
 yfinance
 ephem
+scipy
+PyWavelets
+EMD-signal
+arch
+statsmodels
+scikit-learn
+xgboost
+lightgbm
+pandas_market_calendars
 pyswisseph
 requests

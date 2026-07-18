@@ -56,8 +56,8 @@
   .srv.off{color:var(--dn)}
 
   /* ===== Layout ===== */
-  .main{display:flex;height:calc(100% - 46px - 40px - 26px);min-height:260px}
-  .chart-wrap{flex:1;position:relative;direction:ltr;min-height:200px}
+  .main{display:flex;height:calc(100% - 46px - 40px - 26px);min-height:340px}
+  .chart-wrap{flex:1;position:relative;direction:ltr;min-height:280px}
   #chart{position:absolute;inset:0}
   .pick-hint{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--gold);color:#141414;padding:5px 14px;border-radius:20px;font-weight:600;font-size:12px;z-index:20;display:none;direction:rtl}
   .chart-corner-controls{position:absolute;bottom:26px;right:6px;z-index:20;display:flex;gap:4px}
@@ -78,6 +78,8 @@
   .row label{color:var(--muted);font-size:11.5px;min-width:76px}
   .row input[type=number],.row input[type=text]{background:var(--bg2);border:1px solid var(--line);border-radius:5px;padding:5px 8px;width:90px;font-family:var(--mono);direction:ltr;text-align:left}
   .row input[type=checkbox]{accent-color:var(--gold)}
+  .planet-check-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;flex-wrap:unset}
+  .planet-check-grid label{display:flex;align-items:center;gap:5px;min-width:auto;font-weight:400;cursor:pointer}
   .note{color:var(--muted);font-size:11px;line-height:1.7;background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin-bottom:10px}
   .lvl-list{font-family:var(--mono);font-size:11px;direction:ltr;text-align:left;max-height:180px;overflow-y:auto;border:1px solid var(--line);border-radius:6px;margin-top:8px}
   .lvl-list div{display:flex;justify-content:space-between;padding:4px 9px;border-bottom:1px solid var(--line)}
@@ -212,6 +214,7 @@
       <button class="tab on" data-p="pGann" data-i18n="tabFan">مروحة جان</button>
       <button class="tab" data-p="pSq9" data-i18n="tabSq9">مربع 9</button>
       <button class="tab" data-p="pRet" data-i18n="tabRet">الأثمان</button>
+      <button class="tab" data-p="pInd" data-i18n="tabInd">مؤشرات</button>
       <button class="tab" data-p="pSwing" data-i18n="tabSwing">سوينج</button>
       <button class="tab" data-p="pCyc" data-i18n="tabCyc">دورات</button>
       <button class="tab" data-p="pAstro" data-i18n="tabAstro">فلك</button>
@@ -226,7 +229,7 @@
       <h3 data-i18n="fanH3">مروحة جان</h3>
       <div class="note" data-i18n="fanNote">حدد نقطة ارتكاز (قاع أو قمة) بالنقر على الشارت، وستُرسم الزوايا 1×8 حتى 8×1. الزاوية الذهبية هي 1×1. أو استخدم "تلقائي" لاكتشاف آخر قمة وقاع ورسم مروحتين معًا.</div>
       <div class="row"><button class="btn" id="btnFanPick">🎯 <span data-i18n="fanPickBtn">تحديد الارتكاز بالنقر</span></button></div>
-      <div class="row"><label data-i18n="fanUnitLbl">المعايرة (نقطة/شمعة)</label><input type="number" id="fanUnit" step="0.001"><button class="btn small" id="fanAuto" data-i18n-title="fanAutoTitle" title="اكتشاف آخر قمة وقاع تلقائيًا ورسم مروحتين" data-i18n="autoBtn">تلقائي</button></div>
+      <div class="row"><label data-i18n="fanUnitLbl">المعايرة (نقطة/شمعة)</label><input type="number" id="fanUnit" step="0.001"><button class="btn small" id="fanAuto" data-i18n-title="fanAutoTitle" title="اكتشاف آخر قمة أو قاع تلقائيًا ورسم مروحة واحدة منه" data-i18n="autoBtn">تلقائي</button></div>
       <div class="row"><label data-i18n="dirLbl">الاتجاه</label>
         <select class="btn" id="fanDir"><option value="auto" data-i18n="dirAuto">تلقائي</option><option value="up" data-i18n="dirUp">من قاع (صاعدة)</option><option value="down" data-i18n="dirDown">من قمة (هابطة)</option></select>
       </div>
@@ -268,6 +271,20 @@
       <div class="lvl-list" id="retList"></div>
     </div>
 
+    <!-- Indicators -->
+    <div class="panel" id="pInd">
+      <h3 data-i18n="indH3">المتوسطات والمؤشرات</h3>
+      <div class="note" data-i18n="indNote">تُحسب دائمًا على الشموع المعروضة حاليًا على الشارت فقط (بعد إعادة التجميع للفريم الزمني والنطاق المرئي)، لا على كامل التاريخ — فتتحدث تلقائيًا مع أي تغيير في الفريم أو الرمز.</div>
+      <div class="row"><label data-i18n="indSmaLbl">SMA</label><input type="number" id="indSmaN" value="20" min="2" step="1" style="width:60px"><button class="btn small" id="indSmaAdd" data-i18n="indAddBtn">إضافة</button></div>
+      <div class="row"><label data-i18n="indEmaLbl">EMA</label><input type="number" id="indEmaN" value="50" min="2" step="1" style="width:60px"><button class="btn small" id="indEmaAdd" data-i18n="indAddBtn">إضافة</button></div>
+      <div class="lvl-list" id="indMaList"></div>
+      <div class="row"><label><input type="checkbox" id="indRsi"> RSI(14)</label></div>
+      <div class="row"><label><input type="checkbox" id="indMacd"> MACD(12,26,9)</label></div>
+      <div class="row"><label><input type="checkbox" id="indBb"> Bollinger(20,2)</label></div>
+      <div class="row"><label><input type="checkbox" id="indAdx"> ADX(14)</label></div>
+      <div class="row"><button class="btn small" id="indClear" data-i18n="clearAllBtn">مسح كل الطبقات</button></div>
+    </div>
+
     <!-- Swing -->
     <div class="panel" id="pSwing">
       <h3 data-i18n="swingH3">مخطط سوينج جان</h3>
@@ -298,17 +315,20 @@
     <div class="panel" id="pAstro">
       <h3 data-i18n="astroH3">الخطوط الكوكبية</h3>
       <div class="note" data-i18n="astroNote">مع الخادم: كل الكواكب بدقة VSOP87 (ephem) جيوسنتري أو هيليوسنتري، وفترات التراجع تُرسم متقطعة. بدون خادم: خط الشمس المحلي فقط.</div>
-      <div class="row"><label data-i18n="planetLbl">الكوكب</label>
-        <select class="btn" id="planetSel">
-          <option value="sun" data-i18n="plSun">الشمس</option><option value="moon" data-i18n="plMoon">القمر</option>
-          <option value="mercury" data-i18n="plMercury">عطارد</option><option value="venus" data-i18n="plVenus">الزهرة</option>
-          <option value="mars" data-i18n="plMars">المريخ</option><option value="jupiter" data-i18n="plJupiter">المشتري</option>
-          <option value="saturn" data-i18n="plSaturn">زحل</option><option value="uranus" data-i18n="plUranus">أورانوس</option>
-          <option value="neptune" data-i18n="plNeptune">نبتون</option><option value="pluto" data-i18n="plPluto">بلوتو</option>
-        </select>
-        <label style="min-width:auto" data-i18n="helioLbl">هيليو</label><input type="checkbox" id="helioChk">
+      <div class="note" data-i18n="planetMultiNote">فعّل مربعًا أو أكثر لرسم مسارات كواكب متعددة في نفس الوقت — كل كوكب بلونه المميز.</div>
+      <div class="row planet-check-grid" id="planetChecks">
+        <label><input type="checkbox" class="planet-cb" value="sun"><span style="color:#FFD54F">●</span> <span data-i18n="plSun">الشمس</span></label>
+        <label><input type="checkbox" class="planet-cb" value="moon"><span style="color:#B0BEC5">●</span> <span data-i18n="plMoon">القمر</span></label>
+        <label><input type="checkbox" class="planet-cb" value="mercury"><span style="color:#FFEB3B">●</span> <span data-i18n="plMercury">عطارد</span></label>
+        <label><input type="checkbox" class="planet-cb" value="venus"><span style="color:#F48FB1">●</span> <span data-i18n="plVenus">الزهرة</span></label>
+        <label><input type="checkbox" class="planet-cb" value="mars"><span style="color:#EF5350">●</span> <span data-i18n="plMars">المريخ</span></label>
+        <label><input type="checkbox" class="planet-cb" value="jupiter"><span style="color:#66BB6A">●</span> <span data-i18n="plJupiter">المشتري</span></label>
+        <label><input type="checkbox" class="planet-cb" value="saturn"><span style="color:#9E7B4F">●</span> <span data-i18n="plSaturn">زحل</span></label>
+        <label><input type="checkbox" class="planet-cb" value="uranus"><span style="color:#2979FF">●</span> <span data-i18n="plUranus">أورانوس</span></label>
+        <label><input type="checkbox" class="planet-cb" value="neptune"><span style="color:#26C6DA">●</span> <span data-i18n="plNeptune">نبتون</span></label>
+        <label><input type="checkbox" class="planet-cb" value="pluto"><span style="color:#7E57C2">●</span> <span data-i18n="plPluto">بلوتو</span></label>
       </div>
-      <div class="row"><label data-i18n="enableLinesLbl">تفعيل الخطوط</label><input type="checkbox" id="sunOn"></div>
+      <div class="row"><label style="min-width:auto" data-i18n="helioLbl">هيليو</label><input type="checkbox" id="helioChk"></div>
       <div class="row"><label data-i18n="pricePerDegLbl">سعر لكل درجة</label><input type="number" id="sunScale" step="0.0001"><button class="btn small" id="sunAuto" data-i18n="autoBtn">تلقائي</button></div>
       <div class="row"><label data-i18n="harmonicLbl">التوافقية</label>
         <select class="btn" id="sunHarm"><option value="360">360°</option><option value="180">180°</option><option value="90">90°</option></select>
@@ -341,6 +361,8 @@
       <div class="row"><label data-i18n="aspectTypeLbl">نوع العلاقة</label>
         <select class="btn" id="aspType">
           <option value="conjunction" data-i18n="aspConjunction">اقتران 0°</option>
+          <option value="semisextile" data-i18n="aspSemisextile">نصف سداسي 30°</option>
+          <option value="semisquare" data-i18n="aspSemisquare">نصف تربيع 45°</option>
           <option value="sextile" data-i18n="aspSextile">تسديس 60°</option>
           <option value="square" data-i18n="aspSquare">تربيع 90°</option>
           <option value="trine" data-i18n="aspTrine">تثليث 120°</option>
@@ -359,6 +381,11 @@
       <div class="row"><button class="btn gold small" id="scanRun" data-i18n="scanRunBtn">امسح كل الكواكب</button><button class="btn small" id="scanClear" data-i18n="scanClearBtn">مسح الخطوط</button></div>
       <div class="lvl-list" id="scanList" style="max-height:260px"></div>
       <div class="note" id="scanInfo" style="display:none"></div>
+
+      <h3 data-i18n="aspInfH3">أكثر العلاقات الكوكبية تأثيرًا</h3>
+      <div class="note" data-i18n="aspInfNote">يختبر كل زوج كواكب مع كل زاوية اتصال (0/30/45/60/90/120/180°) معًا — بعكس الماسح أعلاه الذي يقيّم كل كوكب بمفرده — ويرتبها حسب نسبة ترافقها مع ارتكازات سوينج فعلية تاريخيًا.</div>
+      <div class="row"><button class="btn gold small" id="aspInfRun" data-i18n="aspInfRunBtn">اختبر العلاقات</button></div>
+      <div class="lvl-list" id="aspInfList" style="max-height:220px"></div>
     </div>
 
     <!-- Confluence -->
@@ -436,12 +463,15 @@ const I18N={
     ctLine:'خط', ctArea:'مساحة', clearAllBtn:'مسح كل الطبقات', toolsBtn:'🛠 الأدوات',
     pickHint:'انقر على الشارت لتحديد نقطة الارتكاز',
     autoScaleBtn:'تلقائي', autoScaleTitle:'تحجيم تلقائي للسعر (Auto Scale)',
-    tabFan:'مروحة جان', tabSq9:'مربع 9', tabRet:'الأثمان', tabSwing:'سوينج',
+    tabFan:'مروحة جان', tabSq9:'مربع 9', tabRet:'الأثمان', tabInd:'مؤشرات', tabSwing:'سوينج',
     tabCyc:'دورات', tabAstro:'فلك', tabScan:'الماسح ⚛', tabConf:'التقاء',
     tabSquare:'موازنة/كسوف', tabSig:'إشارات',
+    indH3:'المتوسطات والمؤشرات',
+    indNote:'تُحسب دائمًا على الشموع المعروضة حاليًا على الشارت فقط (بعد إعادة التجميع للفريم الزمني والنطاق المرئي)، لا على كامل التاريخ — فتتحدث تلقائيًا مع أي تغيير في الفريم أو الرمز.',
+    indSmaLbl:'SMA', indEmaLbl:'EMA', indAddBtn:'إضافة',
     fanH3:'مروحة جان',
-    fanNote:'حدد نقطة ارتكاز (قاع أو قمة) بالنقر على الشارت، وستُرسم الزوايا 1×8 حتى 8×1. الزاوية الذهبية هي 1×1. أو استخدم "تلقائي" لاكتشاف آخر قمة وقاع ورسم مروحتين معًا.',
-    fanAutoTitle:'اكتشاف آخر قمة وقاع تلقائيًا ورسم مروحتين',
+    fanNote:'حدد نقطة ارتكاز (قاع أو قمة) بالنقر على الشارت، وستُرسم الزوايا 1×8 حتى 8×1. الزاوية الذهبية هي 1×1. أو استخدم "تلقائي" لاكتشاف آخر قمة أو قاع ورسم مروحة واحدة منه.',
+    fanAutoTitle:'اكتشاف آخر قمة أو قاع تلقائيًا ورسم مروحة واحدة منه',
     fanPickBtn:'تحديد الارتكاز بالنقر', fanUnitLbl:'المعايرة (نقطة/شمعة)', autoBtn:'تلقائي',
     dirLbl:'الاتجاه', dirAuto:'تلقائي', dirUp:'من قاع (صاعدة)', dirDown:'من قمة (هابطة)',
     fanClearBtn:'مسح المروحة',
@@ -466,6 +496,7 @@ const I18N={
     analyzeBtn:'تحليل', showProjLbl:'إظهار الإسقاط',
     astroH3:'الخطوط الكوكبية',
     astroNote:'مع الخادم: كل الكواكب بدقة VSOP87 (ephem) جيوسنتري أو هيليوسنتري، وفترات التراجع تُرسم متقطعة. بدون خادم: خط الشمس المحلي فقط.',
+    planetMultiNote:'فعّل مربعًا أو أكثر لرسم مسارات كواكب متعددة في نفس الوقت — كل كوكب بلونه المميز.',
     planetLbl:'الكوكب', plSun:'الشمس', plMoon:'القمر', plMercury:'عطارد', plVenus:'الزهرة',
     plMars:'المريخ', plJupiter:'المشتري', plSaturn:'زحل', plUranus:'أورانوس',
     plNeptune:'نبتون', plPluto:'بلوتو',
@@ -508,7 +539,8 @@ const I18N={
     planetALbl:'الكوكب الأول', planetBLbl:'الكوكب الثاني',
     modeTransit:'عبور', modeNatal:'ميلاد', natalDateLbl:'تاريخ الميلاد/IPO',
     aspectTypeLbl:'نوع العلاقة',
-    aspConjunction:'اقتران 0°', aspSextile:'تسديس 60°', aspSquare:'تربيع 90°',
+    aspConjunction:'اقتران 0°', aspSemisextile:'نصف سداسي 30°', aspSemisquare:'نصف تربيع 45°',
+    aspSextile:'تسديس 60°', aspSquare:'تربيع 90°',
     aspTrine:'تثليث 120°', aspOpposition:'مقابلة 180°',
     orbLbl:'السماحية (توافقية°)', aspRunBtn:'ابحث عن العلاقة',
     aspNeedNatalDate:'أدخل تاريخ الميلاد/IPO أولًا', aspSearching:'جارٍ البحث عن العلاقة...',
@@ -524,7 +556,10 @@ const I18N={
     anchorLabel:'ارتكاز عند', goldLineNote:'الخط الذهبي = الارتكاز نفسه.',
     gridDrawn:'رُسمت شبكة', gridFailed:'تعذر رسم الشبكة',
     connectedLabel:'شبكة مترابطة',
-    aspectsLegend:'ذهبي=قِران 0°، سماوي=سداسي 60°، أحمر=تربيع 90°، أخضر=تثليث 120°، بنفسجي=مقابلة 180°.',
+    aspInfH3:'أكثر العلاقات الكوكبية تأثيرًا',
+    aspInfNote:'يختبر كل زوج كواكب مع كل زاوية اتصال (0/30/45/60/90/120/180°) معًا — بعكس الماسح أعلاه الذي يقيّم كل كوكب بمفرده — ويرتبها حسب نسبة ترافقها مع ارتكازات سوينج فعلية تاريخيًا.',
+    aspInfRunBtn:'اختبر العلاقات',
+    aspectsLegend:'لونان لكل خط: الخط السميك المتقطع الطويل = لون الكوكب نفسه، والخط النقطي فوقه = نوع العلاقة (ذهبي=قِران، برتقالي=نصف سداسي/تربيع، أخضر فاتح=منسجم تسديس/تثليث، أحمر=متوتر تربيع/مقابلة).',
     connectedDrawn:'رُسمت الشبكة المترابطة', topCandidate:'أقوى مرشح',
     serverLost:'انقطع الخادم',
   },
@@ -536,12 +571,15 @@ const I18N={
     ctLine:'Line', ctArea:'Area', clearAllBtn:'Clear all layers', toolsBtn:'🛠 Tools',
     pickHint:'Click the chart to pick an anchor point',
     autoScaleBtn:'Auto', autoScaleTitle:'Auto Scale (fit price range automatically)',
-    tabFan:'Gann Fan', tabSq9:'Square of 9', tabRet:'Retracements', tabSwing:'Swing',
+    tabFan:'Gann Fan', tabSq9:'Square of 9', tabRet:'Retracements', tabInd:'Indicators', tabSwing:'Swing',
     tabCyc:'Cycles', tabAstro:'Astro', tabScan:'Scanner ⚛', tabConf:'Confluence',
     tabSquare:'Squaring/Eclipses', tabSig:'Signals',
+    indH3:'Moving Averages & Indicators',
+    indNote:'Always computed from the candles currently shown on the chart (after timeframe resampling), not the full history — updates automatically with any timeframe or symbol change.',
+    indSmaLbl:'SMA', indEmaLbl:'EMA', indAddBtn:'Add',
     fanH3:'Gann Fan',
-    fanNote:'Pick an anchor point (low or high) by clicking the chart — angles 1×8 through 8×1 will be drawn. 1×1 is the golden angle. Or use "Auto" to detect the last swing high/low and draw both fans at once.',
-    fanAutoTitle:'Auto-detect the last swing high/low and draw two fans',
+    fanNote:'Pick an anchor point (low or high) by clicking the chart — angles 1×8 through 8×1 will be drawn. 1×1 is the golden angle. Or use "Auto" to detect the last swing high/low and draw a single fan from it.',
+    fanAutoTitle:'Auto-detect the last swing high/low and draw a single fan from it',
     fanPickBtn:'Pick anchor by click', fanUnitLbl:'Scale (price/bar)', autoBtn:'Auto',
     dirLbl:'Direction', dirAuto:'Auto', dirUp:'From low (up)', dirDown:'From high (down)',
     fanClearBtn:'Clear fan',
@@ -566,6 +604,7 @@ const I18N={
     analyzeBtn:'Analyze', showProjLbl:'Show projection',
     astroH3:'Planetary lines',
     astroNote:'With server: every planet at VSOP87 (ephem) precision, geocentric or heliocentric, retrograde spans drawn dashed. Without server: local geocentric Sun line only.',
+    planetMultiNote:'Enable one or more checkboxes to plot several planetary paths at once — each in its own color.',
     planetLbl:'Planet', plSun:'Sun', plMoon:'Moon', plMercury:'Mercury', plVenus:'Venus',
     plMars:'Mars', plJupiter:'Jupiter', plSaturn:'Saturn', plUranus:'Uranus',
     plNeptune:'Neptune', plPluto:'Pluto',
@@ -608,7 +647,8 @@ const I18N={
     planetALbl:'First planet', planetBLbl:'Second planet',
     modeTransit:'Transit', modeNatal:'Natal', natalDateLbl:'Natal/IPO date',
     aspectTypeLbl:'Aspect type',
-    aspConjunction:'Conjunction 0°', aspSextile:'Sextile 60°', aspSquare:'Square 90°',
+    aspConjunction:'Conjunction 0°', aspSemisextile:'Semisextile 30°', aspSemisquare:'Semisquare 45°',
+    aspSextile:'Sextile 60°', aspSquare:'Square 90°',
     aspTrine:'Trine 120°', aspOpposition:'Opposition 180°',
     orbLbl:'Orb (tolerance°)', aspRunBtn:'Find aspect',
     aspNeedNatalDate:'Enter the natal/IPO date first', aspSearching:'Searching for the aspect...',
@@ -624,7 +664,10 @@ const I18N={
     anchorLabel:'anchor at', goldLineNote:'The gold line is the anchor itself.',
     gridDrawn:'Grid drawn for', gridFailed:'Could not draw grid',
     connectedLabel:'Connected network',
-    aspectsLegend:'Gold=conjunction 0°, cyan=sextile 60°, red=square 90°, green=trine 120°, violet=opposition 180°.',
+    aspInfH3:'Most influential planetary relationships',
+    aspInfNote:'Tests every planet pair against every aspect angle (0/30/45/60/90/120/180°) together — unlike the scanner above which rates each planet alone — and ranks them by how often they coincide with actual historical swing pivots.',
+    aspInfRunBtn:'Test relationships',
+    aspectsLegend:'Two colors per line: the thick large-dashed line is the planet\'s own color, the dotted overlay is the aspect kind (gold=conjunction, orange=semisextile/semisquare, light green=harmonious sextile/trine, red=tense square/opposition).',
     connectedDrawn:'Connected network drawn for', topCandidate:'Top candidate',
     serverLost:'Server connection lost',
   },
@@ -653,6 +696,31 @@ function applyI18n(){
 }
 function t(key){return I18N[LANG][key]||I18N.ar[key]||key;}
 
+// ألوان الكواكب — مستوحاة من دلالاتها الفلكية الرمزية التقليدية (لا اعتباطية)
+// كي يسهل التمييز البصري بين خطوط المسار المتعددة ورؤوس الاتصالات على الشارت.
+const PLANET_COLORS={
+  sun:'#FFD54F',      // ذهبي حيوي — طاقة/ذات
+  moon:'#B0BEC5',     // فضي — عاطفة/غريزة
+  mercury:'#FFEB3B',  // أصفر — عملات/ذهب/تجارة
+  venus:'#F48FB1',    // وردي — جمال/حب
+  mars:'#EF5350',     // أحمر — طاقة/صراع
+  jupiter:'#66BB6A',  // أخضر شجري — زراعة/تنمية
+  saturn:'#9E7B4F',   // بني — انضباط/بنية تحتية
+  uranus:'#2979FF',   // أزرق زاهٍ — كهرباء/اختراعات
+  neptune:'#26C6DA',  // فيروزي — بحار/خيال
+  pluto:'#7E57C2',    // بنفسجي — تحول/أعماق
+};
+
+// لون نوع الاتصال (منسجم/متوتر/محايد) — مستقل عن لون الكوكب، يُرسم كطبقة
+// ثانية فوق خط الكوكب فيعطي تمييزًا مزدوجًا (أي كوكب + أي نوع علاقة).
+function ASPECT_KIND_COLOR(deg){
+  if(deg===0)return'#E0B341';                 // اقتران — محايد ذهبي
+  if(deg===60||deg===120)return'#66FF99';      // منسجم (تسديس/تثليث) — أخضر فاتح
+  if(deg===90||deg===180)return'#FF5252';      // متوتر (تربيع/مقابلة) — أحمر
+  if(deg===30||deg===45)return'#FFA726';       // توتر خفيف (نصف سداسي/نصف تربيع) — برتقالي
+  return'#9C8CF8';
+}
+
 /* ================= State ================= */
 const S={
   raw:[],            // base bars [{t,o,h,l,c,v}]
@@ -665,12 +733,13 @@ const S={
   ret:{levels:[],lines:[]},
   swing:{on:false,series:null,markers:[]},
   cyc:{series:null,cycles:[]},
-  sun:{on:false,series:[],scale:null},
+  sun:{planets:[],series:{},scale:null}, // planets: قائمة الكواكب المفعّلة عبر checkboxes؛ series: {planet: [line,...]}
   sig:{raw:[],markers:[]},
   sqr:{markers:[]},
   ecl:{markers:[]},
   mt:{markers:[]},
   asp:{markers:[]},
+  ind:{sma:[],ema:[],rsiOn:false,macdOn:false,bbOn:false,adxOn:false,series:[],rsiSeries:null,macdSeries:[],adxSeries:[]},
   autoCal:null, // نتيجة /gann/auto_calibrate الأخيرة — يُستخدم من المروحة/مربع9/144/النجمة
   allowedSymbols:[], // كل الرموز المسموحة من آخر /symbols — أساس فلترة مربع البحث محليًا
   pick:null,
@@ -752,8 +821,9 @@ function render(){
   redrawPriceLines();
   if(S.fan.pivot) redrawFans();
   if(S.swing.on) drawSwing();
-  if(S.sun.on) drawSun();
+  if(S.sun.planets.length) drawSun();
   if(S.cyc.cycles.length && $('cycOverlay').checked) drawCycOverlay();
+  if(indActive()) drawIndicators();
   updateStatus();
 }
 
@@ -970,10 +1040,9 @@ function drawFan(rebuild){
   const inf=$('fanInfo');inf.style.display='block';
   inf.innerHTML=fanInfoLine(P,bestFanName);
 }
-// إعادة رسم أي مروحة/مروحتين قائمتين حاليًا (مثلًا بعد تغيير المعايرة يدويًا).
+// إعادة رسم المروحة القائمة حاليًا (مثلًا بعد تغيير المعايرة يدويًا).
 function redrawFans(){
-  if(S.fan.pivot2){drawFanAuto(false);}
-  else{drawFan(false);}
+  drawFan(false);
 }
 // يكتشف آخر قمة وآخر قاع سوينج تلقائيًا (نفس خوارزمية كاشف السوينج في
 // تبويب "سوينج") ويرسم مروحتين: واحدة صاعدة من آخر قاع، وأخرى هابطة من
@@ -1003,21 +1072,18 @@ function detectSwingPivots(m){
   return pts;
 }
 async function drawFanAuto(runCalibration){
+  // نقطة ارتكاز واحدة فقط — آخر قمة/قاع سوينج أيًا كان الأحدث زمنيًا (بدل
+  // رسم مروحتين من القمة والقاع معًا)، مطابقةً للطريقة الأصلية قبل إضافة
+  // "المروحة المزدوجة".
   const m=+($('swingBars')&&$('swingBars').value)||5;
   const pts=detectSwingPivots(m);
   if(!pts.length){toast('لا توجد بيانات كافية لاكتشاف قمة/قاع');return;}
-  const lastTop=[...pts].reverse().find(p=>p.type==='top');
-  const lastBottom=[...pts].reverse().find(p=>p.type==='bottom');
-  if(!lastTop||!lastBottom){toast('لم يُعثر على قمة وقاع كافيين');return;}
-  S.fan.pivot={time:lastBottom.time,price:lastBottom.value,isLow:true};
-  S.fan.pivot2={time:lastTop.time,price:lastTop.value,isLow:false};
+  const last=pts[pts.length-1];
+  S.fan.pivot={time:last.time,price:last.value,isLow:last.type==='bottom'};
+  S.fan.pivot2=null;
   if(runCalibration!==false&&API.live&&S.serverSym)await runAutoCalibration();
-  clearFan(false);
-  const n1=drawFanFrom(S.fan.pivot);
-  const n2=drawFanFrom(S.fan.pivot2);
-  const inf=$('fanInfo');inf.style.display='block';
-  inf.innerHTML=fanInfoLine(S.fan.pivot,n1)+'<br>'+fanInfoLine(S.fan.pivot2,n2);
-  toast('رُسمت مروحتان تلقائيًا: من آخر قاع وآخر قمة');
+  drawFan(false);
+  toast('رُسمت المروحة تلقائيًا من آخر '+(S.fan.pivot.isLow?'قاع':'قمة'));
 }
 
 /* ================= المعايرة التلقائية الحقيقية =================
@@ -1160,6 +1226,205 @@ function drawSwing(){
   inf.textContent='عدد الارتكازات: '+(pts.length-1)+' — الاتجاه الحالي: '+(dir>=0?'صاعد':'هابط');
 }
 
+/* ================= Indicators =================
+   تُحسب محليًا في المتصفح على S.bars (الشموع المُعاد تجميعها للفريم الزمني
+   الحالي فقط)، لا عبر الخادم على كامل التاريخ — فأي تغيير في الفريم الزمني
+   أو الرمز يعيد حسابها تلقائيًا ضمن دورة render() العادية دون أي منطق إضافي
+   لتتبع "النطاق المرئي". */
+function smaSeries(vals,n){
+  const out=new Array(vals.length).fill(null);
+  let sum=0;
+  for(let i=0;i<vals.length;i++){
+    sum+=vals[i];
+    if(i>=n)sum-=vals[i-n];
+    if(i>=n-1)out[i]=sum/n;
+  }
+  return out;
+}
+function emaSeries(vals,n){
+  const out=new Array(vals.length).fill(null);
+  const k=2/(n+1);let prev=null;
+  for(let i=0;i<vals.length;i++){
+    if(i<n-1)continue;
+    if(prev==null){
+      let sum=0;for(let j=i-n+1;j<=i;j++)sum+=vals[j];
+      prev=sum/n;
+    }else{
+      prev=vals[i]*k+prev*(1-k);
+    }
+    out[i]=prev;
+  }
+  return out;
+}
+function rsiSeries(vals,n){
+  const out=new Array(vals.length).fill(null);
+  if(vals.length<n+1)return out;
+  let gain=0,loss=0;
+  for(let i=1;i<=n;i++){const d=vals[i]-vals[i-1];if(d>=0)gain+=d;else loss-=d;}
+  gain/=n;loss/=n;
+  out[n]=loss===0?100:100-100/(1+gain/loss);
+  for(let i=n+1;i<vals.length;i++){
+    const d=vals[i]-vals[i-1];
+    gain=(gain*(n-1)+Math.max(d,0))/n;
+    loss=(loss*(n-1)+Math.max(-d,0))/n;
+    out[i]=loss===0?100:100-100/(1+gain/loss);
+  }
+  return out;
+}
+function macdSeries(vals,fast,slow,signal){
+  const ef=emaSeries(vals,fast),es=emaSeries(vals,slow);
+  const line=vals.map((_,i)=>(ef[i]!=null&&es[i]!=null)?ef[i]-es[i]:null);
+  const lineVals=line.filter(v=>v!=null);
+  const sigCompact=emaSeries(lineVals,signal);
+  const sig=new Array(vals.length).fill(null);
+  let j=0;
+  for(let i=0;i<vals.length;i++){if(line[i]!=null){sig[i]=sigCompact[j];j++;}}
+  const hist=vals.map((_,i)=>(line[i]!=null&&sig[i]!=null)?line[i]-sig[i]:null);
+  return{line,sig,hist};
+}
+function bollingerSeries(vals,n,k){
+  const mid=smaSeries(vals,n);
+  const up=new Array(vals.length).fill(null),dn=new Array(vals.length).fill(null);
+  for(let i=n-1;i<vals.length;i++){
+    let sum=0;for(let j=i-n+1;j<=i;j++)sum+=(vals[j]-mid[i])**2;
+    const sd=Math.sqrt(sum/n);
+    up[i]=mid[i]+k*sd;dn[i]=mid[i]-k*sd;
+  }
+  return{mid,up,dn};
+}
+function adxSeries(bars,n){
+  const len=bars.length,out=new Array(len).fill(null);
+  if(len<n*2)return out;
+  const plusDM=new Array(len).fill(0),minusDM=new Array(len).fill(0),tr=new Array(len).fill(0);
+  for(let i=1;i<len;i++){
+    const up=bars[i].h-bars[i-1].h,dn=bars[i-1].l-bars[i].l;
+    plusDM[i]=(up>dn&&up>0)?up:0;
+    minusDM[i]=(dn>up&&dn>0)?dn:0;
+    tr[i]=Math.max(bars[i].h-bars[i].l,Math.abs(bars[i].h-bars[i-1].c),Math.abs(bars[i].l-bars[i-1].c));
+  }
+  const smooth=arr=>{
+    const s=new Array(len).fill(null);let acc=0;
+    for(let i=1;i<=n;i++)acc+=arr[i]||0;
+    s[n]=acc;
+    for(let i=n+1;i<len;i++)s[i]=s[i-1]-s[i-1]/n+arr[i];
+    return s;
+  };
+  const trS=smooth(tr),pdS=smooth(plusDM),mdS=smooth(minusDM);
+  const dx=new Array(len).fill(null);
+  for(let i=n;i<len;i++){
+    if(!trS[i])continue;
+    const pdi=100*pdS[i]/trS[i],mdi=100*mdS[i]/trS[i];
+    const sum=pdi+mdi;
+    dx[i]=sum?100*Math.abs(pdi-mdi)/sum:0;
+  }
+  let adxPrev=null;
+  for(let i=n;i<len;i++){
+    if(dx[i]==null)continue;
+    if(adxPrev==null){
+      const window=dx.slice(Math.max(0,i-n+1),i+1).filter(v=>v!=null);
+      if(window.length<n)continue;
+      adxPrev=window.reduce((a,b)=>a+b,0)/window.length;
+    }else{
+      adxPrev=(adxPrev*(n-1)+dx[i])/n;
+    }
+    out[i]=adxPrev;
+  }
+  return out;
+}
+function clearIndSeries(){
+  for(const s of S.ind.series)chart.removeSeries(s);
+  S.ind.series=[];
+  if(S.ind.rsiSeries){chart.removeSeries(S.ind.rsiSeries);S.ind.rsiSeries=null;}
+  for(const s of S.ind.macdSeries)chart.removeSeries(s);
+  S.ind.macdSeries=[];
+  for(const s of S.ind.adxSeries)chart.removeSeries(s);
+  S.ind.adxSeries=[];
+}
+const MA_COLORS=['#4FC3F7','#E0B341','#9C8CF8','#26A69A','#EF5350'];
+function renderIndMaList(){
+  const rows=S.ind.sma.map((n,i)=>`<div class="lvl-row">SMA${n}<button class="btn small" data-kind="sma" data-n="${n}">✕</button></div>`)
+    .concat(S.ind.ema.map((n,i)=>`<div class="lvl-row">EMA${n}<button class="btn small" data-kind="ema" data-n="${n}">✕</button></div>`));
+  $('indMaList').innerHTML=rows.join('');
+  $('indMaList').querySelectorAll('button').forEach(b=>{
+    b.onclick=()=>{
+      const n=+b.dataset.n;
+      if(b.dataset.kind==='sma')S.ind.sma=S.ind.sma.filter(x=>x!==n);
+      else S.ind.ema=S.ind.ema.filter(x=>x!==n);
+      drawIndicators();
+    };
+  });
+}
+function drawIndicators(){
+  clearIndSeries();
+  renderIndMaList();
+  const bars=S.bars;
+  if(!bars.length)return;
+  const closes=bars.map(b=>b.c);
+  let colorI=0;
+  for(const n of S.ind.sma){
+    const vals=smaSeries(closes,n);
+    const s=chart.addLineSeries({color:MA_COLORS[colorI++%MA_COLORS.length],lineWidth:2,priceLineVisible:false,lastValueVisible:true,crosshairMarkerVisible:false,title:'SMA'+n});
+    s.setData(bars.map((b,i)=>vals[i]!=null?{time:b.t,value:vals[i]}:null).filter(Boolean));
+    S.ind.series.push(s);
+  }
+  for(const n of S.ind.ema){
+    const vals=emaSeries(closes,n);
+    const s=chart.addLineSeries({color:MA_COLORS[colorI++%MA_COLORS.length],lineWidth:2,lineStyle:2,priceLineVisible:false,lastValueVisible:true,crosshairMarkerVisible:false,title:'EMA'+n});
+    s.setData(bars.map((b,i)=>vals[i]!=null?{time:b.t,value:vals[i]}:null).filter(Boolean));
+    S.ind.series.push(s);
+  }
+  if(S.ind.bbOn){
+    const bb=bollingerSeries(closes,20,2);
+    for(const[key,color]of[['up','rgba(124,138,160,.7)'],['mid','#E0B341'],['dn','rgba(124,138,160,.7)']]){
+      const s=chart.addLineSeries({color,lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+      s.setData(bars.map((b,i)=>bb[key][i]!=null?{time:b.t,value:bb[key][i]}:null).filter(Boolean));
+      S.ind.series.push(s);
+    }
+  }
+  if(S.ind.rsiOn){
+    const vals=rsiSeries(closes,14);
+    S.ind.rsiSeries=chart.addLineSeries({color:'#9C8CF8',lineWidth:2,priceScaleId:'ind-rsi',priceLineVisible:false,crosshairMarkerVisible:false,title:'RSI14'});
+    chart.priceScale('ind-rsi').applyOptions({scaleMargins:{top:0.78,bottom:0.02}});
+    S.ind.rsiSeries.setData(bars.map((b,i)=>vals[i]!=null?{time:b.t,value:vals[i]}:null).filter(Boolean));
+  }
+  if(S.ind.macdOn){
+    const m=macdSeries(closes,12,26,9);
+    const line=chart.addLineSeries({color:'#4FC3F7',lineWidth:2,priceScaleId:'ind-macd',priceLineVisible:false,crosshairMarkerVisible:false,title:'MACD'});
+    const sig=chart.addLineSeries({color:'#EF5350',lineWidth:1,priceScaleId:'ind-macd',priceLineVisible:false,crosshairMarkerVisible:false});
+    chart.priceScale('ind-macd').applyOptions({scaleMargins:{top:0.78,bottom:0.02}});
+    line.setData(bars.map((b,i)=>m.line[i]!=null?{time:b.t,value:m.line[i]}:null).filter(Boolean));
+    sig.setData(bars.map((b,i)=>m.sig[i]!=null?{time:b.t,value:m.sig[i]}:null).filter(Boolean));
+    S.ind.macdSeries.push(line,sig);
+  }
+  if(S.ind.adxOn){
+    const vals=adxSeries(bars,14);
+    const s=chart.addLineSeries({color:'#26A69A',lineWidth:2,priceScaleId:'ind-adx',priceLineVisible:false,crosshairMarkerVisible:false,title:'ADX14'});
+    chart.priceScale('ind-adx').applyOptions({scaleMargins:{top:0.78,bottom:0.02}});
+    s.setData(bars.map((b,i)=>vals[i]!=null?{time:b.t,value:vals[i]}:null).filter(Boolean));
+    S.ind.adxSeries.push(s);
+  }
+}
+function indActive(){return S.ind.sma.length||S.ind.ema.length||S.ind.rsiOn||S.ind.macdOn||S.ind.bbOn||S.ind.adxOn;}
+$('indSmaAdd').onclick=()=>{
+  const n=+$('indSmaN').value;if(!n||n<2)return;
+  if(!S.ind.sma.includes(n))S.ind.sma.push(n);
+  drawIndicators();
+};
+$('indEmaAdd').onclick=()=>{
+  const n=+$('indEmaN').value;if(!n||n<2)return;
+  if(!S.ind.ema.includes(n))S.ind.ema.push(n);
+  drawIndicators();
+};
+$('indRsi').onchange=e=>{S.ind.rsiOn=e.target.checked;drawIndicators();};
+$('indMacd').onchange=e=>{S.ind.macdOn=e.target.checked;drawIndicators();};
+$('indBb').onchange=e=>{S.ind.bbOn=e.target.checked;drawIndicators();};
+$('indAdx').onchange=e=>{S.ind.adxOn=e.target.checked;drawIndicators();};
+$('indClear').onclick=()=>{
+  S.ind.sma=[];S.ind.ema=[];S.ind.rsiOn=S.ind.macdOn=S.ind.bbOn=S.ind.adxOn=false;
+  $('indRsi').checked=$('indMacd').checked=$('indBb').checked=$('indAdx').checked=false;
+  drawIndicators();
+};
+
 /* ================= Cycles (DFT) ================= */
 $('cycRun').onclick=runCycles;
 $('cycClear').onclick=()=>clearCyc(true);
@@ -1215,80 +1480,99 @@ function sunLon(t){
   return lam<0?lam+360:lam;
 }
 const autoSunScale=()=>+(((maxHigh()-minLow())/540)||0.1).toPrecision(2);
-$('sunOn').onchange=e=>{S.sun.on=e.target.checked;S.sun.on?drawSun():clearSun();};
+function rgba(hex,a){
+  const h=hex.replace('#','');
+  const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+document.querySelectorAll('.planet-cb').forEach(cb=>{
+  cb.onchange=()=>{
+    const p=cb.value;
+    if(cb.checked){if(!S.sun.planets.includes(p))S.sun.planets.push(p);}
+    else S.sun.planets=S.sun.planets.filter(x=>x!==p);
+    drawSun();
+  };
+});
 $('sunAuto').onclick=async()=>{
-  const planet=$('planetSel').value,helio=$('helioChk').checked,center=helio?'helio':'geo';
-  // المعايرة الحقيقية: نتيجة الماسح الكوكبي الفعلية لهذا الكوكب تحديدًا
-  // (نسبة سعر/درجة الأكثر ثباتًا عبر ارتكازات السهم — نفس منهج
-  // scanner.py المُختبر) بدل تقريب (المدى÷540) القديم — فقط لو السيرفر
-  // متاح ونتيجة اختبار الانعكاس لهذا الكوكب موجودة فعلًا.
+  const helio=$('helioChk').checked,center=helio?'helio':'geo';
+  const planet=S.sun.planets[0]||'sun';
+  // المعايرة الحقيقية: نتيجة الماسح الكوكبي الفعلية لأول كوكب مفعّل (نسبة
+  // سعر/درجة الأكثر ثباتًا عبر ارتكازات السهم — نفس منهج scanner.py
+  // المُختبر) بدل تقريب (المدى÷540) القديم — فقط لو السيرفر متاح ونتيجة
+  // اختبار الانعكاس لهذا الكوكب موجودة فعلًا. القيمة تُطبَّق على كل
+  // الكواكب المفعّلة معًا (وحدة سعر/درجة مشتركة عبر الطبقات).
   if(needServer()){
     try{
-      // مسح كل الكواكب على تاريخ كامل عملية ثقيلة فعليًا (٢٠-٣٠ ثانية على
-      // أسهم طويلة التاريخ) — تحتاج مهلة أطول من مهلة الـ 6 ثوانٍ الافتراضية.
       const r=await API.get(`/scan/planets/${S.serverSym}?limit=3000&top=10`,45000);
       const match=(r.planets||[]).find(p=>p.planet===planet&&p.center===center);
       if(match&&match.reversal){
         $('sunScale').value=match.reversal.unit_price_median;
         toast(t('sunAutoMeasured')+' ('+t('hitRate')+' '+(match.reversal.confidence*100).toFixed(0)+'%)');
-        if(S.sun.on)drawSun();
+        drawSun();
         return;
       }
       toast(t('sunAutoNoMatch'));
     }catch(e){if(isConnError(e))setSrv(false);}
   }
   $('sunScale').value=autoSunScale();
-  if(S.sun.on)drawSun();
+  drawSun();
 };
-$('sunScale').onchange=()=>{if(S.sun.on)drawSun();};
-$('sunHarm').onchange=()=>{if(S.sun.on)drawSun();};
-$('planetSel').onchange=()=>{if(S.sun.on)drawSun();};
-$('helioChk').onchange=()=>{if(S.sun.on)drawSun();};
-function clearSun(){for(const s of S.sun.series){try{chart.removeSeries(s);}catch(e){}}S.sun.series=[];$('astroInfo').style.display='none';}
+$('sunScale').onchange=()=>drawSun();
+$('sunHarm').onchange=()=>drawSun();
+$('helioChk').onchange=()=>drawSun();
+function clearSun(){
+  for(const planet in S.sun.series)for(const s of S.sun.series[planet]){try{chart.removeSeries(s);}catch(e){}}
+  S.sun.series={};$('astroInfo').style.display='none';
+}
 
 async function drawSun(){
-  const planet=$('planetSel').value, helio=$('helioChk').checked;
-  let lons=null, retro=null, srvName='';
-  if(API.live){
-    try{
-      const step=Math.max(1,Math.round(barInterval()/86400))||1;
-      const r=await API.get(`/astro/longitudes/${planet}?t_start=${S.bars[0].t}&t_end=${S.bars[S.bars.length-1].t}&step_days=${step}&helio=${helio}`);
-      const map=new Map(r.series.map(x=>[x.t,x]));
-      // مطابقة أقرب نقطة لكل شمعة
-      const keys=r.series;
-      lons=[];retro=[];
-      let j=0;
-      for(const b of S.bars){
-        while(j<keys.length-1&&Math.abs(keys[j+1].t-b.t)<=Math.abs(keys[j].t-b.t))j++;
-        lons.push(keys[j].lon);retro.push(keys[j].retro);
-      }
-      srvName='الخادم · '+planet+(helio?' هيليو':' جيو');
-    }catch(e){if(isConnError(e))setSrv(false);lons=null;}
-  }
-  if(!lons){
-    if(planet!=='sun'||helio){toast('الخادم مطلوب لهذا الكوكب — محليًا الشمس الجيو فقط');$('sunOn').checked=false;S.sun.on=false;return;}
-    lons=S.bars.map(b=>sunLon(b.t));retro=S.bars.map(()=>false);srvName='محلي · الشمس';
-  }
   clearSun();
+  if(!S.sun.planets.length)return;
+  const helio=$('helioChk').checked;
   const c=+$('sunScale').value||autoSunScale();$('sunScale').value=c;
   const step=+$('sunHarm').value;
   const lo=minLow()*0.97,hi=maxHigh()*1.03;
   const kMin=Math.floor(lo/c/step)-1,kMax=Math.ceil(hi/c/step)+1;
-  let drawn=0;
-  for(let k=kMin;k<=kMax;k++){
-    let seg=[],segRetro=false;
-    const flush=()=>{if(seg.length>1){const s=chart.addLineSeries({color:segRetro?'rgba(239,83,80,.55)':'rgba(255,213,79,.55)',lineStyle:segRetro?LWC.LineStyle.Dashed:LWC.LineStyle.Solid,lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});s.setData(seg);S.sun.series.push(s);drawn++;}seg=[];};
-    let prev=null;
-    for(let i=0;i<S.bars.length;i++){
-      const p=(lons[i]+k*step)*c;
-      const isR=retro[i];
-      if(p<lo||p>hi||(prev!=null&&Math.abs(p-prev)>step*c/2)||(seg.length&&isR!==segRetro)){flush();prev=null;if(p<lo||p>hi)continue;}
-      segRetro=isR;seg.push({time:S.bars[i].t,value:p});prev=p;
+  const drawnNames=[];
+  for(const planet of S.sun.planets){
+    let lons=null,retro=null;
+    if(API.live){
+      try{
+        const step2=Math.max(1,Math.round(barInterval()/86400))||1;
+        const r=await API.get(`/astro/longitudes/${planet}?t_start=${S.bars[0].t}&t_end=${S.bars[S.bars.length-1].t}&step_days=${step2}&helio=${helio}`);
+        const keys=r.series;
+        lons=[];retro=[];
+        let j=0;
+        for(const b of S.bars){
+          while(j<keys.length-1&&Math.abs(keys[j+1].t-b.t)<=Math.abs(keys[j].t-b.t))j++;
+          lons.push(keys[j].lon);retro.push(keys[j].retro);
+        }
+      }catch(e){if(isConnError(e))setSrv(false);lons=null;}
     }
-    flush();
+    if(!lons){
+      if(planet!=='sun'||helio){toast('الخادم مطلوب لكوكب '+planet+' — محليًا الشمس الجيو فقط');continue;}
+      lons=S.bars.map(b=>sunLon(b.t));retro=S.bars.map(()=>false);
+    }
+    const color=PLANET_COLORS[planet]||'#E0B341';
+    const series=[];
+    for(let k=kMin;k<=kMax;k++){
+      let seg=[],segRetro=false;
+      const flush=()=>{if(seg.length>1){const s=chart.addLineSeries({color:segRetro?rgba(color,.4):rgba(color,.75),lineStyle:segRetro?LWC.LineStyle.Dashed:LWC.LineStyle.Solid,lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});s.setData(seg);series.push(s);}seg=[];};
+      let prev=null;
+      for(let i=0;i<S.bars.length;i++){
+        const p=(lons[i]+k*step)*c;
+        const isR=retro[i];
+        if(p<lo||p>hi||(prev!=null&&Math.abs(p-prev)>step*c/2)||(seg.length&&isR!==segRetro)){flush();prev=null;if(p<lo||p>hi)continue;}
+        segRetro=isR;seg.push({time:S.bars[i].t,value:p});prev=p;
+      }
+      flush();
+    }
+    S.sun.series[planet]=series;
+    if(series.length)drawnNames.push(planet);
   }
-  if(!drawn)toast('لا خطوط ضمن النطاق — عدّل "سعر لكل درجة"');
-  else{const inf=$('astroInfo');inf.style.display='block';inf.textContent=srvName+' — الأحمر المتقطع = تراجع';}
+  const inf=$('astroInfo');
+  if(!drawnNames.length){toast('لا خطوط ضمن النطاق — عدّل "سعر لكل درجة"');inf.style.display='none';}
+  else{inf.style.display='block';inf.textContent=(API.live?'الخادم':'محلي')+(helio?' هيليو':' جيو')+' · '+drawnNames.join(', ')+' — المتقطع الباهت = تراجع';}
 }
 
 /* ================= العلاقات الكوكبية (Aspects) ================= */
@@ -1387,17 +1671,23 @@ $('scanRun').onclick=async()=>{
         const p=r.planets[+btn.dataset.connected];
         if(!p.reversal){toast(t('noUnitFound'));return;}
         $('scanClear').onclick();
-        const ASPECT_COLORS={0:'#E0B341',60:'#4FC3F7',90:'#EF5350',120:'#26A69A',180:'#9C8CF8'};
         try{
           const g=await API.get(`/scan/connected/${S.serverSym}?planet=${p.planet}&center=${p.center}&unit_price=${p.reversal.unit_price_median}&n_lines=1`);
+          const planetColor=PLANET_COLORS[p.planet]||'#E0B341';
           for(const a of g.aspects){
-            const color=ASPECT_COLORS[a.deg]||'#E0B341';
+            const kindColor=ASPECT_KIND_COLOR(a.deg);
             for(const s of a.series){
               for(const seg of s.segments){
                 if(seg.length<2)continue;
-                const sr=chart.addLineSeries({color,lineWidth:a.deg===0?2:1,lineStyle:a.deg===0?LWC.LineStyle.Solid:LWC.LineStyle.Dashed,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
-                sr.setData(seg.map(pt=>({time:pt.t,value:pt.price})));
-                S.scan.series.push(sr);
+                const data=seg.map(pt=>({time:pt.t,value:pt.price}));
+                // لونان على نفس الخط: طبقة سفلية بلون الكوكب (متقطعة مسافات
+                // واسعة) وفوقها طبقة بلون نوع الاتصال (متقطعة مسافات أضيق) —
+                // بدل خط بلون واحد، يوضح فورًا أي كوكب وأي نوع علاقة معًا.
+                const base=chart.addLineSeries({color:planetColor,lineWidth:a.deg===0?3:2,lineStyle:LWC.LineStyle.LargeDashed,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+                base.setData(data);
+                const overlay=chart.addLineSeries({color:kindColor,lineWidth:a.deg===0?2:1,lineStyle:LWC.LineStyle.Dotted,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+                overlay.setData(data);
+                S.scan.series.push(base,overlay);
               }
             }
           }
@@ -1409,6 +1699,33 @@ $('scanRun').onclick=async()=>{
     });
     toast(t('topCandidate')+': '+(NAMES[r.planets[0].planet]||r.planets[0].planet)+' '+(r.planets[0].center==='helio'?t('helioLbl'):t('geoLbl'))+' ×'+r.planets[0].combined_confidence);
   }catch(e){if(isConnError(e))setSrv(false);$('scanList').innerHTML='';toast(t('serverLost'));}
+};
+
+/* ================= أكثر العلاقات الكوكبية تأثيرًا (أزواج × زوايا) ================= */
+$('aspInfRun').onclick=async()=>{
+  if(!needServer())return;
+  const NAMES={sun:'الشمس',moon:'القمر',mercury:'عطارد',venus:'الزهرة',mars:'المريخ',jupiter:'المشتري',saturn:'زحل',uranus:'أورانوس',neptune:'نبتون',pluto:'بلوتو'};
+  const ASPECT_NAMES={0:'اقتران',30:'نصف سداسي',45:'نصف تربيع',60:'تسديس',90:'تربيع',120:'تثليث',180:'مقابلة'};
+  $('aspInfList').innerHTML=`<div style="padding:10px;color:var(--muted)">جارٍ اختبار كل الأزواج — قد يستغرق دقيقة...</div>`;
+  try{
+    const r=await API.get(`/scan/aspect_influence/${S.serverSym}?limit=3000&top=12`,60000);
+    if(r.error){$('aspInfList').innerHTML=`<div style="padding:10px;color:var(--dn)">${r.error}</div>`;return;}
+    if(!r.pairs.length){$('aspInfList').innerHTML='';toast('لا نتائج كافية');return;}
+    $('aspInfList').innerHTML=r.pairs.map((p,i)=>{
+      const bar=Math.round(p.hit_rate*100);
+      return `<div style="padding:8px;border-bottom:1px solid var(--line);${i===0?'background:rgba(224,179,65,.08)':''}">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <b><span style="color:${PLANET_COLORS[p.planet_a]}">●</span> ${NAMES[p.planet_a]||p.planet_a} × <span style="color:${PLANET_COLORS[p.planet_b]}">●</span> ${NAMES[p.planet_b]||p.planet_b} — ${ASPECT_NAMES[p.aspect_deg]||p.aspect_deg+'°'}</b>
+          <span class="${i===0?'card':''}" style="font-family:var(--mono)">${bar}%</span>
+        </div>
+        <div style="height:4px;background:var(--line);border-radius:2px;margin-bottom:5px"><div style="height:100%;width:${bar}%;background:var(--gold);border-radius:2px"></div></div>
+        <div style="font-size:10.5px;color:var(--muted);font-family:var(--mono);direction:ltr;text-align:left">
+          ${p.center==='helio'?'هيليو':'جيو'} — ${p.matched_pivots}/${p.occurrences} تطابق مع ارتكازات فعلية
+        </div>
+      </div>`;
+    }).join('');
+    toast('أقوى علاقة: '+(NAMES[r.pairs[0].planet_a]||r.pairs[0].planet_a)+'×'+(NAMES[r.pairs[0].planet_b]||r.pairs[0].planet_b)+' '+(ASPECT_NAMES[r.pairs[0].aspect_deg]||''));
+  }catch(e){if(isConnError(e))setSrv(false);$('aspInfList').innerHTML='';toast(t('serverLost'));}
 };
 
 /* ================= Star / Sq144 / Confluence (خادم) ================= */
@@ -1653,12 +1970,15 @@ function clearAll(msg){
   removeAllPriceLines();S.sq9.levels=[];S.ret.levels=[];$('sq9List').innerHTML='';$('retList').innerHTML='';
   S.swing.on=false;$('swingOn').checked=false;clearSwing();
   clearCyc(false);
-  S.sun.on=false;$('sunOn').checked=false;clearSun();
+  S.sun.planets=[];document.querySelectorAll('.planet-cb').forEach(cb=>cb.checked=false);clearSun();
   S.sig.raw=[];S.sig.markers=[];
   S.sqr.markers=[];$('sqrList').innerHTML='';$('sqrInfo').style.display='none';
   S.ecl.markers=[];$('eclList').innerHTML='';
   S.mt.markers=[];$('mtList').innerHTML='';
   S.asp.markers=[];$('aspList').innerHTML='';
+  S.ind.sma=[];S.ind.ema=[];S.ind.rsiOn=S.ind.macdOn=S.ind.bbOn=S.ind.adxOn=false;
+  $('indRsi').checked=$('indMacd').checked=$('indBb').checked=$('indAdx').checked=false;
+  clearIndSeries();renderIndMaList();
   applyMarkers();
   if(msg)toast('تم مسح كل الطبقات');
 }
@@ -1754,13 +2074,23 @@ function pickSymSuggest(sym){
   $('symSearch').value=sym;
   renderSymOptions(sym);
   $('symSelect').value=sym;
+  symAutoLoaded=sym;
   loadSymbol(sym);
 }
+let symAutoLoaded=''; // آخر رمز فُتح تلقائيًا أثناء الكتابة — يمنع إعادة تحميله بكل ضغطة حرف تالية
 $('symSearch').addEventListener('input',()=>{
   const list=renderSymOptions($('symSearch').value);
   const q=$('symSearch').value.trim();
-  if(!q){closeSymSuggest();return;}
+  if(!q){closeSymSuggest();symAutoLoaded='';return;}
   renderSymSuggest(list);
+  // فتح تلقائي بمجرد مطابقة رمز محلي كامل — بلا حاجة لـ Enter أو نقر، تمامًا
+  // كسلوك منصات التداول المعتادة؛ القائمة المنسدلة تبقى متاحة أيضًا للاختيار
+  // اليدوي عند عدم التأكد من الرمز الكامل.
+  const exact=S.allowedSymbols.find(s=>s.symbol.toUpperCase()===q.toUpperCase()||s.symbol.split('.')[0].toUpperCase()===q.toUpperCase());
+  if(exact&&exact.symbol!==symAutoLoaded){
+    symAutoLoaded=exact.symbol;
+    loadSymbol(exact.symbol);
+  }
 });
 $('symSearch').addEventListener('keydown',e=>{
   const opts=[...symSuggestEl.querySelectorAll('.opt')];
@@ -1875,9 +2205,23 @@ async function loadSymbol(sym){
     render();
     $('fanUnit').value=autoUnit();$('sq9Price').value=fmt(minLow());$('sunScale').value=autoSunScale();
     toast(sym+' — '+r.bars.length+' شمعة من الخادم');
+    fetchFirstTradeDate(sym);
   }catch(e){
     setSrv(false);toast('انقطع الاتصال بالخادم');
   }
+}
+// يملأ حقل "تاريخ الميلاد/IPO" تلقائيًا بأول يوم تداول فعلي للرمز (لا تاريخ
+// تأسيس الشركة) من yfinance عند اختيار سهم — فقط لو الحقل فارغ، كي لا يُلغي
+// تاريخًا أدخله المستخدم يدويًا لغرض آخر (كميلاد شخصي بدل IPO مثلًا).
+async function fetchFirstTradeDate(sym){
+  if(!API.live||$('aspNatalDate').value)return;
+  try{
+    const r=await API.get(`/first_trade/${encodeURIComponent(sym)}`,10000);
+    if(r.first_trade_t){
+      const d=new Date(r.first_trade_t*1000);
+      $('aspNatalDate').value=d.toISOString().slice(0,10);
+    }
+  }catch(e){/* غير حرج — الحقل يبقى فارغًا لإدخال يدوي */}
 }
 $('symSelect').onchange=e=>loadSymbol(e.target.value);
 

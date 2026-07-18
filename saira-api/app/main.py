@@ -13,7 +13,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import pipeline_bridge
 from .analysis import gann, indicators
-from .config import DATA_DIR, load_allowlist, load_eligible_tickers
+from .config import (DATA_DIR, load_allowlist, load_eligible_tickers,
+                     load_first_trade_cache, save_first_trade)
 from .data import store
 
 app = FastAPI(
@@ -132,6 +133,37 @@ def refresh(symbol: str, period: str = "3mo"):
     except Exception as exc:
         raise HTTPException(502, f"فشل الجلب: {exc}")
     return {"symbol": symbol.upper(), "rows": n}
+
+
+@app.get("/first_trade/{symbol}")
+def first_trade(symbol: str):
+    """تاريخ أول يوم تداول فعلي للرمز (من yfinance's firstTradeDateMilliseconds
+    — وهو أول تداول للتيكر نفسه على السوق، وليس تاريخ تأسيس الشركة، فيتغيّر
+    مع الاندماج/الانفصال/الطرح الثانوي كما هو مطلوب هنا) — يُستخدم كتاريخ
+    ميلاد افتراضي مقترح للحسابات الفلكية (aspects الميلادية).
+
+    يُخزَّن في runs/first_trade_cache.json بعد أول جلب ناجح — استعلامات
+    yfinance's .info بطيئة نسبيًا (~1-2 ثانية) فلا داعي لتكرارها لنفس الرمز.
+    """
+    symbol_upper = symbol.upper()
+    cache = load_first_trade_cache()
+    if symbol_upper in cache:
+        return {"symbol": symbol_upper, "first_trade_t": cache[symbol_upper], "cached": True}
+    try:
+        import yfinance as yf
+    except ImportError:
+        raise HTTPException(501, "ثبّت yfinance أولًا: pip install yfinance")
+    ticker = symbol.split(".")[0]
+    try:
+        info = yf.Ticker(ticker).info
+    except Exception as exc:
+        raise HTTPException(502, f"فشل الجلب من yfinance: {exc}")
+    ms = info.get("firstTradeDateMilliseconds")
+    if ms is None:
+        raise HTTPException(404, "لا يتوفر تاريخ أول تداول لهذا الرمز عبر yfinance")
+    t = int(ms // 1000)
+    save_first_trade(symbol_upper, t)
+    return {"symbol": symbol_upper, "first_trade_t": t, "cached": False}
 
 
 # ---------------------------------------------------------------- شموع ومؤشرات
@@ -450,3 +482,14 @@ def scan_connected(symbol: str, planet: str, center: str, unit_price: float,
         return scanner.connected_lines(df, planet, center, unit_price, n_lines)
     except ValueError as exc:
         raise HTTPException(400, str(exc))
+
+
+@app.get("/scan/aspect_influence/{symbol}")
+def scan_aspect_influence(symbol: str, tf: str = "D", limit: int = 5000, top: int = 10):
+    """يختبر كل أزواج الكواكب × كل زوايا الاتصال (0/30/45/60/90/120/180)
+    معًا — بعكس /scan/planets الذي يقيّم كل كوكب بمفرده — ويرتب أكثر
+    العلاقات (زوج كوكبين + زاوية) ترافقًا مع ارتكازات سوينج فعلية."""
+    import pandas as pd
+    df = pd.DataFrame(_need_symbol(symbol, tf, limit))
+    return {"symbol": symbol.upper(), "tf": tf,
+            **scanner.aspect_influence_scan(df, top)}

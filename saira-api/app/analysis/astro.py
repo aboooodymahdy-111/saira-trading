@@ -154,11 +154,13 @@ def eclipses(t_start: float, t_end: float) -> list[dict]:
 # سماحية من التسديس مثلًا، لأن تأثيرهما أقوى وأبطأ حركة نسبيًا حول الزاوية
 # المضبوطة). المستخدم يقدر يغيّر السماحية صراحة عبر orb_deg في الطلب.
 ASPECTS: dict[str, dict] = {
-    "conjunction": {"angle": 0.0, "orb": 8.0, "ar": "اقتران"},
-    "sextile":     {"angle": 60.0, "orb": 4.0, "ar": "تسديس"},
-    "square":      {"angle": 90.0, "orb": 6.0, "ar": "تربيع"},
-    "trine":       {"angle": 120.0, "orb": 6.0, "ar": "تثليث"},
-    "opposition":  {"angle": 180.0, "orb": 8.0, "ar": "مقابلة"},
+    "conjunction":  {"angle": 0.0, "orb": 8.0, "ar": "اقتران"},
+    "semisextile":  {"angle": 30.0, "orb": 2.0, "ar": "نصف سداسي"},
+    "semisquare":   {"angle": 45.0, "orb": 2.0, "ar": "نصف تربيع"},
+    "sextile":      {"angle": 60.0, "orb": 4.0, "ar": "تسديس"},
+    "square":       {"angle": 90.0, "orb": 6.0, "ar": "تربيع"},
+    "trine":        {"angle": 120.0, "orb": 6.0, "ar": "تثليث"},
+    "opposition":   {"angle": 180.0, "orb": 8.0, "ar": "مقابلة"},
 }
 
 
