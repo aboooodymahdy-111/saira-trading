@@ -17,11 +17,11 @@ name: AI Catch & Win — volatile-ticker predictions + trade plans
 # GitHub Pages deploy step here would race daily-scan.yml's own deploy and
 # could clobber it, since neither is aware of the other's snapshot).
 #
-# Scheduled the same time as daily-scan.yml (13:00 UTC = 16:00 Cairo, 30 min
-# before the 16:30 Cairo / 9:30 AM ET US market open) so both land together.
+# Scheduled 2 hours before daily-scan.yml (11:00 UTC = 14:00 Cairo, 2.5 hours
+# before the 16:30 Cairo / 9:30 AM ET US market open) at Abdo's request.
 on:
   schedule:
-    - cron: "0 13 * * *"
+    - cron: "0 11 * * *"
   workflow_dispatch:
     inputs:
       n_tickers:
