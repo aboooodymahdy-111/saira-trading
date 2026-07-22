@@ -21,6 +21,15 @@ ARCHIVE_DIR = Path("../runs/ai_catch_win_engine/archive")
 
 DIRECTION_TRUST_THRESHOLD = 55.0
 
+# نفس الـ10 أعمدة المعروضة في جدول الإيميل بالظبط — طلب عبده صريح 2026-07-21:
+# "مش حابب اخلص المساحة المتاحة على GitHub" + "التقرير بيبعت تفاصيل ما تهمنيش"
+# — الملف الكامل (كل الـ36 عمود من ai_catch_win_latest.csv) كان بيتكرر في كل
+# صف من الـ200 سهم × الأرشيف اليومي، بلا داعي. Excel المرفَق والأرشيف دلوقتي
+# بنفس أعمدة HTML بالضبط، لا أكتر.
+REPORT_COLUMNS = ["ticker", "current_price", "h1_calibrated_pct_change", "h1_direction_accuracy",
+                   "entry_price", "stop_loss_price", "ai_t_price", "t1_price",
+                   "t2_price", "target3_plus_price"]
+
 
 def _fmt(value) -> str:
     if pd.isna(value):
@@ -53,9 +62,9 @@ def build_html(top_n: int = 15) -> str:
           <td>{direction_acc if direction_acc is not None else '—'}%</td>
           <td>{_fmt_dollar(r.get('entry_price'))}</td>
           <td>{_fmt_dollar(r.get('stop_loss_price'))}</td>
-          <td>{_fmt_dollar(r.get('exit_price'))}</td>
-          <td>{_fmt_dollar(r.get('target2_price'))}</td>
-          <td>{_fmt_dollar(r.get('target3_price'))}</td>
+          <td>{_fmt_dollar(r.get('ai_t_price'))}</td>
+          <td>{_fmt_dollar(r.get('t1_price'))}</td>
+          <td>{_fmt_dollar(r.get('t2_price'))}</td>
           <td>{_fmt_dollar(r.get('target3_plus_price'))}</td>
         </tr>""")
 
@@ -67,7 +76,7 @@ def build_html(top_n: int = 15) -> str:
       <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-size: 13px;">
         <tr style="background:#f0f0f0;">
           <th>السهم</th><th>السعر الحالي</th><th>ربح AI معايَر</th><th>ثقة الاتجاه</th>
-          <th>دخول</th><th>وقف خسارة</th><th>T1</th><th>T2</th><th>T3</th><th>T3+</th>
+          <th>دخول</th><th>وقف خسارة</th><th>AI T</th><th>T1</th><th>T2</th><th>ممتد</th>
         </tr>
         {table_rows}
       </table>
@@ -81,24 +90,48 @@ def build_html(top_n: int = 15) -> str:
 
 def build_excel() -> Path:
     """
-    ملف Excel كامل (كل الـ200 سهم، لا أعلى 15 بس زي HTML الإيميل) — طلب عبده
+    ملف Excel لكل الـ200 سهم (لا أعلى 15 بس زي HTML الإيميل) — طلب عبده
     2026-07-18: "لو حبيت أدور على توقع بخصوص سهم" — بحث/فلترة سهلة في Excel
     عادي بدل الرجوع لملف CSV خام. يُكتَب كنسخة "أحدث" + نسخة أرشيفية بالتاريخ.
+
+    **الأعمدة (تحديث 2026-07-21)**: نفس REPORT_COLUMNS بالظبط (10 أعمدة، مطابقة
+    لجدول HTML) — لا كل الـ36 عمود الخام. طلب عبده الصريح: تفاصيل زيادة
+    (RMSE-جانبية، أعمدة h5/h10/h20 غير المستخدَمة في القرار، إلخ) "ما تهمنيش"،
+    وبيضخّم حجم الأرشيف اليومي على GitHub بلا داعي حقيقي.
     """
     if not RESULTS_CSV.exists():
         raise FileNotFoundError(f"{RESULTS_CSV} غير موجود — شغّل ai_catch_win.py أولاً.")
 
     df = pd.read_csv(RESULTS_CSV)
     df = df.sort_values("h1_calibrated_pct_change", ascending=False, na_position="last")
+    df = df[[c for c in REPORT_COLUMNS if c in df.columns]]
 
     OUTPUT_XLSX.parent.mkdir(parents=True, exist_ok=True)
-    df.to_excel(OUTPUT_XLSX, index=False, sheet_name="AI Catch & Win")
+    _write_excel_with_autofilter(df, OUTPUT_XLSX)
 
     ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
     archive_path = ARCHIVE_DIR / f"ai_catch_win_{date.today().isoformat()}.xlsx"
-    df.to_excel(archive_path, index=False, sheet_name="AI Catch & Win")
+    _write_excel_with_autofilter(df, archive_path)
 
     return OUTPUT_XLSX
+
+
+def _write_excel_with_autofilter(df: pd.DataFrame, path: Path) -> None:
+    """
+    نفس df.to_excel العادي، لكن بإضافة AutoFilter (قوائم الفلترة/الفرز
+    المدمجة في Excel نفسه على كل عمود) — طلب عبده 2026-07-22: الصفوف بعد أي
+    فلترة يدوية في Excel كانت بتحافظ على ترتيبها الأصلي في الملف (الربح
+    تنازليًا، مضمون من sort_values فوق) لكن من غير أزرار فلترة/فرز جاهزة،
+    فالمستخدم كان مضطر يفتح "تصفية تلقائية مخصصة" يدويًا في كل مرة. AutoFilter
+    الرسمي بيدّي نفس القوائم المنسدلة القياسية (فرز تصاعدي/تنازلي + فلترة)
+    اللي أي مستخدم Excel متعوّد عليها، من غير ما يغيّر ترتيب الصفوف نفسه فعليًا
+    (يفضل الربح تنازليًا زي ما هو، الفلتر/الفرز اللي يطبّقه المستخدم لاحقًا
+    فوقه اختياري).
+    """
+    with pd.ExcelWriter(path, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="AI Catch & Win")
+        worksheet = writer.sheets["AI Catch & Win"]
+        worksheet.auto_filter.ref = worksheet.dimensions
 
 
 if __name__ == "__main__":
