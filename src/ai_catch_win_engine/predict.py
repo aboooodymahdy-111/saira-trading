@@ -23,6 +23,14 @@ ai_catch_win_engine/predict.py — أداة الاستخدام النهائية 
 غير موثوقة (حجم موثوق لاتجاه عشوائي بلا قيمة) — المعامل ما يُطبَّقش وقتها،
 ويظهر تحذير صريح بدل رقم مضلِّل.
 
+**المعايرة الحية (2026-07-19، إكمال طلب عبده "أداة تتعلم من تحقق الأهداف
+مع الوقت")**: `prediction_tracker.recompute_live_calibration()` تحسب معامل
+معايرة بديل من التوقعات المُقيَّمة الفعلية المتراكمة (لا test split وقت
+التدريب فقط) — أدق مع الوقت لأنه مبني على أداء حقيقي حي. لو متاح لتركيبة
+(سهم × هدف × أفق) معينة وعيّنته كافية (نفس MIN_LIVE_SAMPLES_FOR_RECALIBRATION
+بتاع prediction_tracker.py)، يُفضَّل على معامل التدريب الثابت؛ غير كده،
+معامل التدريب يبقى fallback كما كان.
+
 **تنبيه صريح غير قابل للحذف (طلب المشروع الثابت: preflight-checklist قبل
 أي تنفيذ حقيقي)**: هذا الملف **لا ينفّذ أي أمر شراء/بيع** — فقط يرتّب
 تنبؤات رقمية للمراجعة اليدوية، بنفس فلسفة full_universe_analysis.py و
@@ -40,10 +48,11 @@ import xgboost as xgb
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # مطلق، لا "." هش — راجع cloud_build_feature_tables.py
 
 from ai_catch_win_engine.feature_table import OUTPUT_ROOT, PREDICTION_HORIZONS_DAYS, build_feature_table
-from ai_catch_win_engine.prediction_tracker import log_predictions
+from ai_catch_win_engine.prediction_tracker import MIN_LIVE_SAMPLES_FOR_RECALIBRATION, log_predictions
 from ai_catch_win_engine.train_model import NON_FEATURE_COLUMNS
 
 TRAINING_RESULTS_PATH = Path("../runs/ai_catch_win_engine/model_training_results_daily.csv")
+LIVE_CALIBRATION_PATH = Path("../runs/ai_catch_win_engine/live_calibration.csv")
 
 RANK_BY_HORIZON = 1  # الأفق المُستخدَم للترتيب النهائي (h1 — الأثبت أداءً في كل التجارب)
 DIRECTION_TRUST_THRESHOLD = 55.0  # تحت ده، دقة الاتجاه قريبة جدًا من الصدفة (50%) — لا تُطبَّق المعايرة
@@ -73,6 +82,22 @@ def _load_historical_accuracy() -> pd.DataFrame:
     df = pd.read_csv(TRAINING_RESULTS_PATH)
     df = df[(df["skipped"] == False) & (df["overfit_ratio"] <= 3)]
     return df.loc[df.groupby(["ticker", "target"])["accuracy_within_2pct"].idxmax()]
+
+
+def _load_live_calibration() -> pd.DataFrame:
+    """معامل المعايرة الحي (راجع docstring الملف) لكل (ticker, target_kind,
+    horizon_days) بعيّنة كافية — فارغ لو الملف غير موجود بعد أو لا صفوف
+    عدّت عتبة العيّنة الدنيا (prediction_tracker.py لسه ما جمّعش تقييمات
+    كافية، طبيعي لميزة جديدة)."""
+    if not LIVE_CALIBRATION_PATH.exists():
+        return pd.DataFrame(columns=["ticker", "target_kind", "horizon_days",
+                                      "live_direction_accuracy", "live_magnitude_calibration_factor"])
+    try:
+        df = pd.read_csv(LIVE_CALIBRATION_PATH)
+    except pd.errors.EmptyDataError:
+        return pd.DataFrame(columns=["ticker", "target_kind", "horizon_days",
+                                      "live_direction_accuracy", "live_magnitude_calibration_factor"])
+    return df[df["n_correct_direction_live"] >= MIN_LIVE_SAMPLES_FOR_RECALIBRATION] if not df.empty else df
 
 
 def _fit_best_model(X: pd.DataFrame, y: pd.Series) -> xgb.XGBRegressor:
@@ -135,7 +160,8 @@ def _load_feature_table(ticker: str) -> pd.DataFrame | None:
 
 
 def predict_ticker_all_horizons(ticker: str, accuracy_table: pd.DataFrame,
-                                 target_kind: str = "high") -> dict | None:
+                                 target_kind: str = "high",
+                                 live_calibration: pd.DataFrame | None = None) -> dict | None:
     """
     يبني جدول ميزات كامل لـ`ticker` مرة واحدة، ثم يدرّب نموذجًا منفصلاً لكل
     أفق (h1/h5/h10/h20) على نفس target_kind (high/low/close)، ويرجّع صفًا
@@ -147,13 +173,30 @@ def predict_ticker_all_horizons(ticker: str, accuracy_table: pd.DataFrame,
 
     excluded = NON_FEATURE_COLUMNS | {f"target_{kind}_h{h}" for h in PREDICTION_HORIZONS_DAYS
                                        for kind in ("high", "low", "close")}
-    feature_cols = [c for c in df.columns if c not in excluded]
+    # XGBoost (نسخة حديثة) بيرفض أعمدة نصية بدون enable_categorical=True —
+    # استبعاد أي عمود object/string من الميزات (مش تعديل feature_table.py
+    # نفسها، فقط مدخل predict.py) بدل تحديد اسمين بعينهما.
+    non_numeric_cols = set(df.select_dtypes(exclude="number").columns)
+    feature_cols = [c for c in df.columns if c not in excluded and c not in non_numeric_cols]
     latest_row = df.iloc[[-1]]
     current_price = float(latest_row["close"].iloc[0])
+
+    # سيولة التداول (طلب عبده 2026-07-22: "فيه أسهم الـVolume فيها أقل من
+    # 100 ألف وأحيانًا أقل من 10 آلاف — طب لو اشتريته هضمن إزاي خروج في
+    # الميعاد؟") — متوسط حجم التداول لآخر 20 يوم (avg_volume_20d) هو مؤشر
+    # السيولة الحقيقي (حجم يوم واحد لوحده مضلِّل: قفزة/هبوط حاد ليوم واحد
+    # مش دليل سيولة مستمرة) — بيوضّح هل السهم أصلاً بيتداول بكمية كافية
+    # للدخول/الخروج بسعر قريب من المستويات المحسوبة بلا انزلاق سعري كبير،
+    # قبل ما يوصل لخطة الصفقة خالص. today_volume معروض جنبه للمرجعية فقط.
+    volume_ma20 = df["volume"].rolling(20).mean()
+    avg_volume_20d = float(volume_ma20.iloc[-1]) if pd.notna(volume_ma20.iloc[-1]) else None
+    today_volume = float(latest_row["volume"].iloc[0]) if pd.notna(latest_row["volume"].iloc[0]) else None
 
     result = {
         "ticker": ticker, "as_of_date": latest_row["date"].iloc[0],
         "current_price": round(current_price, 2),
+        "today_volume": int(today_volume) if today_volume is not None else None,
+        "avg_volume_20d": int(avg_volume_20d) if avg_volume_20d is not None else None,
     }
 
     for horizon in PREDICTION_HORIZONS_DAYS:
@@ -185,14 +228,30 @@ def predict_ticker_all_horizons(ticker: str, accuracy_table: pd.DataFrame,
         # به (فوق DIRECTION_TRUST_THRESHOLD)؛ غير كده، معايرة حجم على اتجاه
         # شبه عشوائي رقم مضلِّل، فيُترَك calibrated_pct_change = None صراحة
         # (لا تقريب صامت لقيمة غير موثوقة).
-        calib_factor = (
-            float(match["magnitude_calibration_factor"].iloc[0])
-            if not match.empty and pd.notna(match["magnitude_calibration_factor"].iloc[0]) else None
-        )
+        # المعامل الحي (لو متاح بعيّنة كافية لنفس التركيبة) يُفضَّل على معامل
+        # التدريب الثابت — أدق لأنه مبني على أداء فعلي متراكم، لا test split
+        # وقت التدريب فقط. غير كده، معامل التدريب fallback كالمعتاد.
+        calib_factor = None
+        calib_source = None
+        if live_calibration is not None and not live_calibration.empty:
+            live_match = live_calibration[
+                (live_calibration["ticker"] == ticker)
+                & (live_calibration["target_kind"] == target_kind)
+                & (live_calibration["horizon_days"] == horizon)
+            ]
+            if not live_match.empty and pd.notna(live_match["live_magnitude_calibration_factor"].iloc[0]):
+                calib_factor = float(live_match["live_magnitude_calibration_factor"].iloc[0])
+                calib_source = "live"
+        if calib_factor is None and not match.empty and pd.notna(match["magnitude_calibration_factor"].iloc[0]):
+            calib_factor = float(match["magnitude_calibration_factor"].iloc[0])
+            calib_source = "trained"
+
         if calib_factor is not None and dir_acc is not None and dir_acc >= DIRECTION_TRUST_THRESHOLD:
             result[f"h{horizon}_calibrated_pct_change"] = round(predicted_pct * calib_factor, 3)
+            result[f"h{horizon}_calibration_source"] = calib_source
         else:
             result[f"h{horizon}_calibrated_pct_change"] = None
+            result[f"h{horizon}_calibration_source"] = None
 
     return result
 
@@ -206,10 +265,11 @@ def rank_predictions(tickers: list[str], target_kind: str = "high") -> pd.DataFr
     للمراجعة اليدوية مع تحذيرها الصريح.
     """
     accuracy_table = _load_historical_accuracy()
+    live_calibration = _load_live_calibration()
 
     rows = []
     for ticker in tickers:
-        result = predict_ticker_all_horizons(ticker, accuracy_table, target_kind)
+        result = predict_ticker_all_horizons(ticker, accuracy_table, target_kind, live_calibration)
         if result is None:
             print(f"{ticker}: تخطّي (بيانات غير كافية)")
             continue
@@ -226,7 +286,9 @@ def rank_predictions(tickers: list[str], target_kind: str = "high") -> pd.DataFr
             elif calib_pct is None:
                 parts.append(f"h{h}: خام={pct:+.2f}% [تحذير: اتجاه~صدفة {dir_acc}%]، لا معايرة موثوقة")
             else:
-                parts.append(f"h{h}: معايَر={calib_pct:+.2f}% (خام={pct:+.2f}%، ±2%={acc2}% / "
+                src = result[f"h{h}_calibration_source"]
+                src_tag = "حي" if src == "live" else "تدريب"
+                parts.append(f"h{h}: معايَر({src_tag})={calib_pct:+.2f}% (خام={pct:+.2f}%، ±2%={acc2}% / "
                               f"±5%={acc5}% / اتجاه={dir_acc}%)")
         print(f"{ticker}: " + " | ".join(parts))
 

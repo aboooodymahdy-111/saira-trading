@@ -21,13 +21,18 @@ ARCHIVE_DIR = Path("../runs/ai_catch_win_engine/archive")
 
 DIRECTION_TRUST_THRESHOLD = 55.0
 
-# نفس الـ10 أعمدة المعروضة في جدول الإيميل بالظبط — طلب عبده صريح 2026-07-21:
+# نفس الأعمدة المعروضة في جدول الإيميل بالظبط — طلب عبده صريح 2026-07-21:
 # "مش حابب اخلص المساحة المتاحة على GitHub" + "التقرير بيبعت تفاصيل ما تهمنيش"
-# — الملف الكامل (كل الـ36 عمود من ai_catch_win_latest.csv) كان بيتكرر في كل
+# — الملف الكامل (كل الـ36+ عمود من ai_catch_win_latest.csv) كان بيتكرر في كل
 # صف من الـ200 سهم × الأرشيف اليومي، بلا داعي. Excel المرفَق والأرشيف دلوقتي
 # بنفس أعمدة HTML بالضبط، لا أكتر.
+#
+# avg_volume_20d (طلب عبده 2026-07-22): "فيه أسهم الـVolume فيها أقل من 100
+# ألف وأحيانًا أقل من 10 آلاف — طب لو اشتريته هضمن إزاي خروج في الميعاد؟" —
+# مؤشر سيولة صريح، متوسط 20 يوم لا حجم يوم واحد (يوم واحد وحده مضلِّل: قفزة/
+# هبوط حاد ليوم واحد مش دليل سيولة مستمرة).
 REPORT_COLUMNS = ["ticker", "current_price", "h1_calibrated_pct_change", "h1_direction_accuracy",
-                   "entry_price", "stop_loss_price", "ai_t_price", "t1_price",
+                   "avg_volume_20d", "entry_price", "stop_loss_price", "ai_t_price", "t1_price",
                    "t2_price", "target3_plus_price"]
 
 
@@ -40,6 +45,28 @@ def _fmt(value) -> str:
 def _fmt_dollar(value) -> str:
     formatted = _fmt(value)
     return "—" if formatted is None else f"${formatted}"
+
+
+# عتبة تحذير سيولة (طلب عبده 2026-07-22: أسهم بمتوسط حجم تداول أقل من 100
+# ألف، وأحيانًا أقل من 10 آلاف، قد لا يضمن خروج بالسعر المستهدَف في الميعاد
+# المتوقَّع — انزلاق سعري كبير محتمل عند محاولة بيع كمية أكبر من السيولة
+# اليومية المعتادة). لا يُستبعَد السهم، فقط يُعلَّم بصريًا للمراجعة اليدوية.
+LOW_LIQUIDITY_VOLUME_THRESHOLD = 100_000
+
+
+def _fmt_volume(value) -> str:
+    if pd.isna(value):
+        return "—"
+    value = float(value)
+    if value >= 1_000_000:
+        label = f"{value / 1_000_000:.1f}M"
+    elif value >= 1_000:
+        label = f"{value / 1_000:.0f}K"
+    else:
+        label = f"{value:.0f}"
+    if value < LOW_LIQUIDITY_VOLUME_THRESHOLD:
+        return f"⚠️ {label}"
+    return label
 
 
 def build_html(top_n: int = 15) -> str:
@@ -60,6 +87,7 @@ def build_html(top_n: int = 15) -> str:
           <td>{_fmt_dollar(r.get('current_price'))}</td>
           <td>{pct_change if pct_change is not None else '—'}%</td>
           <td>{direction_acc if direction_acc is not None else '—'}%</td>
+          <td>{_fmt_volume(r.get('avg_volume_20d'))}</td>
           <td>{_fmt_dollar(r.get('entry_price'))}</td>
           <td>{_fmt_dollar(r.get('stop_loss_price'))}</td>
           <td>{_fmt_dollar(r.get('ai_t_price'))}</td>
@@ -68,7 +96,7 @@ def build_html(top_n: int = 15) -> str:
           <td>{_fmt_dollar(r.get('target3_plus_price'))}</td>
         </tr>""")
 
-    table_rows = "".join(rows_html) if rows_html else "<tr><td colspan='10'>لا إشارات بثقة كافية اليوم.</td></tr>"
+    table_rows = "".join(rows_html) if rows_html else "<tr><td colspan='11'>لا إشارات بثقة كافية اليوم.</td></tr>"
 
     return f"""
     <div style="font-family: Arial, sans-serif;">
@@ -76,10 +104,15 @@ def build_html(top_n: int = 15) -> str:
       <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-size: 13px;">
         <tr style="background:#f0f0f0;">
           <th>السهم</th><th>السعر الحالي</th><th>ربح AI معايَر</th><th>ثقة الاتجاه</th>
+          <th>متوسط السيولة (20 يوم)</th>
           <th>دخول</th><th>وقف خسارة</th><th>AI T</th><th>T1</th><th>T2</th><th>ممتد</th>
         </tr>
         {table_rows}
       </table>
+      <p style="color:#888; font-size:12px;">
+        ⚠️ = متوسط سيولة أقل من {LOW_LIQUIDITY_VOLUME_THRESHOLD:,} سهم/يوم — احتمال انزلاق سعري
+        عند محاولة الخروج بحجم أكبر من السيولة المعتادة، راجع يدويًا قبل أي قرار.
+      </p>
       <p style="color:#888; font-size:12px;">
         للمراجعة اليدوية فقط — لا تنفيذ آلي لأي صفقة. الملف الكامل (كل
         الأسهم) مرفَق في هذا الإيميل كـExcel، ومحفوظ في أرشيف الريبو أيضًا.
