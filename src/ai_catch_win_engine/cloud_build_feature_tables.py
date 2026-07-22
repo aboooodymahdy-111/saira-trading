@@ -1,5 +1,5 @@
 """
-astro_engine_1/cloud_build_feature_tables.py — نسخة سحابية من feature_table.py
+ai_catch_win_engine/cloud_build_feature_tables.py — نسخة سحابية من feature_table.py
 لـai_catch_win.py's GitHub Actions workflow: تبني نفس جدول الميزات بالضبط
 (بلا فلك — راجع feature_table.py's docstring، القسم 9.18) لكن من yfinance
 مباشرة (`yahoo_fetch.fetch_ohlc`) بدل الأرشيف المحلي (`build_local_ticker_
@@ -27,7 +27,7 @@ import pandas as pd
 # Windows بنفس الاستدعاء بالظبط — راجع الفحص الفعلي 2026-07-18).
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from astro_engine_1.feature_table import OUTPUT_ROOT, PREDICTION_HORIZONS_DAYS
+from ai_catch_win_engine.feature_table import OUTPUT_ROOT, PREDICTION_HORIZONS_DAYS
 from yahoo_fetch import fetch_ohlc
 
 MIN_ROWS_REQUIRED = 120

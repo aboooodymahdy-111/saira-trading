@@ -1,9 +1,9 @@
 """
-astro_engine_1/ai_catch_win_email.py — يبني ملخّص HTML بسيط (أعلى 15 سهم،
+ai_catch_win_engine/ai_catch_win_email.py — يبني ملخّص HTML بسيط (أعلى 15 سهم،
 داخل الإيميل نفسه) + ملف Excel كامل (كل الـ200 سهم، مرفَق) من نتيجة
 ai_catch_win.py (ai_catch_win_latest.csv) — راجع .github/workflows/
 ai-catch-win.yml. الأرشيف: نسخة بتاريخ التشغيلة تُحفَظ في
-runs/astro_engine_1/archive/ (طلب عبده 2026-07-18: "نحتفظ بأرشيف في مكان ما
+runs/ai_catch_win_engine/archive/ (طلب عبده 2026-07-18: "نحتفظ بأرشيف في مكان ما
 زي ما عملنا في التقرير اليومي الآخر") — نفس مبدأ full_universe_analysis.py's
 ARCHIVE_DIR بالضبط، مجلد منفصل هنا فقط لعدم الخلط مع أرشيف التقرير القديم.
 """
@@ -14,10 +14,10 @@ from pathlib import Path
 
 import pandas as pd
 
-RESULTS_CSV = Path("../runs/astro_engine_1/ai_catch_win_latest.csv")
-OUTPUT_HTML = Path("../runs/astro_engine_1/ai_catch_win_email.html")
-OUTPUT_XLSX = Path("../runs/astro_engine_1/ai_catch_win_latest.xlsx")
-ARCHIVE_DIR = Path("../runs/astro_engine_1/archive")
+RESULTS_CSV = Path("../runs/ai_catch_win_engine/ai_catch_win_latest.csv")
+OUTPUT_HTML = Path("../runs/ai_catch_win_engine/ai_catch_win_email.html")
+OUTPUT_XLSX = Path("../runs/ai_catch_win_engine/ai_catch_win_latest.xlsx")
+ARCHIVE_DIR = Path("../runs/ai_catch_win_engine/archive")
 
 DIRECTION_TRUST_THRESHOLD = 55.0
 

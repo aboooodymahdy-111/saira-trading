@@ -1,5 +1,5 @@
 """
-astro_engine_1/aspect_index.py — مؤشر اتصالات يومي على طراز ZET9's AspGraphic
+ai_catch_win_engine/aspect_index.py — مؤشر اتصالات يومي على طراز ZET9's AspGraphic
 (راجع CLAUDE.md/ZET_AspGraphic_Methodology.md للمنهجية الأصلية المُشتقة عبر
 تحليل عكسي لمخرجات ZET9 الفعلية).
 
@@ -47,8 +47,8 @@ sys.path.insert(0, ".")
 from full_universe_analysis import build_local_ticker_index, load_local_history
 from gann_astrology import get_planet_longitude
 
-from astro_engine_1.birth_chart import compute_ascendant
-from astro_engine_1.natal_dates import NatalDateUnavailable, get_natal_date
+from ai_catch_win_engine.birth_chart import compute_ascendant
+from ai_catch_win_engine.natal_dates import NatalDateUnavailable, get_natal_date
 
 ASPECT_ORB_DEGREES = 3.0  # أورب أوسع قليلاً من ASPECT_ORB_DEGREES في gann_astrology.py (2.0)
                           # لأن المؤشر هنا يعتمد على "on/off" يومي واحد، لا تدرّج دقيق
@@ -249,7 +249,7 @@ if __name__ == "__main__":
     end_arg = _date.fromisoformat(sys.argv[4]) if len(sys.argv) > 4 else _date.today()
 
     from lab_stats import bonferroni_alpha
-    from astro_engine_1.planet_isolation import SLOW_PLANETS
+    from ai_catch_win_engine.planet_isolation import SLOW_PLANETS
     alpha = bonferroni_alpha(len(SLOW_PLANETS))
 
     try:

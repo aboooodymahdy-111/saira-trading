@@ -1,5 +1,5 @@
 """
-astro_engine_1/predict.py — أداة الاستخدام النهائية (طلب عبده 2026-07-18):
+ai_catch_win_engine/predict.py — أداة الاستخدام النهائية (طلب عبده 2026-07-18):
 "عند استخدامه سأطلب منه ترتيب النتائج من الأعلى ربحية متوقعة مع عرض نسبة
 الدقة... نفس الأمر مع h5, h10, h20... عمود للربح وآخر للدقة التاريخية".
 
@@ -39,11 +39,11 @@ import xgboost as xgb
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # مطلق، لا "." هش — راجع cloud_build_feature_tables.py
 
-from astro_engine_1.feature_table import OUTPUT_ROOT, PREDICTION_HORIZONS_DAYS, build_feature_table
-from astro_engine_1.prediction_tracker import log_predictions
-from astro_engine_1.train_model import NON_FEATURE_COLUMNS
+from ai_catch_win_engine.feature_table import OUTPUT_ROOT, PREDICTION_HORIZONS_DAYS, build_feature_table
+from ai_catch_win_engine.prediction_tracker import log_predictions
+from ai_catch_win_engine.train_model import NON_FEATURE_COLUMNS
 
-TRAINING_RESULTS_PATH = Path("../runs/astro_engine_1/model_training_results_daily.csv")
+TRAINING_RESULTS_PATH = Path("../runs/ai_catch_win_engine/model_training_results_daily.csv")
 
 RANK_BY_HORIZON = 1  # الأفق المُستخدَم للترتيب النهائي (h1 — الأثبت أداءً في كل التجارب)
 DIRECTION_TRUST_THRESHOLD = 55.0  # تحت ده، دقة الاتجاه قريبة جدًا من الصدفة (50%) — لا تُطبَّق المعايرة
@@ -109,7 +109,7 @@ def _fit_best_model(X: pd.DataFrame, y: pd.Series) -> xgb.XGBRegressor:
 
 def _load_feature_table(ticker: str) -> pd.DataFrame | None:
     """
-    يفضّل جدول ميزات مبني مسبقًا (runs/astro_engine_1/feature_tables/{ticker}.csv
+    يفضّل جدول ميزات مبني مسبقًا (runs/ai_catch_win_engine/feature_tables/{ticker}.csv
     — سواء بناه feature_table.py محليًا من الأرشيف المحلي، أو
     cloud_build_feature_tables.py سحابيًا من yfinance مباشرة، راجع ذلك الملف)
     بدل إعادة البناء الحي هنا. **لماذا**: build_feature_table الأصلية تعتمد
@@ -251,12 +251,12 @@ if __name__ == "__main__":
     else:
         # هدف عبده 2026-07-18: التركيز على الأسهم شديدة التقلب (راجع
         # volatility_screen.py) بدل عيّنة الـ10 أسهم الهادئة القديمة.
-        from astro_engine_1.volatility_screen import top_volatile_tickers
+        from ai_catch_win_engine.volatility_screen import top_volatile_tickers
         tickers_arg = top_volatile_tickers(20)
     ranked = rank_predictions(tickers_arg)
     print("\n=== الترتيب النهائي (من الأعلى ربحية معايَرة، أفق h1) ===")
     print(ranked.to_string(index=False))
 
-    out_path = Path("../runs/astro_engine_1/latest_predictions.csv")
+    out_path = Path("../runs/ai_catch_win_engine/latest_predictions.csv")
     ranked.to_csv(out_path, index=False)
     print(f"\nWrote ranked predictions to {out_path.resolve()}")

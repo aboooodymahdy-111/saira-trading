@@ -1,5 +1,5 @@
 """
-astro_engine_1/planet_isolation.py — يطبّق منهجية عبده الجديدة (2026-07):
+ai_catch_win_engine/planet_isolation.py — يطبّق منهجية عبده الجديدة (2026-07):
 لكل كوكب على حدة، بدل تفكيك EMD عشوائي، نبني نافذة تغطي 2-3 دورات كاملة لهذا
 الكوكب تحديدًا، ثم نبحث عن النوافذ ذات **أقل عدد اتصالات (أسبكتات) نشطة** مع
 باقي الكواكب — في هذه النوافذ تحديدًا، تأثير حركة الكوكب المفرد على السعر
@@ -63,9 +63,9 @@ sys.path.insert(0, ".")
 from full_universe_analysis import build_local_ticker_index, load_local_history
 from gann_astrology import ASPECT_TABLE, PLANET_CLASSES, get_planet_longitude
 
-from astro_engine_1.birth_chart import compute_ascendant
-from astro_engine_1.effect_size import fit_harmonic, permutation_test_harmonic, random_control_test_harmonic
-from astro_engine_1.known_cycles import SIDEREAL_PERIOD_DAYS
+from ai_catch_win_engine.birth_chart import compute_ascendant
+from ai_catch_win_engine.effect_size import fit_harmonic, permutation_test_harmonic, random_control_test_harmonic
+from ai_catch_win_engine.known_cycles import SIDEREAL_PERIOD_DAYS
 
 ISOLATION_ORB_DEGREES = 2.5  # "نقي" بالمعنى الصارم — راجع نقاش القرار مع عبده (orb ضيق ±2-3°)
 
@@ -187,7 +187,7 @@ def _natal_ascendant_for_ticker(ticker: str) -> float:
     natal_dates.get_natal_date (يرفع NatalDateUnavailable صراحة لو تعذّر
     الحصول على تاريخ حقيقي — لا رجوع صامت لتقريب الأرشيف بعد الآن).
     """
-    from astro_engine_1.natal_dates import get_natal_date
+    from ai_catch_win_engine.natal_dates import get_natal_date
     ipo_date = get_natal_date(ticker)
     return compute_ascendant(ipo_date).ascendant_longitude
 
@@ -221,7 +221,7 @@ def measure_window_effect(ticker: str, planet: str, window: LowDensityWindow,
     if len(win) < 30:
         return None
 
-    from astro_engine_1.natal_dates import NatalDateUnavailable
+    from ai_catch_win_engine.natal_dates import NatalDateUnavailable
     try:
         natal_ascendant = _natal_ascendant_for_ticker(ticker)
     except NatalDateUnavailable:
@@ -277,17 +277,17 @@ def run_planet_isolation_experiment(ticker: str, planet: str, n_windows: int = 5
     local_index = build_local_ticker_index()
     hist = load_local_history(ticker, local_index)
     if hist is None:
-        print(f"astro_engine_1: مفيش بيانات محلية لـ {ticker}.")
+        print(f"ai_catch_win_engine: مفيش بيانات محلية لـ {ticker}.")
         return []
 
     window_days = recommended_window_days(planet)
     history_start = hist.index[0].date()
     history_end = hist.index[-1].date()
     if (history_end - history_start).days < window_days:
-        print(f"astro_engine_1: تاريخ {ticker} أقصر من نافذة {planet} الموصى بها ({window_days} يوم).")
+        print(f"ai_catch_win_engine: تاريخ {ticker} أقصر من نافذة {planet} الموصى بها ({window_days} يوم).")
         return []
 
-    print(f"astro_engine_1: {ticker} × {planet} — نافذة {window_days} يوم (~2.5 دورة)، "
+    print(f"ai_catch_win_engine: {ticker} × {planet} — نافذة {window_days} يوم (~2.5 دورة)، "
           f"بحث عبر {history_start} إلى {history_end}")
 
     windows = find_lowest_density_windows(planet, history_start, history_end, window_days, n_windows)
@@ -319,6 +319,6 @@ if __name__ == "__main__":
 
     outcomes = run_planet_isolation_experiment(ticker_arg, planet_arg)
     if not outcomes:
-        print(f"\nastro_engine_1: مفيش نتائج لـ {ticker_arg} × {planet_arg}.")
+        print(f"\nai_catch_win_engine: مفيش نتائج لـ {ticker_arg} × {planet_arg}.")
     for outcome in outcomes:
         _print_isolation_result(outcome)

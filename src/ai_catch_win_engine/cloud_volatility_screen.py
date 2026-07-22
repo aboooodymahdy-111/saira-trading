@@ -1,5 +1,5 @@
 """
-astro_engine_1/cloud_volatility_screen.py — نفس فكرة volatility_screen.py لكن
+ai_catch_win_engine/cloud_volatility_screen.py — نفس فكرة volatility_screen.py لكن
 بيانات yfinance بدل الأرشيف المحلي (`LOCAL_MARKET_DATA_DIR` بتاع Abdo)،
 عشان يشتغل على GitHub Actions حيث الأرشيف المحلي مش متاح — طلب عبده صراحة:
 "متحدثهاش من جهازي خالص. ضيف خطوة الفلترة والجلب قبل التحليل على GH".
@@ -31,7 +31,7 @@ sys.path.insert(0, ".")
 from full_universe_analysis import load_ticker_universe
 from yahoo_fetch import fetch_ohlc
 
-OUTPUT_PATH = Path("../runs/astro_engine_1/cloud_volatility_rolling.csv")
+OUTPUT_PATH = Path("../runs/ai_catch_win_engine/cloud_volatility_rolling.csv")
 
 MIN_ROWS = 100           # yfinance rng="1y" ~250 صف لو توفّر كامل، هامش أقل تشددًا من النسخة المحلية
 MIN_PRICE = 1.0

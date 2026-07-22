@@ -1,11 +1,11 @@
 """
-astro_engine_1/correlation_weights.py — تعلّم من الارتباط (توجيه عبده
+ai_catch_win_engine/correlation_weights.py — تعلّم من الارتباط (توجيه عبده
 2026-07-18: "لو لم تنجح طريقة استخدم ما تم اثباته. اكمل بطريقة تعلم من
 الارتباط"). بدل معيار رفض/قبول ثنائي صارم (permutation+control+Bonferroni،
-المستخدَم في كل ملفات astro_engine_1 الأخرى)، هذا الملف يحسب **وزن استمراري**
+المستخدَم في كل ملفات ai_catch_win_engine الأخرى)، هذا الملف يحسب **وزن استمراري**
 لكل كوكب مع كل سهم من السجل المُثبَت فعليًا (القسم 9.11 من
 Astro_Wave_Decomposition_Methodology.md)، ثم يدمج كل الكواكب معًا في تنبؤ
-مرجّح واحد — خطوة انتقالية بين الإثبات الإحصائي الصارم (astro_engine_1
+مرجّح واحد — خطوة انتقالية بين الإثبات الإحصائي الصارم (ai_catch_win_engine
 الحالية) والنموذج الكامل (feature_table.py + ML مستقبلي).
 
 **الفكرة**: بدل "هل β معنوي إحصائيًا؟" (نعم/لا)، نسأل "كم وزن هذا الكوكب في
@@ -29,9 +29,9 @@ sys.path.insert(0, ".")
 from full_universe_analysis import build_local_ticker_index, load_local_history
 from gann_astrology import get_planet_longitude
 
-from astro_engine_1.birth_chart import compute_ascendant
-from astro_engine_1.effect_size import fit_harmonic
-from astro_engine_1.natal_dates import get_natal_date
+from ai_catch_win_engine.birth_chart import compute_ascendant
+from ai_catch_win_engine.effect_size import fit_harmonic
+from ai_catch_win_engine.natal_dates import get_natal_date
 
 # السجل المُثبَت (القسم 9.11 من الوثيقة المرجعية) — كل صف هو (سهم, كوكب)
 # عبر البوابات الإحصائية بنجاح فعلي موثّق، بأوزان β محسوبة سابقًا. يُستخدم
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     weights = build_weight_table()
     print(weights.to_string(index=False))
 
-    out_path = "../runs/astro_engine_1/proven_weights_20260718.csv"
+    out_path = "../runs/ai_catch_win_engine/proven_weights_20260718.csv"
     weights.to_csv(out_path, index=False)
     print(f"\nWrote weight table to {out_path}")
 

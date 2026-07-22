@@ -1,5 +1,5 @@
 """
-astro_engine_1/train_model.py — تدريب نموذج XGBoost على جداول الميزات
+ai_catch_win_engine/train_model.py — تدريب نموذج XGBoost على جداول الميزات
 (feature_table.py، بلا فلك بعد القسم 9.18 — راجع docstring ذلك الملف)،
 بهدف عبده الصريح: تنبؤ رقمي مباشر بسعر الغد (High/Low/Close)، لا تصنيف
 صعود/هبوط فقط — لكن **دقة الاتجاه تُقاس وتُعرَض دائمًا كمقياس مستقل**
@@ -45,13 +45,13 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 # نافذة تدريب مختلفة (بالأيام للنمط اليومي، بالساعات للساعي).
 FRAME_CONFIGS = {
     "daily": {
-        "dir": Path("../runs/astro_engine_1/feature_tables"),
+        "dir": Path("../runs/ai_catch_win_engine/feature_tables"),
         "date_col": "date",
         "horizons": [1, 5, 10, 20],
         "train_windows": {"full_history": None, "last_10y": 2520, "last_5y": 1260, "last_2y": 504},
     },
     "hourly": {
-        "dir": Path("../runs/astro_engine_1/feature_tables_hourly"),
+        "dir": Path("../runs/ai_catch_win_engine/feature_tables_hourly"),
         "date_col": "datetime_utc",
         "horizons": [1, 4, 8],
         # بيانات ساعية أقصر بكثير (~4900 صف إجمالي لـWMT) من اليومية —
@@ -276,7 +276,7 @@ def main(frame: str, tickers: list[str]) -> None:
                       f"دقة الاتجاه={dir_acc}%{dir_flag}")
 
     out_df = pd.DataFrame(rows)
-    out_path = Path(f"../runs/astro_engine_1/model_training_results_{frame}.csv")
+    out_path = Path(f"../runs/ai_catch_win_engine/model_training_results_{frame}.csv")
     out_df.to_csv(out_path, index=False)
     print(f"\nWrote training results to {out_path.resolve()}")
 

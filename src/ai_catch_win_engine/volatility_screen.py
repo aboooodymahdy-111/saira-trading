@@ -1,5 +1,5 @@
 """
-astro_engine_1/volatility_screen.py — فلترة كمية للأسهم "شديدة التقلب" من
+ai_catch_win_engine/volatility_screen.py — فلترة كمية للأسهم "شديدة التقلب" من
 الأرشيف المحلي (طلب عبده 2026-07-18: "أنا أستهدف الاسهم التي تتقلب بعنف").
 
 **لماذا فلترة كمية لا يدوية**: الـ8 أسهم اللي اتدرّب عليها النموذج قبل شوية
@@ -28,7 +28,7 @@ sys.path.insert(0, ".")
 
 from full_universe_analysis import build_local_ticker_index, load_local_history
 
-OUTPUT_PATH = Path("../runs/astro_engine_1/volatility_screen.csv")
+OUTPUT_PATH = Path("../runs/ai_catch_win_engine/volatility_screen.csv")
 
 MIN_ROWS = 250          # على الأقل سنة تداول تقريبًا من التاريخ
 MIN_PRICE = 1.0         # يستبعد penny stocks تحت الدولار (سبريد/سيولة رديئة تضخّم %التغيّر مصطنعًا)

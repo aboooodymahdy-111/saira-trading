@@ -1,5 +1,5 @@
 """
-astro_engine_1/isolation_batch_runner.py — يكرر planet_isolation.
+ai_catch_win_engine/isolation_batch_runner.py — يكرر planet_isolation.
 run_planet_isolation_experiment عبر عيّنة أسهم فعلية، لكوكب واحد محدد. بما أن
 النوافذ "الأنقى" (find_lowest_density_windows) مُحدَّدة بالكامل من مواقع
 الكواكب (مستقلة عن أي سهم)، تُحسب مرة واحدة فقط هنا وتُعاد استخدامها لكل
@@ -37,7 +37,7 @@ from ethical_screen import get_sector_and_industry
 from full_universe_analysis import build_local_ticker_index, load_local_history
 from lab_stats import bonferroni_alpha
 
-from astro_engine_1.planet_isolation import (
+from ai_catch_win_engine.planet_isolation import (
     SLOW_PLANETS,
     find_lowest_density_windows,
     measure_window_effect,
@@ -68,7 +68,7 @@ DIVERSIFIED_SAMPLE_TICKERS = [
 ]
 
 DEFAULT_SAMPLE_SIZE = len(DIVERSIFIED_SAMPLE_TICKERS)
-OUTPUT_ROOT = Path("../runs/astro_engine_1")
+OUTPUT_ROOT = Path("../runs/ai_catch_win_engine")
 
 
 def _diversified_tickers(local_index: dict, sample_size: int) -> list[str]:
@@ -89,7 +89,7 @@ def run_isolation_batch(planet: str, n_tickers: int = DEFAULT_SAMPLE_SIZE,
     search_start = date(1962, 1, 1)  # أقدم بيانات NYSE محلية معروفة تقريبًا
     search_end = date.today()
 
-    print(f"astro_engine_1 isolation batch: planet={planet}, {len(tickers)} تيكر "
+    print(f"ai_catch_win_engine isolation batch: planet={planet}, {len(tickers)} تيكر "
           f"(عيّنة يدوية متنوعة قطاعيًا)، نافذة={window_days} يوم, alpha={alpha:.5f}")
 
     windows = find_lowest_density_windows(planet, search_start, search_end, window_days, n_windows)

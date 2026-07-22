@@ -1,12 +1,12 @@
 """
-astro_engine_1/batch_runner.py — يكرر harness.run_mini_experiment عبر عيّنة
+ai_catch_win_engine/batch_runner.py — يكرر harness.run_mini_experiment عبر عيّنة
 أسهم فعلية من الداتا المحلية (بدل سهم واحد)، ويجمّع كل النتائج (الناجحة
 والفاشلة معًا — لا نتيجة سلبية تُخفى) في CSV واحد + ملخص.
 
 نفس منهجية lab.py: عيّنة عشوائية بـ seed ثابت (قابلة لإعادة الإنتاج بالضبط)،
-مخرجات مؤرشفة بالتوقيت الزمني تحت runs/astro_engine_1/.
+مخرجات مؤرشفة بالتوقيت الزمني تحت runs/ai_catch_win_engine/.
 
-تشغيل: `python -m astro_engine_1.batch_runner [n_tickers]` من مجلد src/.
+تشغيل: `python -m ai_catch_win_engine.batch_runner [n_tickers]` من مجلد src/.
 """
 from __future__ import annotations
 
@@ -22,11 +22,11 @@ sys.path.insert(0, ".")
 
 from full_universe_analysis import build_local_ticker_index
 
-from astro_engine_1.harness import _default_alpha, run_mini_experiment
+from ai_catch_win_engine.harness import _default_alpha, run_mini_experiment
 
 SAMPLE_SEED = 42
 DEFAULT_SAMPLE_SIZE = 50
-OUTPUT_ROOT = Path("../runs/astro_engine_1")
+OUTPUT_ROOT = Path("../runs/ai_catch_win_engine")
 
 
 def _sample_tickers(local_index: dict, sample_size: int, seed: int) -> list[str]:
@@ -47,7 +47,7 @@ def run_batch(n_tickers: int = DEFAULT_SAMPLE_SIZE) -> pd.DataFrame:
     tickers = _sample_tickers(local_index, n_tickers, SAMPLE_SEED)
     alpha = _default_alpha()
 
-    print(f"astro_engine_1 batch: {len(tickers)} تيكر (seed={SAMPLE_SEED}), "
+    print(f"ai_catch_win_engine batch: {len(tickers)} تيكر (seed={SAMPLE_SEED}), "
           f"alpha مُصحَّح بـ Bonferroni = {alpha:.6f}")
 
     rows: list[dict] = []

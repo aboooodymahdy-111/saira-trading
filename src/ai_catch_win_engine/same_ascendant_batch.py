@@ -1,5 +1,5 @@
 """
-astro_engine_1/same_ascendant_batch.py — تصميم اختبار مختلف تمامًا عن
+ai_catch_win_engine/same_ascendant_batch.py — تصميم اختبار مختلف تمامًا عن
 isolation_batch_runner.py، بتوجيه عبده الصريح (2026-07-18):
 
 بدل عيّنة أسهم بأطالع مختلفة (كما في isolation_batch_runner، حيث الهدف فصل
@@ -48,13 +48,13 @@ from full_universe_analysis import build_local_ticker_index, load_local_history
 from gann_astrology import get_planet_longitude
 from lab_stats import bonferroni_alpha
 
-from astro_engine_1.birth_chart import compute_ascendant
-from astro_engine_1.effect_size import (fit_harmonic, permutation_test_harmonic,
+from ai_catch_win_engine.birth_chart import compute_ascendant
+from ai_catch_win_engine.effect_size import (fit_harmonic, permutation_test_harmonic,
                                           random_control_test_harmonic)
-from astro_engine_1.natal_dates import filter_suspicious_natal_dates
-from astro_engine_1.planet_isolation import SLOW_PLANETS, recommended_window_days
+from ai_catch_win_engine.natal_dates import filter_suspicious_natal_dates
+from ai_catch_win_engine.planet_isolation import SLOW_PLANETS, recommended_window_days
 
-OUTPUT_ROOT = Path("../runs/astro_engine_1")
+OUTPUT_ROOT = Path("../runs/ai_catch_win_engine")
 
 # مرشحو العيّنة: القائمة المتنوعة قطاعيًا الأصلية + إضافات (شركات مُدرَجة بعد
 # 1970 من قطاعات لم تكن ممثَّلة كفاية، لزيادة فرصة إيجاد مجموعة برج كبيرة

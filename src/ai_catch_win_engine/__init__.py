@@ -1,5 +1,5 @@
 """
-astro_engine_1 — Astro Engine 1.0: بيئة اختبار مستقلة ضمن مجموعة lab_*.py،
+ai_catch_win_engine — Astro Engine 1.0: بيئة اختبار مستقلة ضمن مجموعة lab_*.py،
 تختبر فرضية "حجم الأثر الكوكبي" الموصوفة في
 CLAUDE.md/Astro_Wave_Decomposition_Methodology.md.
 

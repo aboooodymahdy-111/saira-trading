@@ -1,5 +1,5 @@
 """
-astro_engine_1/feature_table_hourly.py — نفس منهجية feature_table.py، لكن
+ai_catch_win_engine/feature_table_hourly.py — نفس منهجية feature_table.py، لكن
 على فريم **ساعي** بدل يومي (طلب عبده 2026-07-18: اختبار فريمات مختلفة).
 
 **تحديث 2026-07-18 (إزالة الفلك بالكامل)**: راجع القسم 9.18 من
@@ -7,7 +7,7 @@ Astro_Wave_Decomposition_Methodology.md و docstring feature_table.py —
 نفس القرار والسبب هنا (الفلك أُثبت أنه لا يحسّن الأداء، وأُسقط من الملفين
 معًا للاتساق).
 
-**مصدر البيانات**: astro_engine_1.hourly_data.load_hourly_history (دمج
+**مصدر البيانات**: ai_catch_win_engine.hourly_data.load_hourly_history (دمج
 محلي+yfinance، راجع docstring ذلك الملف لتفاصيل الفجوة الزمنية المعروفة
 بين المصدرين). **مدى محدود بطبيعة البيانات المتاحة** (~2022-11 حتى الآن،
 بفجوة ~10 أشهر) — أقصر بكثير من الفريم اليومي (feature_table.py يغطي عقودًا).
@@ -24,9 +24,9 @@ import pandas as pd
 
 sys.path.insert(0, ".")
 
-from astro_engine_1.hourly_data import load_hourly_history
+from ai_catch_win_engine.hourly_data import load_hourly_history
 
-OUTPUT_ROOT = Path("../runs/astro_engine_1/feature_tables_hourly")
+OUTPUT_ROOT = Path("../runs/ai_catch_win_engine/feature_tables_hourly")
 
 PREDICTION_HORIZONS_HOURS = [1, 4, 8]
 

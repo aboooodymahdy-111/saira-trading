@@ -1,5 +1,5 @@
 """
-astro_engine_1/harness.py — التجربة المصغّرة (قسم 7 من
+ai_catch_win_engine/harness.py — التجربة المصغّرة (قسم 7 من
 CLAUDE.md/Astro_Wave_Decomposition_Methodology.md): سهم واحد، IMF واحد (الأسرع/
 الأعلى طاقة)، اختبار الفرضية الجوهرية قبل بناء الـ pipeline الكامل بـ7 مراحل.
 
@@ -40,13 +40,13 @@ from lab_spectral_features import emd_decompose, fft_cycle_features, wavelet_den
 
 from lab_stats import bonferroni_alpha
 
-from astro_engine_1.effect_size import (
+from ai_catch_win_engine.effect_size import (
     check_harmonic_stability_split_half,
     permutation_test_harmonic,
     random_control_test_harmonic,
     fit_harmonic,
 )
-from astro_engine_1.known_cycles import CycleMatch, build_known_cycles_table, match_period_to_known_cycles
+from ai_catch_win_engine.known_cycles import CycleMatch, build_known_cycles_table, match_period_to_known_cycles
 
 DEFAULT_LOOKBACK = 252  # نفس lab_spectral_features.DEFAULT_LOOKBACK — سنة تداول تقريبًا
 
@@ -185,7 +185,7 @@ def run_mini_experiment(ticker: str, lookback: int = DEFAULT_LOOKBACK,
     local_index = build_local_ticker_index()
     hist = load_local_history(ticker, local_index)
     if hist is None or len(hist) < lookback + 10:
-        print(f"astro_engine_1: مفيش بيانات محلية كفاية لـ {ticker} "
+        print(f"ai_catch_win_engine: مفيش بيانات محلية كفاية لـ {ticker} "
               f"(محتاج {lookback + 10} صف على الأقل).")
         return []
 
@@ -194,7 +194,7 @@ def run_mini_experiment(ticker: str, lookback: int = DEFAULT_LOOKBACK,
 
     emd_result = emd_decompose(denoised)
     if emd_result.n_imfs < 1:
-        print(f"astro_engine_1: EMD مرجّعش أي IMF لـ {ticker}.")
+        print(f"ai_catch_win_engine: EMD مرجّعش أي IMF لـ {ticker}.")
         return []
 
     results: list[MiniExperimentResult] = []
@@ -207,7 +207,7 @@ def run_mini_experiment(ticker: str, lookback: int = DEFAULT_LOOKBACK,
         if result is not None:
             results.append(result)
         else:
-            print(f"astro_engine_1: {ticker} IMF #{i} — لا مطابقة فلكية ضمن هامش "
+            print(f"ai_catch_win_engine: {ticker} IMF #{i} — لا مطابقة فلكية ضمن هامش "
                   f"{max_period_error_pct}% أو بيانات غير كافية.")
 
     return results
@@ -233,6 +233,6 @@ if __name__ == "__main__":
     ticker_arg = sys.argv[1] if len(sys.argv) > 1 else "AAPL"
     outcomes = run_mini_experiment(ticker_arg)
     if not outcomes:
-        print(f"\nastro_engine_1: مفيش أي IMF لـ {ticker_arg} عنده مطابقة فلكية قابلة للاختبار.")
+        print(f"\nai_catch_win_engine: مفيش أي IMF لـ {ticker_arg} عنده مطابقة فلكية قابلة للاختبار.")
     for outcome in outcomes:
         _print_result(outcome)

@@ -1,9 +1,9 @@
 """
-astro_engine_1/test_ipo_seasonality.py — اختبار مخصص (توجيه عبده 2026-07-18):
+ai_catch_win_engine/test_ipo_seasonality.py — اختبار مخصص (توجيه عبده 2026-07-18):
 "هل وجود IPO يحدث فارق؟" — بمعنى: هل موسم/توقيت تاريخ الإدراج نفسه (لا أي
 حساب فلكي مشتق منه) يحمل إشارة تنبؤية، بمعزل عن الفلك تمامًا؟
 
-**لماذا هذا ملف منفصل، لا امتداد لـtrain_model.py**: كل تجارب astro_engine_1
+**لماذا هذا ملف منفصل، لا امتداد لـtrain_model.py**: كل تجارب ai_catch_win_engine
 الأخرى تدرّب نموذجًا **منفصلاً لكل سهم** — وهذا يجعل أي ميزة IPO ثابتة
 (مثل شهر الإدراج) عديمة الفائدة تمامًا (قيمة واحدة لا تتغيّر ضمن بيانات
 سهم واحد = صفر معلومة لأي نموذج). لاختبار "هل موسم IPO يفرّق فعليًا بين
@@ -31,13 +31,13 @@ from sklearn.metrics import mean_squared_error
 
 sys.path.insert(0, ".")
 
-from astro_engine_1.natal_dates import get_natal_date
-from astro_engine_1.train_model import FRAME_CONFIGS, NON_FEATURE_COLUMNS
+from ai_catch_win_engine.natal_dates import get_natal_date
+from ai_catch_win_engine.train_model import FRAME_CONFIGS, NON_FEATURE_COLUMNS
 
 TICKERS = ["AAL", "ADBE", "ALL", "AVB", "AVGO", "COST", "CSCO", "EBAY", "EQR",
            "ISRG", "LIN", "LUV", "MA", "NSC", "QCOM", "ROST", "SYY", "UNP", "VTR", "WMT"]
 TARGET = "target_high_h1"
-FEATURE_TABLES_DIR = Path("../runs/astro_engine_1/feature_tables")
+FEATURE_TABLES_DIR = Path("../runs/ai_catch_win_engine/feature_tables")
 
 
 def _load_pooled_data() -> pd.DataFrame:
@@ -130,7 +130,7 @@ def run_test() -> None:
         print(f"{name} (n={len(cols)}): RMSE={rmse:.4f}, acc±2%={acc2:.2f}%, acc±5%={acc5:.2f}%")
 
     out = pd.DataFrame(results)
-    out_path = Path("../runs/astro_engine_1/ipo_seasonality_test.csv")
+    out_path = Path("../runs/ai_catch_win_engine/ipo_seasonality_test.csv")
     out.to_csv(out_path, index=False)
     print(f"\nWrote results to {out_path.resolve()}")
 

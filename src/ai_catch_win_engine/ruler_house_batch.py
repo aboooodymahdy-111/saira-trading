@@ -1,5 +1,5 @@
 """
-astro_engine_1/ruler_house_batch.py — اختبار "الحاكم قوي البيت" (توجيه عبده
+ai_catch_win_engine/ruler_house_batch.py — اختبار "الحاكم قوي البيت" (توجيه عبده
 2026-07-18): بدل تثبيت برج الطالع (same_ascendant_batch.py)، هنا معيار
 الاختيار مستقل عن البرج تمامًا — أي سهم يكون **الكوكب الحاكم لبرج طالعه
 واقعًا فعليًا في البيت الأول أو العاشر** من خريطته (Equal House، راجع
@@ -38,22 +38,22 @@ from ethical_screen import get_sector_and_industry
 from full_universe_analysis import build_local_ticker_index, load_local_history
 from lab_stats import bonferroni_alpha
 
-from astro_engine_1.aspect_index import CLASSICAL_SEVEN, natal_longitudes_for_ticker
-from astro_engine_1.birth_chart import compute_ascendant, house_of_longitude
-from astro_engine_1.natal_dates import filter_suspicious_natal_dates
-from astro_engine_1.planet_isolation import SLOW_PLANETS, recommended_window_days
-from astro_engine_1.same_ascendant_batch import CANDIDATE_POOL, MANUALLY_EXCLUDED
-from astro_engine_1.effect_size import fit_harmonic, permutation_test_harmonic, random_control_test_harmonic
+from ai_catch_win_engine.aspect_index import CLASSICAL_SEVEN, natal_longitudes_for_ticker
+from ai_catch_win_engine.birth_chart import compute_ascendant, house_of_longitude
+from ai_catch_win_engine.natal_dates import filter_suspicious_natal_dates
+from ai_catch_win_engine.planet_isolation import SLOW_PLANETS, recommended_window_days
+from ai_catch_win_engine.same_ascendant_batch import CANDIDATE_POOL, MANUALLY_EXCLUDED
+from ai_catch_win_engine.effect_size import fit_harmonic, permutation_test_harmonic, random_control_test_harmonic
 from gann_astrology import get_planet_longitude
 import numpy as np
 
-OUTPUT_ROOT = Path("../runs/astro_engine_1")
+OUTPUT_ROOT = Path("../runs/ai_catch_win_engine")
 
 # دورة الكواكب السبعة الكلاسيكية (أيام سيدرالية) — لحساب طول نافذة مخصصة
 # لكل حاكم (run_custom_window)، ولحساب alpha الموحّد (تصحيح Bonferroni عبر
 # 7 كواكب كلاسيكية ممكنة كحاكم، لا 6 SLOW_PLANETS فقط — كل الكواكب السبعة
 # قابلة لتكون حاكمًا هنا، بخلاف planet_isolation.py حيث فقط البطيئة تُختبر).
-from astro_engine_1.known_cycles import SIDEREAL_PERIOD_DAYS
+from ai_catch_win_engine.known_cycles import SIDEREAL_PERIOD_DAYS
 
 CLASSICAL_PERIOD_DAYS = {
     "saturn": SIDEREAL_PERIOD_DAYS["saturn"], "jupiter": SIDEREAL_PERIOD_DAYS["jupiter"],

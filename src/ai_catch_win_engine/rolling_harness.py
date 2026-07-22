@@ -1,5 +1,5 @@
 """
-astro_engine_1/rolling_harness.py — النسخة المُعتمَدة الثانية من التجربة
+ai_catch_win_engine/rolling_harness.py — النسخة المُعتمَدة الثانية من التجربة
 المصغّرة، تصحّح الخلل المكتشف فعليًا في harness.py: فترة IMF **ليست ثابتة**
 عبر نافذة طويلة (252 يوم) — فحص zero-crossing حقيقي على AAPL IMF#1 أظهر فترة
 فعلية متراوحة 8-56 يوم رغم أن FFT على النافذة الكاملة يلخّصها برقم واحد (28
@@ -33,9 +33,9 @@ from full_universe_analysis import build_local_ticker_index, load_local_history
 from lab_spectral_features import emd_decompose, fft_cycle_features, wavelet_denoise
 from lab_stats import bonferroni_alpha
 
-from astro_engine_1.effect_size import fit_harmonic, permutation_test_harmonic, random_control_test_harmonic
-from astro_engine_1.harness import _longitude_series_for_match
-from astro_engine_1.known_cycles import build_known_cycles_table, match_period_to_known_cycles
+from ai_catch_win_engine.effect_size import fit_harmonic, permutation_test_harmonic, random_control_test_harmonic
+from ai_catch_win_engine.harness import _longitude_series_for_match
+from ai_catch_win_engine.known_cycles import build_known_cycles_table, match_period_to_known_cycles
 
 WINDOW_DAYS = 60      # قريب من "Basic Interval" الموصى به في TS لدورات قصيرة/متوسطة المدى
 STEP_DAYS = 20         # تداخل 2/3 بين نافذة وأخرى — كثافة كافية لرصد استقرار/تلاشي الدورة
@@ -131,7 +131,7 @@ def run_rolling_experiment(ticker: str, window_days: int = WINDOW_DAYS, step_day
     local_index = build_local_ticker_index()
     hist = load_local_history(ticker, local_index)
     if hist is None or len(hist) < MIN_TOTAL_HISTORY:
-        print(f"astro_engine_1: مفيش بيانات محلية كفاية لـ {ticker} "
+        print(f"ai_catch_win_engine: مفيش بيانات محلية كفاية لـ {ticker} "
               f"(محتاج {MIN_TOTAL_HISTORY} صف على الأقل).")
         return []
 

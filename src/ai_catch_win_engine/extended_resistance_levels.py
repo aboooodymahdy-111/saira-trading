@@ -1,5 +1,5 @@
 """
-astro_engine_1/extended_resistance_levels.py — مستويات دعم/مقاومة حقيقية
+ai_catch_win_engine/extended_resistance_levels.py — مستويات دعم/مقاومة حقيقية
 إضافية لأهداف AI Catch & Win الكبيرة (طلب عبده 2026-07-18: "قد تكون الزاوية
 720 أو أكثر في مربع جان والمثل في فيبوناتشي" — لو AI بتوقع مكسب أكبر من أبعد
 مقاومة موجودة حاليًا في full_universe_analysis.compute_entry_exit_levels).

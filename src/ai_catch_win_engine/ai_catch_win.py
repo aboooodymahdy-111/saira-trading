@@ -1,5 +1,5 @@
 """
-astro_engine_1/ai_catch_win.py — "AI Catch & Win": الأداة النهائية الموحّدة
+ai_catch_win_engine/ai_catch_win.py — "AI Catch & Win": الأداة النهائية الموحّدة
 (طلب عبده 2026-07-18) اللي بتجمع كل حاجة اتعملت في هذه الجلسة في مكان واحد:
 
   1. قائمة الأسهم شديدة التقلب (data/ai_catch_win_universe.csv — نسخة مجمّدة
@@ -45,15 +45,15 @@ from full_universe_analysis import compute_entry_exit_levels
 from gann_increment_selection import recommended_price_increment
 from yahoo_fetch import fetch_ohlc
 
-from astro_engine_1.extended_resistance_levels import extended_resistances_above
-from astro_engine_1.predict import rank_predictions
-from astro_engine_1.prediction_tracker import (check_retrain_warning,
+from ai_catch_win_engine.extended_resistance_levels import extended_resistances_above
+from ai_catch_win_engine.predict import rank_predictions
+from ai_catch_win_engine.prediction_tracker import (check_retrain_warning,
                                                  recompute_live_calibration,
                                                  score_due_predictions)
 
 UNIVERSE_CSV = Path("../data/ai_catch_win_universe.csv")
-OUTPUT_JSON = Path("../runs/astro_engine_1/ai_catch_win_latest.json")
-OUTPUT_CSV = Path("../runs/astro_engine_1/ai_catch_win_latest.csv")
+OUTPUT_JSON = Path("../runs/ai_catch_win_engine/ai_catch_win_latest.json")
+OUTPUT_CSV = Path("../runs/ai_catch_win_engine/ai_catch_win_latest.csv")
 
 DIRECTION_TRUST_THRESHOLD = 55.0  # نفس عتبة predict.py — دقة اتجاه تحت كده = ثقة صدفة تقريبًا
 
@@ -62,7 +62,7 @@ def load_universe(n: int | None = None) -> list[str]:
     if not UNIVERSE_CSV.exists():
         raise FileNotFoundError(
             f"{UNIVERSE_CSV} غير موجود — رجاء تحديثه من جهاز عبده عبر "
-            f"`python astro_engine_1/volatility_screen.py` ثم نسخ الناتج لـ{UNIVERSE_CSV}."
+            f"`python ai_catch_win_engine/volatility_screen.py` ثم نسخ الناتج لـ{UNIVERSE_CSV}."
         )
     df = pd.read_csv(UNIVERSE_CSV)
     tickers = df["ticker"].tolist()

@@ -1,5 +1,5 @@
 """
-astro_engine_1/prediction_tracker.py — الأداة اللي بتخلّي predict.py يتعلّم من
+ai_catch_win_engine/prediction_tracker.py — الأداة اللي بتخلّي predict.py يتعلّم من
 النتائج الفعلية بمرور الوقت (طلب عبده 2026-07-18: "ابني أداة تتعلم من تحقق
 الأهداف مع الوقت في المستقبل وتحسن التوقعات").
 
@@ -23,8 +23,8 @@ astro_engine_1/prediction_tracker.py — الأداة اللي بتخلّي pred
    "أعِد التدريب" بدل تشغيله أعمى على جدول زمني. هذا خط الدفاع الثاني الأغلى،
    يتفعّل فقط عند إشارة حقيقية.
 
-اللوجات: runs/astro_engine_1/prediction_log.csv (توقعات) +
-runs/astro_engine_1/prediction_scores.csv (مقيّمة، بعد score_due_predictions).
+اللوجات: runs/ai_catch_win_engine/prediction_log.csv (توقعات) +
+runs/ai_catch_win_engine/prediction_scores.csv (مقيّمة، بعد score_due_predictions).
 """
 from __future__ import annotations
 
@@ -37,10 +37,10 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # مطلق، لا "." هش — راجع cloud_build_feature_tables.py
 
-from astro_engine_1.feature_table import PREDICTION_HORIZONS_DAYS
+from ai_catch_win_engine.feature_table import PREDICTION_HORIZONS_DAYS
 from yahoo_fetch import fetch_ohlc
 
-LOG_ROOT = Path("../runs/astro_engine_1")
+LOG_ROOT = Path("../runs/ai_catch_win_engine")
 PREDICTION_LOG_CSV = LOG_ROOT / "prediction_log.csv"
 PREDICTION_SCORES_CSV = LOG_ROOT / "prediction_scores.csv"
 TRAINING_RESULTS_PATH = LOG_ROOT / "model_training_results_daily.csv"

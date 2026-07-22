@@ -3,11 +3,11 @@ name: AI Catch & Win — volatile-ticker predictions + trade plans
 # Fully cloud-based (no dependency on Abdo's local machine data): reads the
 # frozen volatile-ticker list committed at data/ai_catch_win_universe.csv
 # (refreshed every ~3 days from Abdo's own machine via
-# src/astro_engine_1/volatility_screen.py — see that file's docstring),
+# src/ai_catch_win_engine/volatility_screen.py — see that file's docstring),
 # fetches fresh yfinance data for just those tickers, retrains the XGBoost
 # model fully each run (cheap here: public repo = unlimited free GitHub
 # Actions minutes, so a nightly full retrain costs nothing but time), predicts,
-# builds real entry/stop/target trade plans (astro_engine_1.ai_catch_win's
+# builds real entry/stop/target trade plans (ai_catch_win_engine.ai_catch_win's
 # own _reorder_targets_by_ai_goal, guided but never invented from AI's
 # %target — see that function's docstring for why), and alerts Telegram +
 # email + commits a JSON the front end can read directly from
@@ -60,7 +60,7 @@ jobs:
       # every later step's `if:` gate but the run itself shows green.
       - name: Check if today is a NYSE trading day
         id: trading_day
-        run: python astro_engine_1/is_trading_day.py
+        run: python ai_catch_win_engine/is_trading_day.py
 
       # TA-Lib is optional (feature_table.py degrades gracefully without it,
       # falling back to lag/momentum features only) — never fails the run.
@@ -86,20 +86,20 @@ jobs:
       # twin used only in this cloud workflow.
       - name: Build feature tables from live Yahoo data
         if: steps.trading_day.outputs.is_trading_day == 'true'
-        run: python astro_engine_1/cloud_build_feature_tables.py
+        run: python ai_catch_win_engine/cloud_build_feature_tables.py
 
       - name: Train models (full retrain — free on this public repo)
         if: steps.trading_day.outputs.is_trading_day == 'true'
         run: |
           TICKERS=$(python -c "import pandas as pd; print(' '.join(pd.read_csv('../data/ai_catch_win_universe.csv')['ticker'].tolist()))")
-          python astro_engine_1/train_model.py daily $TICKERS
+          python ai_catch_win_engine/train_model.py daily $TICKERS
 
       - name: Predict + build trade plans + send Telegram alert
         if: steps.trading_day.outputs.is_trading_day == 'true'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python astro_engine_1/ai_catch_win.py
+        run: python ai_catch_win_engine/ai_catch_win.py
 
       # المرحلة الثانية للتعلّم من النتائج الحية (طلب عبده 2026-07-18: "ابني
       # أداة تتعلم من تحقق الأهداف مع الوقت في المستقبل وتحسن التوقعات") —
@@ -114,14 +114,14 @@ jobs:
       - name: Score due predictions + recalibrate + check retrain drift
         if: steps.trading_day.outputs.is_trading_day == 'true'
         continue-on-error: true
-        run: python astro_engine_1/prediction_tracker.py full_cycle
+        run: python ai_catch_win_engine/prediction_tracker.py full_cycle
 
       - name: Commit results back to the repo
         if: steps.trading_day.outputs.is_trading_day == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ../runs/astro_engine_1/
+          git add ../runs/ai_catch_win_engine/
           git diff --cached --quiet || git commit -m "AI Catch & Win daily run $(date -u +%Y-%m-%dT%H:%M:%SZ)"
           git pull --rebase
           git push
@@ -132,7 +132,7 @@ jobs:
       # that workflow's own comment for why Resend over Gmail SMTP.
       - name: Build email summary HTML
         if: steps.trading_day.outputs.is_trading_day == 'true'
-        run: python astro_engine_1/ai_catch_win_email.py
+        run: python ai_catch_win_engine/ai_catch_win_email.py
 
       # Payload (incl. the base64 Excel attachment, per Abdo's request 2026-
       # 07-18: "أدور على توقع بخصوص سهم" + an archived copy) is built in
@@ -146,8 +146,8 @@ jobs:
         run: |
           python3 -c "
           import base64, json, os
-          html = open('../runs/astro_engine_1/ai_catch_win_email.html', encoding='utf-8').read()
-          xlsx_b64 = base64.b64encode(open('../runs/astro_engine_1/ai_catch_win_latest.xlsx', 'rb').read()).decode()
+          html = open('../runs/ai_catch_win_engine/ai_catch_win_email.html', encoding='utf-8').read()
+          xlsx_b64 = base64.b64encode(open('../runs/ai_catch_win_engine/ai_catch_win_latest.xlsx', 'rb').read()).decode()
           payload = {
               'from': 'Saira Trading Bot <onboarding@resend.dev>',
               'to': ['aboooodymahdy@gmail.com'],
