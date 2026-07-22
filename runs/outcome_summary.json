@@ -1,10 +1,10 @@
 {
   "window_days": 90,
-  "total_tracked": 30699,
-  "resolved": 14551,
-  "still_pending": 16148,
-  "hits": 1293,
-  "misses": 13258,
-  "hit_rate": 0.089,
+  "total_tracked": 33802,
+  "resolved": 18130,
+  "still_pending": 15672,
+  "hits": 1502,
+  "misses": 16628,
+  "hit_rate": 0.083,
   "avg_days_to_exit": 2.4
 }
