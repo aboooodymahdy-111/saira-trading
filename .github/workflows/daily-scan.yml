@@ -47,7 +47,7 @@ jobs:
 
       # Skip the rest of the run entirely on weekends/US market holidays
       # (Abdo's explicit request 2026-07-18: "خلي التحليل والتقرير يتموا أيام
-      # التداول فقط") — astro_engine_1/is_trading_day.py uses
+      # التداول فقط") — ai_catch_win_engine/is_trading_day.py uses
       # pandas_market_calendars' real NYSE calendar, not just a Sat/Sun
       # check, so Thanksgiving/Christmas/etc. are correctly skipped too.
       # is_trading_day.py always exits 0 and writes its true/false result to
@@ -58,7 +58,7 @@ jobs:
       # step's `if:` gate but the run itself shows green.
       - name: Check if today is a NYSE trading day
         id: trading_day
-        run: python src/astro_engine_1/is_trading_day.py
+        run: python src/ai_catch_win_engine/is_trading_day.py
 
       # TA-Lib is optional (advanced_technical_tools.py degrades gracefully
       # without it — see its module docstring); a failed build here should
