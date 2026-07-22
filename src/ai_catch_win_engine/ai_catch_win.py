@@ -72,11 +72,22 @@ def load_universe(n: int | None = None) -> list[str]:
 def _reorder_targets_by_ai_goal(entry_exit: dict, current_price: float,
                                  ai_pct_change: float | None) -> dict:
     """
-    يعيد ترتيب T1/T2/T3 (الناتجة من full_universe_analysis.compute_entry_
-    exit_levels — دائمًا "أقرب مقاومة حقيقية للسعر الحالي" افتراضيًا) بحيث
-    T1 يبقى أقرب مقاومة حقيقية لهدف AI (current_price × (1 + ai_pct_change/100))
-    بدل الأقرب للسعر الحالي مباشرة — بلا اختراع أي مستوى جديد، فقط إعادة ترتيب
-    نفس الثلاثة المستويات الحقيقية اللي رجّعتها الدالة المشتركة أصلاً.
+    يفرز المستويات الثلاثة (الناتجة من full_universe_analysis.compute_entry_
+    exit_levels — دائمًا "أقرب مقاومة حقيقية للسعر الحالي" افتراضيًا) لمستوى
+    واحد مميَّز (`ai_t_price`) هو الأقرب فعليًا لهدف AI (current_price × (1 +
+    ai_pct_change/100))، والاتنين الباقيين (`t1_price`/`t2_price`) بترتيبهم
+    السعري الطبيعي التصاعدي بينهم (t1 < t2 دايمًا) — بلا اختراع أي مستوى
+    جديد، فقط إعادة تسمية/تجميع نفس الثلاثة المستويات الحقيقية اللي رجّعتها
+    الدالة المشتركة أصلاً.
+
+    **تسمية الأعمدة (طلب عبده 2026-07-22، بعد نقاش)**: `ai_t_price` (المستوى
+    المميَّز حسب قرب هدف AI، لا حسب السعر) + `t1_price`/`t2_price` (الباقيان،
+    ترتيبهم سعري تصاعدي عادي فيما بينهم). هذا يفادي مشكلة الاسم القديم
+    (`exit_price`/`target2_price`/`target3_price` بترتيب T1/T2/T3 يوحي
+    بتسلسل سعري ثابت، لكن كان بيتغيّر فعليًا حسب قرب هدف AI — راجع اكتشاف
+    عبده: RGTU طلعت T1=11.64 أعلى من T2=10.71، مربك لقارئ خارجي). الاسم
+    الجديد يفصل بوضوح: مستوى واحد "بالأولوية" (ai_t)، ومستويان "بالترتيب
+    السعري العادي" (t1/t2) — لا تناقض محتمل بين الاسم والقيمة.
 
     **لماذا هنا لا داخل compute_entry_exit_levels نفسها**: تلك الدالة مشتركة
     مع الفحص اليومي الكامل (full_universe_analysis.py) وفيها تعديلات أخرى غير
@@ -92,17 +103,23 @@ def _reorder_targets_by_ai_goal(entry_exit: dict, current_price: float,
         return entry_exit
 
     ai_target_price = current_price * (1 + ai_pct_change / 100)
-    reordered = sorted(real_levels, key=lambda level: abs(level - ai_target_price))
+    ai_t = min(real_levels, key=lambda level: abs(level - ai_target_price))
+    remaining = sorted(level for level in real_levels if level != ai_t)
 
     result = dict(entry_exit)
-    result["exit_price"] = reordered[0]
-    result["exit_basis"] = f"nearest real resistance to AI target ({ai_pct_change:+.1f}%) — reordered (T1)"
-    result["target2_price"] = reordered[1] if len(reordered) >= 2 else None
-    result["target2_basis"] = "second-closest real resistance to AI target (T2)" if len(reordered) >= 2 else \
-        entry_exit.get("target2_basis")
-    result["target3_price"] = reordered[2] if len(reordered) >= 3 else None
-    result["target3_basis"] = "third-closest real resistance to AI target (T3)" if len(reordered) >= 3 else \
-        entry_exit.get("target3_basis")
+    result.pop("exit_price", None)
+    result.pop("target2_price", None)
+    result.pop("target3_price", None)
+    result.pop("exit_basis", None)
+    result.pop("target2_basis", None)
+    result.pop("target3_basis", None)
+
+    result["ai_t_price"] = ai_t
+    result["ai_t_basis"] = f"nearest real resistance to AI target ({ai_pct_change:+.1f}%)"
+    result["t1_price"] = remaining[0] if len(remaining) >= 1 else None
+    result["t1_basis"] = "nearest remaining real resistance level" if len(remaining) >= 1 else None
+    result["t2_price"] = remaining[1] if len(remaining) >= 2 else None
+    result["t2_basis"] = "second remaining real resistance level" if len(remaining) >= 2 else None
     return result
 
 
@@ -136,14 +153,14 @@ def build_trade_plan(ticker: str, ai_pct_change: float | None) -> dict | None:
     )
     entry_exit = _reorder_targets_by_ai_goal(entry_exit, current_price, ai_pct_change)
 
-    # لو هدف AI تخطّى حتى T3 العادي (أو مفيش T3 أصلاً)، نجرّب مستوى ممتد
-    # (فيبوناتشي extension / مربع9 دورات إضافية) كـ"T3+" — معلَّم صراحة، لا
-    # يُعرَض كأنه بنفس ثقة T1/T2/T3 العادية.
+    # لو هدف AI تخطّى حتى أبعد مستوى عادي (أو مفيش مستويات أصلاً)، نجرّب مستوى
+    # ممتد (فيبوناتشي extension / مربع9 دورات إضافية) كمستوى إضافي — معلَّم
+    # صراحة، لا يُعرَض كأنه بنفس ثقة ai_t/t1/t2 العادية.
     target3_plus_price, target3_plus_basis = None, None
     if ai_pct_change is not None:
         ai_target_price = current_price * (1 + ai_pct_change / 100)
-        normal_targets = [t for t in (entry_exit["exit_price"], entry_exit["target2_price"],
-                                       entry_exit["target3_price"]) if t is not None]
+        normal_targets = [t for t in (entry_exit["ai_t_price"], entry_exit["t1_price"],
+                                       entry_exit["t2_price"]) if t is not None]
         farthest_normal = max(normal_targets) if normal_targets else current_price
         if ai_target_price > farthest_normal:
             try:
@@ -206,13 +223,14 @@ def format_telegram_message(ranked: pd.DataFrame, trade_plans: dict[str, dict], 
         lines.append(f"<b>{ticker}</b> — AI: {calib:+.1f}% (ثقة اتجاه {dir_acc:.0f}%)")
         if plan:
             lines.append(f"  دخول: ${plan['entry_price']} | وقف: ${plan['stop_loss_price']}")
-            targets = [f"T1=${plan['exit_price']}"]
-            if plan.get("target2_price") is not None:
-                targets.append(f"T2=${plan['target2_price']}")
-            if plan.get("target3_price") is not None:
-                targets.append(f"T3=${plan['target3_price']}")
+            # ai_t هو الأقرب فعليًا لهدف AI بالبناء (راجع _reorder_targets_by_ai_goal)
+            targets = [f"AI T=${plan['ai_t_price']}"]
+            if plan.get("t1_price") is not None:
+                targets.append(f"T1=${plan['t1_price']}")
+            if plan.get("t2_price") is not None:
+                targets.append(f"T2=${plan['t2_price']}")
             if plan.get("target3_plus_price") is not None:
-                targets.append(f"T3+=${plan['target3_plus_price']}")
+                targets.append(f"Extended=${plan['target3_plus_price']}")
             lines.append("  " + " | ".join(targets))
         lines.append("")
         shown += 1
