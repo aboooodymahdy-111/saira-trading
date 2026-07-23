@@ -53,9 +53,9 @@ WHAT IT COMPUTES PER TICKER:
        three (Ichimoku/Pivots/Volume Profile) work regardless.
     7. Swing-horizon fit for Abdo's own trading profile: hit rate of reaching
        the target gain within the target holding period
-       (swing_horizon_filter.evaluate_horizon_fit) — defaults set to 10%/5
-       trading days per his stated profile (2026-07), but configurable via the
-       constants below.
+       (swing_horizon_filter.evaluate_horizon_fit) — defaults set to 30%/5
+       trading days per his stated profile (2026-07, revised 2026-07-23), but
+       configurable via the constants below.
     8. Entry/exit/stop-loss/T2 price levels (compute_entry_exit_levels, ADDED
        2026-07, CORRECTED 2026-07): combines the Astrological group's
        calibrated Square of Nine projected level with ONE of two candidate
@@ -153,11 +153,11 @@ COMMITTEE_CANDIDATES_CSV = Path("runs/committee_candidates.csv")
 # future training/comparison data.
 ARCHIVE_DIR = Path("runs/archive")
 
-# Abdo's stated swing-trading profile (2026-07, revised same month to 10%/5
-# trading days): adjust here to test other holding-period/target-gain
+# Abdo's stated swing-trading profile (2026-07, revised again 2026-07-23 to
+# 30%/5 trading days): adjust here to test other holding-period/target-gain
 # combinations without touching the logic below.
 TARGET_HOLDING_DAYS = 5
-TARGET_GAIN_PCT = 10.0
+TARGET_GAIN_PCT = 30.0
 
 # Eligibility cache (2026-07): with the daily schedule (run_daily.ps1 via
 # register_scheduled_task.ps1), re-running the ethical screen (1 yfinance

@@ -130,14 +130,14 @@ COLUMN_TOOLTIPS = {
                         "for the exact basis. Blank if no second support level was identified.",
     "exit_price": "Nearest resistance level above current price (Pivot Point R1/R2/R3 or the calibrated "
                    "Square of Nine projected level) — the first realistic take-profit target, ALWAYS a real "
-                   "resistance level regardless of vote. Falls back to the standard 10%-swing target only as "
+                   "resistance level regardless of vote. Falls back to the standard 30%-swing target only as "
                    "a reference floor if no resistance level was found at all. Hover the value for the exact "
                    "basis used on this row.",
     "target2_price": "The next resistance level up from exit_price (\"T2\") — a second, further profit "
                       "target if the first is reached. Hover for the exact basis. Blank if no second "
                       "resistance level was identified.",
     "exit_days_estimate": "This ticker's own historical median trading days to reach the swing target "
-                           "(10% within 5 trading days), from swing_horizon_filter.evaluate_horizon_fit. "
+                           "(30% within 5 trading days), from swing_horizon_filter.evaluate_horizon_fit. "
                            "Blank if the target was never historically hit in that window.",
     "total_buy_votes": "Sum of buy votes across the Technical (4), Quantitative (2), Astrological (1), "
                         "and Advanced Technical (up to 4) groups. Primary ranking key.",
