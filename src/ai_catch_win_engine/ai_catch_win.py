@@ -49,6 +49,7 @@ from ai_catch_win_engine.etf_screen import filter_out_etfs
 from ai_catch_win_engine.extended_resistance_levels import extended_resistances_above
 from ai_catch_win_engine.liquidity_screen import filter_by_price_and_liquidity
 from ai_catch_win_engine.predict import rank_predictions
+from ai_catch_win_engine.tradability_screen import filter_by_tradability
 from ai_catch_win_engine.prediction_tracker import (check_retrain_warning,
                                                  recompute_live_calibration,
                                                  score_due_predictions)
@@ -74,6 +75,10 @@ def load_universe(n: int | None = None) -> list[str]:
     # Price cap ($50 max) + liquidity floor (100k avg 20-day volume) — same
     # backstop reasoning as the ETF filter above, see liquidity_screen.py.
     tickers = filter_by_price_and_liquidity(tickers)
+    # Executability check (Abdo 2026-07, IOTR example: 5.7% bid/ask spread,
+    # 1-share bid depth — a result nobody can actually fill) — see
+    # tradability_screen.py.
+    tickers = filter_by_tradability(tickers)
     return tickers[:n] if n is not None else tickers
 
 

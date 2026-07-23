@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 import pandas as pd
 
 _CHART_URL = "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?range={rng}&interval={interval}"
+_QUOTE_URL = "https://query1.finance.yahoo.com/v7/finance/quote?symbols={symbol}"
 _HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 
@@ -61,6 +62,50 @@ def fetch_ohlc(symbol: str, rng: str = "1y", interval: str = "1d", timeout: int 
     df = pd.DataFrame(rows).set_index("idx")
     df.index.name = "DATE"
     return df
+
+
+def fetch_instrument_type(symbol: str, timeout: int = 25) -> str | None:
+    """
+    يرجّع نوع الأداة المالية ("EQUITY"، "ETF"، "MUTUALFUND"، إلخ) من نفس
+    v8/finance/chart endpoint المستخدَم في fetch_ohlc أعلاه (حقل
+    meta.instrumentType) — بلا استدعاء endpoint إضافي أو مخاطرة crumb/cookie
+    زيادة، لأنه نفس الاستدعاء المؤكَّد شغّال بالفعل (راجع docstring الملف).
+    يرجّع None (لا يرمي استثناء) لو الحقل غير موجود — الاستثناءات الحقيقية
+    (فشل الشبكة/رمز غير موجود) لسه بتتفرقع زي fetch_ohlc بالظبط.
+    """
+    url = _CHART_URL.format(symbol=symbol, rng="5d", interval="1d")
+    req = urllib.request.Request(url, headers=_HEADERS)
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        payload = json.loads(resp.read())
+
+    result = payload.get("chart", {}).get("result")
+    if not result:
+        err = payload.get("chart", {}).get("error")
+        raise ValueError(f"Yahoo returned no data for {symbol}: {err}")
+    return result[0].get("meta", {}).get("instrumentType")
+
+
+def fetch_bid_ask(symbol: str, timeout: int = 25) -> dict:
+    """
+    يرجّع bid/ask/bidSize/askSize من v7/finance/quote — endpoint غير رسمي منفصل
+    عن v8/finance/chart (اللي لا يحمل bid/ask أصلاً)، فمخاطرة توقّفه أو احتياجه
+    crumb/cookie لاحقًا مستقلة عن fetch_ohlc/fetch_instrument_type. المتصل
+    (tradability_screen.py) بيتعامل مع فشل هذا الاستدعاء بـ"فشل مفتوح" (fail
+    open) — سهم بلا بيانات bid/ask ما يتفلترش بره، بدل ما يوقّف التشغيلة كلها.
+    """
+    url = _QUOTE_URL.format(symbol=symbol)
+    req = urllib.request.Request(url, headers=_HEADERS)
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        payload = json.loads(resp.read())
+
+    results = payload.get("quoteResponse", {}).get("result")
+    if not results:
+        raise ValueError(f"Yahoo returned no quote for {symbol}")
+    q = results[0]
+    return {
+        "bid": q.get("bid"), "ask": q.get("ask"),
+        "bidSize": q.get("bidSize"), "askSize": q.get("askSize"),
+    }
 
 
 def merged_daily_history(symbol: str, local_hist: pd.DataFrame | None, rng: str = "6mo") -> pd.DataFrame:
