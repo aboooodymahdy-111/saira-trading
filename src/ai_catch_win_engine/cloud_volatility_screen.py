@@ -35,7 +35,9 @@ OUTPUT_PATH = Path("../runs/ai_catch_win_engine/cloud_volatility_rolling.csv")
 
 MIN_ROWS = 100           # yfinance rng="1y" ~250 صف لو توفّر كامل، هامش أقل تشددًا من النسخة المحلية
 MIN_PRICE = 1.0
+MAX_PRICE = 50.0         # طلب عبده (2026-07) — نفس سقف volatility_screen.py المحلي
 MAX_PRICE_RATIO = 50.0
+MIN_AVG_VOLUME_20D = 100_000  # طلب عبده (2026-07) — نفس عتبة volatility_screen.py المحلي
 REQUEST_DELAY_SECONDS = 1.0  # نفس وتيرة full_universe_analysis — احترام Yahoo rate limit
 STALE_AFTER_DAYS = 10        # سهم لم يُفحص منذ أكتر من كده يُستبعد من القائمة النهائية (بيانات قديمة جدًا)
 
@@ -55,6 +57,11 @@ def _screen_one(ticker: str) -> dict | None:
     if min_price < MIN_PRICE:
         return None
     if min_price > 0 and (max_price / min_price) > MAX_PRICE_RATIO:
+        return None
+    if float(close.iloc[-1]) > MAX_PRICE:
+        return None
+    avg_volume_20d = float(hist["Volume"].tail(20).mean())
+    if avg_volume_20d < MIN_AVG_VOLUME_20D:
         return None
 
     pct = close.pct_change().abs() * 100

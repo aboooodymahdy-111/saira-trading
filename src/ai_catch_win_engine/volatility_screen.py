@@ -32,7 +32,10 @@ OUTPUT_PATH = Path("../runs/ai_catch_win_engine/volatility_screen.csv")
 
 MIN_ROWS = 250          # على الأقل سنة تداول تقريبًا من التاريخ
 MIN_PRICE = 1.0         # يستبعد penny stocks تحت الدولار (سبريد/سيولة رديئة تضخّم %التغيّر مصطنعًا)
+MAX_PRICE = 50.0        # طلب عبده (2026-07): سقف سعر جديد، بلا داعي لأسهم أغلى من كده لحسابه
 MAX_PRICE_RATIO = 50.0  # يستبعد أسهم بها انقسام عكسي ضخم يُظهر "تقلب" كاذب (راجع docstring الملف)
+MIN_AVG_VOLUME_20D = 100_000  # طلب عبده (2026-07): نفس عتبة السيولة اللي كانت تحذير بصري بس في
+                              # الإيميل (LOW_LIQUIDITY_VOLUME_THRESHOLD)، بقت استبعاد فعلي هنا
 
 
 def screen_universe(sample_size: int | None = None, seed: int = 42) -> pd.DataFrame:
@@ -62,6 +65,12 @@ def screen_universe(sample_size: int | None = None, seed: int = 42) -> pd.DataFr
         if min_price < MIN_PRICE:
             continue
         if min_price > 0 and (max_price / min_price) > MAX_PRICE_RATIO:
+            continue
+        last_close = float(close.iloc[-1])
+        if last_close > MAX_PRICE:
+            continue
+        avg_volume_20d = float(hist["Volume"].tail(20).mean())
+        if avg_volume_20d < MIN_AVG_VOLUME_20D:
             continue
 
         pct = close.pct_change().abs() * 100
