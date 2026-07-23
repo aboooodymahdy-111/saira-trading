@@ -45,6 +45,7 @@ from full_universe_analysis import compute_entry_exit_levels
 from gann_increment_selection import recommended_price_increment
 from yahoo_fetch import fetch_ohlc
 
+from ai_catch_win_engine.etf_screen import filter_out_etfs
 from ai_catch_win_engine.extended_resistance_levels import extended_resistances_above
 from ai_catch_win_engine.predict import rank_predictions
 from ai_catch_win_engine.prediction_tracker import (check_retrain_warning,
@@ -66,6 +67,9 @@ def load_universe(n: int | None = None) -> list[str]:
         )
     df = pd.read_csv(UNIVERSE_CSV)
     tickers = df["ticker"].tolist()
+    # Abdo wants stock-only signals, no ETFs — see etf_screen.py docstring for
+    # why this can't just be baked into the frozen CSV once and forgotten.
+    tickers = filter_out_etfs(tickers)
     return tickers[:n] if n is not None else tickers
 
 

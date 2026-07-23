@@ -25,7 +25,7 @@ on:
   workflow_dispatch:
     inputs:
       n_tickers:
-        description: "Limit to first N tickers from the universe (blank = all 200)"
+        description: "Limit to first N tickers from the universe (blank = all, ETFs excluded)"
         required: false
         default: ""
 
