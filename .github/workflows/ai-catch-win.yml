@@ -19,9 +19,22 @@ name: AI Catch & Win — volatile-ticker predictions + trade plans
 #
 # Scheduled 2 hours before daily-scan.yml (11:00 UTC = 14:00 Cairo, 2.5 hours
 # before the 16:30 Cairo / 9:30 AM ET US market open) at Abdo's request.
+#
+# SECOND RUN (added 2026-07-24, Abdo's request): the run itself (TA-Lib build +
+# live feature tables + full retrain for the whole universe + predict + email)
+# takes roughly 2 hours end to end, which is why the 14:00 Cairo trigger below
+# actually lands in Abdo's inbox around 16:00 Cairo — not a timezone
+# misconfiguration on any platform's end, just this workflow's own runtime.
+# The extra 14:00 UTC trigger fires exactly 3 hours after the first (same
+# 3-hour gap Abdo asked for, measured trigger-to-trigger rather than
+# delivery-to-delivery, since delivery time isn't fixed/schedulable — only
+# the cron trigger is). Both schedules run the exact same job independently
+# (each gated by its own is_trading_day check below), so trading-day skipping
+# and everything else behaves identically for either firing.
 on:
   schedule:
     - cron: "0 11 * * *"
+    - cron: "0 14 * * *"
   workflow_dispatch:
     inputs:
       n_tickers:
